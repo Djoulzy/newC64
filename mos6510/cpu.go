@@ -12,6 +12,9 @@ func (C *CPU) Reset() {
 	C.SP = 0xFF
 
 	C.PC = (uint16(C.ram.Read(0xFFFC+1)) << 8) + uint16(C.ram.Read(0xFFFC))
+	
+	// PLA Settings (Bank switching)
+	C.ram.Write(0x0001, 7)
 }
 
 func (C *CPU) Init(mem interface{}) {
