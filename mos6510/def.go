@@ -43,6 +43,13 @@ const (
 	compute
 )
 
+type memory interface {
+	Init()
+	Clear()
+	Read(uint16) byte
+	Write(uint16, byte)
+}
+
 // CPU :
 type CPU struct {
 	PC uint16
@@ -52,6 +59,7 @@ type CPU struct {
 	Y  byte
 	S  byte
 
+	ram        memory
 	inst       instruction
 	operLO     byte
 	operHI     byte

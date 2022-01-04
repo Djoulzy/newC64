@@ -10,10 +10,14 @@ func (C *CPU) Reset() {
 
 	C.PC = 0xFF00
 	C.SP = 0xFF
+
+	C.PC = (uint16(C.ram.Read(0xFFFC+1)) << 8) + uint16(C.ram.Read(0xFFFC))
 }
 
-func (C *CPU) Init() {
+func (C *CPU) Init(mem interface{}) {
 	fmt.Printf("mos6510 - Init\n")
+	C.ram = mem.(memory)
+	C.Reset()
 }
 
 func (C *CPU) NextCycle() {
