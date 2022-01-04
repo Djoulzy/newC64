@@ -16,24 +16,25 @@ func (P *PLA) Load(filename string) {
 
 }
 
-func (P *PLA) Attach(mem interface{}, memtype interface{}) {
+func (P *PLA) Attach(mem interface{}, memtype interface{}, startLocation int) {
 	selectedType := memtype.(MemType)
 	P.mem[selectedType] = mem.(memory)
+	P.startLocation[selectedType] = startLocation
 }
 
 func (P *PLA) getChip(addr uint16) MemType {
 	switch {
-	case addr < 0xA000:
+	case addr < BasicStart:
 		return RAM
-	case addr < 0xC000:
+	case addr < BasicEnd:
 		if P.setting&3 == 3 {
 			return BASIC
 		} else {
 			return RAM
 		}
-	case addr < 0xD000:
+	case addr < CharStart:
 		return RAM
-	case addr < 0xE000:
+	case addr < KernalStart:
 		if P.setting&3 == 0 {
 			return RAM
 		} else if P.setting&4 == 0 {
@@ -54,8 +55,9 @@ func (P *PLA) getChip(addr uint16) MemType {
 
 func (P *PLA) Read(addr uint16) byte {
 	dest := P.getChip(addr)
-	fmt.Printf("pla906114 - Read - %04X - Zone: %d\n", addr, dest)
-	return P.mem[dest].Read(addr)
+	destAddr := addr - uint16(P.startLocation[dest])
+	// fmt.Printf("pla906114 - Read - %04X - Zone: %d\n", addr, dest)
+	return P.mem[dest].Read(destAddr)
 }
 
 func (P *PLA) Write(addr uint16, value byte) {
@@ -69,8 +71,7 @@ func (P *PLA) Dump(startAddr uint16) {
 	for j := 0; j < 16; j++ {
 		fmt.Printf("%04X : ", cpt)
 		for i := 0; i < 16; i++ {
-			dest := P.getChip(cpt)
-			fmt.Printf("%02X ", P.mem[dest].Read(cpt))
+			fmt.Printf("%02X ", P.Read(cpt))
 			cpt++
 		}
 		fmt.Println()

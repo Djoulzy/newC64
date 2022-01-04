@@ -13,7 +13,7 @@ type PLA interface {
 	Init()
 	Clear()
 	Load(string)
-	Attach(interface{}, interface{})
+	Attach(interface{}, interface{}, int)
 	Read(uint16) byte
 	Write(uint16, byte)
 	Dump(uint16)

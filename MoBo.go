@@ -31,17 +31,17 @@ func setup() {
 
 	// PLA Setup
 	pla = &pla906114.PLA{}
-	pla.Attach(mem, pla906114.RAM)
-	pla.Attach(kernal, pla906114.KERNAL)
-	pla.Attach(basic, pla906114.BASIC)
-	pla.Attach(basic, pla906114.CHAR)
+	pla.Attach(mem, pla906114.RAM, 0)
+	pla.Attach(kernal, pla906114.KERNAL, pla906114.KernalStart)
+	pla.Attach(basic, pla906114.BASIC, pla906114.BasicStart)
+	pla.Attach(basic, pla906114.CHAR, pla906114.CharStart)
 
 	// CPU Setup
 	cpu = &mos6510.CPU{}
 	cpu.Init(pla)
 
 	pla.Dump(0x0000)
-	pla.Dump(0xE000)
+	pla.Dump(0xFEFF)
 }
 
 func main() {
