@@ -11,15 +11,20 @@ func (C *CPU) Reset() {
 	C.PC = 0xFF00
 	C.SP = 0xFF
 
-	C.PC = (uint16(C.ram.Read(0xFFFC+1)) << 8) + uint16(C.ram.Read(0xFFFC))
-	
+	C.ram.Clear()
+
 	// PLA Settings (Bank switching)
 	C.ram.Write(0x0001, 7)
+
+	C.PC = (uint16(C.ram.Read(0xFFFC+1)) << 8) + uint16(C.ram.Read(0xFFFC))
+
+	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
 }
 
 func (C *CPU) Init(mem interface{}) {
 	fmt.Printf("mos6510 - Init\n")
 	C.ram = mem.(memory)
+	C.ram.Init()
 	C.Reset()
 }
 

@@ -3,25 +3,21 @@ package pla906114
 type memory interface {
 	Init()
 	Clear()
+	Load(string)
 	Read(uint16) byte
 	Write(uint16, byte)
-}
-
-type rom interface {
-	Init(string, int)
-	Read(uint16) byte
 }
 
 type MemType int
 
 const (
-	KERNAL MemType = iota
+	RAM MemType = iota
+	KERNAL
 	BASIC
 	CHAR
 	IO
 	CART_LO
 	CART_HI
-	RAM
 )
 
 const (
@@ -48,6 +44,6 @@ const (
 
 // RAM :
 type PLA struct {
-	ram memory
-	rom [3]rom
+	setting byte
+	mem     [4]memory
 }
