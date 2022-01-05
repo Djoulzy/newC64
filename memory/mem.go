@@ -54,6 +54,16 @@ func (M *MEM) Write(addr uint16, value byte) {
 	M.Cells[addr] = value
 }
 
+func (M *MEM) GetView(start int, size int) interface{} {
+	view := MEM{
+		Size:          size,
+		readOnly:      M.readOnly,
+		StartLocation: 0,
+		Cells:         M.Cells[start : start+size],
+	}
+	return &view
+}
+
 func (M *MEM) Dump(startAddr uint16) {
 	cpt := startAddr
 	fmt.Printf("\n")

@@ -65,6 +65,10 @@ func (P *PLA) Write(addr uint16, value byte) {
 	P.mem[dest].Write(addr, value)
 }
 
+func (P *PLA) GetView(start int, size int) interface{} {
+	return P.mem[RAM].GetView(start, size)
+}
+
 func (P *PLA) Dump(startAddr uint16) {
 	cpt := startAddr
 	fmt.Printf("\n")

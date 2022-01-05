@@ -6,6 +6,7 @@ type memory interface {
 	Load(string)
 	Read(uint16) byte
 	Write(uint16, byte)
+	GetView(int, int) interface{}
 }
 
 type MemType int
