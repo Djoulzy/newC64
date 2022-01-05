@@ -34,6 +34,10 @@ func (C *CPU) ror() {
 	fmt.Printf("Not implemented: %v\n", C.inst)
 }
 
+func (C *CPU) sax() {
+	fmt.Printf("Not implemented: %v\n", C.inst)
+}
+
 func (C *CPU) slo() {
 	fmt.Printf("Not implemented: %v\n", C.inst)
 }

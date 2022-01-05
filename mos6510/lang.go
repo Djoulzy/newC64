@@ -233,6 +233,11 @@ func (C *CPU) initLanguage() {
 
 		0x60: {name: "RTS", bytes: 1, cycles: 6, action: C.rts, addr: implied},
 
+		0x87: {name: "SAX", bytes: 2, cycles: 3, action: C.sax, addr: zeropage},
+		0x97: {name: "SAX", bytes: 2, cycles: 4, action: C.sax, addr: zeropageY},
+		0x83: {name: "SAX", bytes: 2, cycles: 6, action: C.sax, addr: zeropageX},
+		0x8F: {name: "SAX", bytes: 3, cycles: 4, action: C.sax, addr: absolute},
+
 		0xE9: {name: "SBC", bytes: 2, cycles: 2, action: C.sbc, addr: immediate},
 		0xE5: {name: "SBC", bytes: 2, cycles: 3, action: C.sbc, addr: zeropage},
 		0xF5: {name: "SBC", bytes: 2, cycles: 4, action: C.sbc, addr: zeropageX},
