@@ -15,12 +15,16 @@ const (
 type addressing int
 
 const (
-	immediate addressing = iota
+	implied addressing = iota
+	immediate
+	relative
 	zeropage
 	zeropageX
+	zeropageY
 	absolute
 	absoluteX
 	absoluteY
+	indirect
 	indirectX
 	indirectY
 )
@@ -60,6 +64,7 @@ type CPU struct {
 	S  byte
 
 	ram        memory
+	instStart  uint16
 	inst       instruction
 	operLO     byte
 	operHI     byte

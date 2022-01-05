@@ -1,23 +1,24 @@
 package mos6510
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func (C *CPU) Reset() {
 	C.A = 0xAA
 	C.X = 0
 	C.Y = 0
 	C.S = 0b00100000
-
-	C.PC = 0xFF00
 	C.SP = 0xFF
 
 	C.ram.Clear()
-
 	// PLA Settings (Bank switching)
 	C.ram.Write(0x0001, 7)
 
-	C.PC = (uint16(C.ram.Read(0xFFFC+1)) << 8) + uint16(C.ram.Read(0xFFFC))
-
+	C.state = readInstruction
+	// C.PC = (uint16(C.ram.Read(0xFFFC+1)) << 8) + uint16(C.ram.Read(0xFFFC))
+	C.PC = 0xE000
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
 }
 
@@ -25,11 +26,89 @@ func (C *CPU) Init(mem interface{}) {
 	fmt.Printf("mos6510 - Init\n")
 	C.ram = mem.(memory)
 	C.ram.Init()
+	C.initLanguage()
 	C.Reset()
 }
 
-func (C *CPU) NextCycle() {
+func (C *CPU) disassemble() {
+	fmt.Printf("%04X: %03s ", C.instStart, C.inst.name)
+	switch C.inst.addr {
+	case implied:
+		fmt.Printf("\t\t")
+	case immediate:
+		fmt.Printf("#$%02X\t\t", C.operLO)
+	case relative:
+		fmt.Printf("$%02X\t\t", C.operLO)
+	case zeropage:
+		fmt.Printf("$%02X\t\t", C.operLO)
+	case zeropageX:
+		fmt.Printf("$%02X,X\t\t", C.operLO)
+	case zeropageY:
+		fmt.Printf("$%02X,Y\t\t", C.operLO)
+	case absolute:
+		fmt.Printf("$%02X%02X\t\t", C.operHI, C.operLO)
+	case absoluteX:
+		fmt.Printf("$%02X%02X,X\t", C.operHI, C.operLO)
+	case absoluteY:
+		fmt.Printf("$%02X%02X,Y\t", C.operHI, C.operLO)
+	case indirect:
+		fmt.Printf("($%02X%02X)\t", C.operHI, C.operLO)
+	case indirectX:
+		fmt.Printf("($%02X,X)\t", C.operLO)
+	case indirectY:
+		fmt.Printf("($%02X),Y\t", C.operLO)
+	}
+	fmt.Printf("\t")
+}
 
+func (C *CPU) computeInstruction() {
+	if C.cycleCount == C.inst.cycles {
+		C.state = readInstruction
+		C.disassemble()
+		C.inst.action()
+	}
+}
+
+func (C *CPU) NextCycle() {
+	var ok bool
+
+	C.cycleCount++
+	switch C.state {
+	case idle:
+		C.cycleCount = 0
+		C.state++
+	case readInstruction:
+		C.cycleCount = 1
+		C.instStart = C.PC
+		if C.inst, ok = mnemonic[C.ram.Read(C.PC)]; !ok {
+			log.Fatal(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
+		}
+		C.PC++
+		if C.inst.bytes > 1 {
+			C.state = readOperLO
+		} else {
+			C.state = compute
+			C.computeInstruction()
+		}
+	case readOperLO:
+		C.operLO = C.ram.Read(C.PC)
+		C.PC++
+		if C.inst.bytes > 2 {
+			C.state = readOperHI
+		} else {
+			C.state = compute
+			C.computeInstruction()
+		}
+	case readOperHI:
+		C.operHI = C.ram.Read(C.PC)
+		C.PC++
+		C.state = compute
+		C.computeInstruction()
+	case compute:
+		C.computeInstruction()
+	default:
+		log.Fatal("Unknown CPU state\n")
+	}
 }
 
 // var output = ""
