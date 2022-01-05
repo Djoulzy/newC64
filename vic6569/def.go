@@ -2,8 +2,16 @@ package vic6569
 
 import (
 	"newC64/graphic"
-	"newC64/memory"
 )
+
+type memory interface {
+	Init()
+	Clear()
+	Load(string)
+	Read(uint16) byte
+	Write(uint16, byte)
+	GetView(int, int) interface{}
+}
 
 var (
 	Black      byte = 0
@@ -67,26 +75,26 @@ type VIC struct {
 	RasterIRQ uint16
 	graph     graphic.Driver
 
-	chargen *memory.MEM
-	io      *memory.MEM
-	color   *memory.MEM
-	ram     *memory.MEM
-	screen  *memory.MEM
+	chargen memory
+	io      memory
+	color   memory
+	ram     memory
+	screen  memory
 }
 
 const (
 	CharStart   = 0xD000
 	IOStart     = 0xD000
-	colorStart  = 0xD800
+	colorStart  = 0x0800 // 0xD800 translated
 	screenStart = 0x0400
 
-	REG_CTRL1  uint16 = 0xD011 // Screen control (0b01111111)
-	REG_RASTER uint16 = 0xD012 // Raster 8 first bits
-	REG_CTRL2  uint16 = 0xD016 // Screen control (0b01111111)
-	REG_IRQ    uint16 = 0xD019 // IRQ Register
-	REG_SETIRQ uint16 = 0xD01A // IRQ Enabler
-	REG_EC     uint16 = 0xD020 // Border Color
-	REG_B0C    uint16 = 0xD021 // Background color 0
+	REG_CTRL1  uint16 = 0x0011 // 0xD011: Screen control (0b01111111)
+	REG_RASTER uint16 = 0x0012 // 0xD012: Raster 8 first bits
+	REG_CTRL2  uint16 = 0x0016 // 0xD016: Screen control (0b01111111)
+	REG_IRQ    uint16 = 0x0019 // 0xD019: IRQ Register
+	REG_SETIRQ uint16 = 0x001A // 0xD01A: IRQ Enabler
+	REG_EC     uint16 = 0x0020 // 0xD020: Border Color
+	REG_B0C    uint16 = 0x0021 // 0xD021: Background color 0
 	PALNTSC    uint16 = 0x02A6
 
 	YSCROLL byte = 0b00000111 // From REG_CTRL1

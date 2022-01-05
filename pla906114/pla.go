@@ -4,6 +4,7 @@ import "fmt"
 
 func (P *PLA) Init() {
 	P.mem[RAM].Init()
+	P.mem[IO].Init()
 	P.setting = 7
 	fmt.Printf("pla906114 - Settings: %d\n", P.setting)
 }

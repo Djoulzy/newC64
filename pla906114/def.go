@@ -26,6 +26,7 @@ const (
 	StackEnd    = 0x01FF
 	ScreenStart = 0x0400
 	ScreenEnd   = 0x07FF
+	IOStart     = 0xD000
 	CharStart   = 0xD000
 	CharEnd     = 0xDFFF
 	ColorStart  = 0xD800
@@ -45,6 +46,6 @@ const (
 // RAM :
 type PLA struct {
 	setting       byte
-	startLocation [4]int
-	mem           [4]memory
+	startLocation [5]int
+	mem           [5]memory
 }
