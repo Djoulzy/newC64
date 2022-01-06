@@ -6,6 +6,7 @@ import (
 )
 
 func (C *CPU) bcc() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if !C.issetC() {
@@ -14,10 +15,11 @@ func (C *CPU) bcc() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) bcs() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if C.issetC() {
@@ -26,10 +28,11 @@ func (C *CPU) bcs() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) beq() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if C.issetZ() {
@@ -38,10 +41,11 @@ func (C *CPU) beq() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) bmi() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if C.issetN() {
@@ -50,10 +54,11 @@ func (C *CPU) bmi() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) bne() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if !C.issetZ() {
@@ -62,10 +67,11 @@ func (C *CPU) bne() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) bpl() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if !C.issetN() {
@@ -74,7 +80,7 @@ func (C *CPU) bpl() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) brk() {
@@ -91,6 +97,7 @@ func (C *CPU) brk() {
 }
 
 func (C *CPU) bvc() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if !C.issetV() {
@@ -99,10 +106,11 @@ func (C *CPU) bvc() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) bvs() {
+	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
 		if C.issetV() {
@@ -111,7 +119,7 @@ func (C *CPU) bvs() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("(%04X)\n", dest)
 }
 
 func (C *CPU) jmp() {

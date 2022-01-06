@@ -5,23 +5,6 @@ import (
 	"log"
 )
 
-// switch C.inst.addr {
-// case implied:
-// case immediate:
-// case relative:
-// case zeropage:
-// case zeropageX:
-// case zeropageY:
-// case absolute:
-// case absoluteX:
-// case absoluteY:
-// case indirect:
-// case indirectX:
-// case indirectY:
-// default:
-// 	log.Fatal("Bad addressing mode")
-// }
-
 func (C *CPU) lda() {
 	switch C.inst.addr {
 	case immediate:

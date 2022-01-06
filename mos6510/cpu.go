@@ -3,6 +3,7 @@ package mos6510
 import (
 	"fmt"
 	"log"
+	"os"
 )
 
 func (C *CPU) Reset() {
@@ -14,53 +15,56 @@ func (C *CPU) Reset() {
 
 	C.ram.Clear()
 	// PLA Settings (Bank switching)
-	C.ram.Write(0x0001, 7)
+	C.ram.Write(0x0000, 0x2F)
+	C.ram.Write(0x0001, 0x37)
 
 	C.state = readInstruction
 	// Cold Start:
-	// C.PC = C.readWord(COLDSTART_Vector)
-	C.PC = 0xE000
+	C.PC = C.readWord(COLDSTART_Vector)
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
 }
 
 func (C *CPU) Init(mem interface{}) {
 	fmt.Printf("mos6510 - Init\n")
-	C.ram = mem.(memory)
+	C.ram = mem.(ram)
 	C.ram.Init()
-	C.stack = (C.ram.GetView(StackStart, 256)).(memory)
+	C.stack = (C.ram.GetView(StackStart, 256)).(ram)
 	C.initLanguage()
 	C.Reset()
 }
 
 func (C *CPU) disassemble() {
-	fmt.Printf("%04X: %03s ", C.instStart, C.inst.name)
+	var buf string
+
+	fmt.Printf("%08b - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m\t\t", C.S, 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
+	fmt.Printf("%04X: %-10s %03s ", C.instStart, C.instDump, C.inst.name)
 	switch C.inst.addr {
 	case implied:
-		fmt.Printf("\t\t")
+		buf = fmt.Sprintf("")
 	case immediate:
-		fmt.Printf("#$%02X\t\t", C.oper)
+		buf = fmt.Sprintf("#$%02X", C.oper)
 	case relative:
-		fmt.Printf("$%02X\t\t", C.oper)
+		buf = fmt.Sprintf("$%02X", C.oper)
 	case zeropage:
-		fmt.Printf("$%02X\t\t", C.oper)
+		buf = fmt.Sprintf("$%02X", C.oper)
 	case zeropageX:
-		fmt.Printf("$%02X,X\t\t", C.oper)
+		buf = fmt.Sprintf("$%02X,X", C.oper)
 	case zeropageY:
-		fmt.Printf("$%02X,Y\t\t", C.oper)
+		buf = fmt.Sprintf("$%02X,Y", C.oper)
 	case absolute:
-		fmt.Printf("$%04X\t\t", C.oper)
+		buf = fmt.Sprintf("$%04X", C.oper)
 	case absoluteX:
-		fmt.Printf("$%04X,X\t", C.oper)
+		buf = fmt.Sprintf("$%04X,X", C.oper)
 	case absoluteY:
-		fmt.Printf("$%04X,Y\t", C.oper)
+		buf = fmt.Sprintf("$%04X,Y", C.oper)
 	case indirect:
-		fmt.Printf("($%04X)\t", C.oper)
+		buf = fmt.Sprintf("($%04X)", C.oper)
 	case indirectX:
-		fmt.Printf("($%02X,X)\t", C.oper)
+		buf = fmt.Sprintf("($%02X,X)", C.oper)
 	case indirectY:
-		fmt.Printf("($%02X),Y\t", C.oper)
+		buf = fmt.Sprintf("($%02X),Y", C.oper)
 	}
-	fmt.Printf("\t")
+	fmt.Printf("%-10s\t", buf)
 }
 
 //////////////////////////////////
@@ -79,11 +83,13 @@ func (C *CPU) ReadIndirectY(addr uint16) byte {
 
 func (C *CPU) WriteIndirectX(addr uint16, val byte) {
 	dest := addr + uint16(C.X)
+	fmt.Printf("(%04X)", (uint16(C.ram.Read(dest+1))<<8)+uint16(C.ram.Read(dest)))
 	C.ram.Write((uint16(C.ram.Read(dest+1))<<8)+uint16(C.ram.Read(dest)), val)
 }
 
 func (C *CPU) WriteIndirectY(addr uint16, val byte) {
 	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
+	fmt.Printf("(%04X)", dest+uint16(C.Y))
 	C.ram.Write(dest+uint16(C.Y), val)
 }
 
@@ -142,6 +148,9 @@ func (C *CPU) computeInstruction() {
 		C.state = readInstruction
 		C.disassemble()
 		C.inst.action()
+		if C.PC == 0xFD7E {
+			os.Exit(0)
+		}
 	}
 }
 
@@ -156,29 +165,32 @@ func (C *CPU) NextCycle() {
 	case readInstruction:
 		C.cycleCount = 1
 		C.instStart = C.PC
+		C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
 		if C.inst, ok = mnemonic[C.ram.Read(C.PC)]; !ok {
 			log.Fatal(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
 		}
-		C.PC++
 		if C.inst.bytes > 1 {
 			C.state = readOperLO
 		} else {
 			C.state = compute
+			C.PC += 1
 			C.computeInstruction()
 		}
 	case readOperLO:
-		C.oper = uint16(C.ram.Read(C.PC))
-		C.PC++
+		C.oper = uint16(C.ram.Read(C.PC + 1))
+		C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
 		if C.inst.bytes > 2 {
 			C.state = readOperHI
 		} else {
 			C.state = compute
+			C.PC += 2
 			C.computeInstruction()
 		}
 	case readOperHI:
-		C.oper += uint16(C.ram.Read(C.PC)) << 8
-		C.PC++
+		C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
+		C.oper += uint16(C.ram.Read(C.PC+2)) << 8
 		C.state = compute
+		C.PC += 3
 		C.computeInstruction()
 	case compute:
 		C.computeInstruction()

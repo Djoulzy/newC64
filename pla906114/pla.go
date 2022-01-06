@@ -63,7 +63,9 @@ func (P *PLA) Read(addr uint16) byte {
 
 func (P *PLA) Write(addr uint16, value byte) {
 	dest := P.getChip(addr)
-	P.mem[dest].Write(addr, value)
+	// fmt.Printf("pla906114 - Write - %04X - Zone: %d\n", addr, dest)
+	destAddr := addr - uint16(P.startLocation[dest])
+	P.mem[dest].Write(destAddr, value)
 }
 
 func (P *PLA) GetView(start int, size int) interface{} {

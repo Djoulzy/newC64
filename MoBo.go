@@ -55,19 +55,16 @@ func setup() {
 	cpu = &mos6510.CPU{}
 	cpu.Init(pla)
 
-	pla.Dump(0x0000)
-	pla.Dump(0xFEFF)
-
-	video = &graphic.SDLDriver{}
-	vic = vic6569.VIC{}
-	vic.Init(mem, io, chargen, video)
+	// video = &graphic.SDLDriver{}
+	// vic = vic6569.VIC{}
+	// vic.Init(mem, io, chargen, video)
 }
 
 func main() {
 	setup()
 
 	for {
-		vic.Run()
+		// vic.Run()
 		cpu.NextCycle()
 	}
 }

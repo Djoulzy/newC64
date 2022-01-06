@@ -53,7 +53,7 @@ const (
 	compute
 )
 
-type memory interface {
+type ram interface {
 	Init()
 	Clear()
 	Load(string)
@@ -72,9 +72,10 @@ type CPU struct {
 	Y  byte
 	S  byte
 
-	ram        memory
-	stack      memory
+	ram        ram
+	stack      ram
 	instStart  uint16
+	instDump   string
 	inst       instruction
 	oper       uint16
 	cycleCount int
