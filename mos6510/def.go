@@ -66,8 +66,7 @@ type CPU struct {
 	ram        memory
 	instStart  uint16
 	inst       instruction
-	operLO     byte
-	operHI     byte
+	oper       uint16
 	cycleCount int
 	state      cpuState
 }

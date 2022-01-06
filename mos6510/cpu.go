@@ -36,29 +36,49 @@ func (C *CPU) disassemble() {
 	case implied:
 		fmt.Printf("\t\t")
 	case immediate:
-		fmt.Printf("#$%02X\t\t", C.operLO)
+		fmt.Printf("#$%02X\t\t", C.oper)
 	case relative:
-		fmt.Printf("$%02X\t\t", C.operLO)
+		fmt.Printf("$%02X\t\t", C.oper)
 	case zeropage:
-		fmt.Printf("$%02X\t\t", C.operLO)
+		fmt.Printf("$%02X\t\t", C.oper)
 	case zeropageX:
-		fmt.Printf("$%02X,X\t\t", C.operLO)
+		fmt.Printf("$%02X,X\t\t", C.oper)
 	case zeropageY:
-		fmt.Printf("$%02X,Y\t\t", C.operLO)
+		fmt.Printf("$%02X,Y\t\t", C.oper)
 	case absolute:
-		fmt.Printf("$%02X%02X\t\t", C.operHI, C.operLO)
+		fmt.Printf("$%04X\t\t", C.oper)
 	case absoluteX:
-		fmt.Printf("$%02X%02X,X\t", C.operHI, C.operLO)
+		fmt.Printf("$%04X,X\t", C.oper)
 	case absoluteY:
-		fmt.Printf("$%02X%02X,Y\t", C.operHI, C.operLO)
+		fmt.Printf("$%04X,Y\t", C.oper)
 	case indirect:
-		fmt.Printf("($%02X%02X)\t", C.operHI, C.operLO)
+		fmt.Printf("($%04X)\t", C.oper)
 	case indirectX:
-		fmt.Printf("($%02X,X)\t", C.operLO)
+		fmt.Printf("($%02X,X)\t", C.oper)
 	case indirectY:
-		fmt.Printf("($%02X),Y\t", C.operLO)
+		fmt.Printf("($%02X),Y\t", C.oper)
 	}
 	fmt.Printf("\t")
+}
+
+func (C *CPU) ReadIndirectX(addr uint16) byte {
+	dest := addr + uint16(C.X)
+	return C.ram.Read((uint16(C.ram.Read(dest+1)) << 8) + uint16(C.ram.Read(dest)))
+}
+
+func (C *CPU) ReadIndirectY(addr uint16) byte {
+	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
+	return C.ram.Read(dest + uint16(C.Y))
+}
+
+func (C *CPU) WriteIndirectX(addr uint16, val byte) {
+	dest := addr + uint16(C.X)
+	C.ram.Write((uint16(C.ram.Read(dest+1))<<8)+uint16(C.ram.Read(dest)), val)
+}
+
+func (C *CPU) WriteIndirectY(addr uint16, val byte) {
+	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
+	C.ram.Write(dest+uint16(C.Y), val)
 }
 
 func (C *CPU) computeInstruction() {
@@ -91,7 +111,7 @@ func (C *CPU) NextCycle() {
 			C.computeInstruction()
 		}
 	case readOperLO:
-		C.operLO = C.ram.Read(C.PC)
+		C.oper = uint16(C.ram.Read(C.PC))
 		C.PC++
 		if C.inst.bytes > 2 {
 			C.state = readOperHI
@@ -100,7 +120,7 @@ func (C *CPU) NextCycle() {
 			C.computeInstruction()
 		}
 	case readOperHI:
-		C.operHI = C.ram.Read(C.PC)
+		C.oper += uint16(C.ram.Read(C.PC)) << 8
 		C.PC++
 		C.state = compute
 		C.computeInstruction()
