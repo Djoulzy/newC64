@@ -1,19 +1,52 @@
 package mos6510
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func (C *CPU) pha() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.pushByteStack(C.A)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) php() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setB(true)
+		C.setU(true)
+		C.pushByteStack(C.S)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) pla() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.A = C.pullByteStack()
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.A)
+	C.updateZ(C.A)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) plp() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.S = C.pullByteStack()
+		C.setB(false)
+		C.setU(false)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }

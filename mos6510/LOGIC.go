@@ -60,7 +60,29 @@ func (C *CPU) asl() {
 }
 
 func (C *CPU) eor() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case immediate:
+		C.A ^= byte(C.oper)
+	case zeropage:
+		C.A ^= C.ram.Read(C.oper)
+	case zeropageX:
+		C.A ^= C.ram.Read(C.oper + uint16(C.X))
+	case absolute:
+		C.A ^= C.ram.Read(C.oper)
+	case absoluteX:
+		C.A ^= C.ram.Read(C.oper + uint16(C.X))
+	case absoluteY:
+		C.A ^= C.ram.Read(C.oper + uint16(C.Y))
+	case indirectX:
+		C.A ^= C.ReadIndirectX(C.oper)
+	case indirectY:
+		C.A ^= C.ReadIndirectY(C.oper)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.A)
+	C.updateZ(C.A)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) lsr() {
@@ -100,7 +122,29 @@ func (C *CPU) lsr() {
 }
 
 func (C *CPU) ora() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case immediate:
+		C.A |= byte(C.oper)
+	case zeropage:
+		C.A |= C.ram.Read(C.oper)
+	case zeropageX:
+		C.A |= C.ram.Read(C.oper + uint16(C.X))
+	case absolute:
+		C.A |= C.ram.Read(C.oper)
+	case absoluteX:
+		C.A |= C.ram.Read(C.oper + uint16(C.X))
+	case absoluteY:
+		C.A |= C.ram.Read(C.oper + uint16(C.Y))
+	case indirectX:
+		C.A |= C.ReadIndirectX(C.oper)
+	case indirectY:
+		C.A |= C.ReadIndirectY(C.oper)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.A)
+	C.updateZ(C.A)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) rla() {

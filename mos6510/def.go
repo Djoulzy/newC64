@@ -7,9 +7,15 @@ const (
 	I_mask byte = 0b11111011
 	D_mask byte = 0b11110111
 	B_mask byte = 0b11101111
-
+	U_mask byte = 0b11011111
 	V_mask byte = 0b10111111
 	N_mask byte = 0b01111111
+
+	StackStart = 0x0100
+
+	NMI_Vector       = 0xFFFA
+	COLDSTART_Vector = 0xFFFC
+	IRQBRK_Vector    = 0xFFFE
 )
 
 type addressing int
@@ -50,8 +56,11 @@ const (
 type memory interface {
 	Init()
 	Clear()
+	Load(string)
 	Read(uint16) byte
 	Write(uint16, byte)
+	GetView(int, int) interface{}
+	Dump(uint16)
 }
 
 // CPU :
@@ -64,6 +73,7 @@ type CPU struct {
 	S  byte
 
 	ram        memory
+	stack      memory
 	instStart  uint16
 	inst       instruction
 	oper       uint16

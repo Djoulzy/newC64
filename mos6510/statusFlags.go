@@ -1,6 +1,8 @@
 package mos6510
 
-type toggle byte
+//////////////////////////////////
+//////////// Zero Flag ///////////
+//////////////////////////////////
 
 func (C *CPU) updateZ(val byte) {
 	if val == 0 {
@@ -9,6 +11,14 @@ func (C *CPU) updateZ(val byte) {
 		C.S &= Z_mask
 	}
 }
+
+func (C *CPU) issetZ() bool {
+	return C.S & ^Z_mask > 0
+}
+
+//////////////////////////////////
+///////// Negative Flag //////////
+//////////////////////////////////
 
 func (C *CPU) updateN(val byte) {
 	if val&0b10000000 > 0 {
@@ -26,6 +36,14 @@ func (C *CPU) setN(val bool) {
 	}
 }
 
+func (C *CPU) issetN() bool {
+	return C.S & ^N_mask > 0
+}
+
+//////////////////////////////////
+/////////// Carry Flag ///////////
+//////////////////////////////////
+
 func (C *CPU) setC(val bool) {
 	if val {
 		C.S |= ^C_mask
@@ -34,6 +52,85 @@ func (C *CPU) setC(val bool) {
 	}
 }
 
+func (C *CPU) getC() byte {
+	if C.S & ^C_mask > 0 {
+		return 0x01
+	}
+	return 0x00
+}
+
 func (C *CPU) issetC() bool {
 	return C.S & ^C_mask > 0
+}
+
+//////////////////////////////////
+/////////// Break Flag ///////////
+//////////////////////////////////
+
+func (C *CPU) setB(val bool) {
+	if val {
+		C.S |= ^B_mask
+	} else {
+		C.S &= B_mask
+	}
+}
+
+//////////////////////////////////
+////////// Unused Flag ///////////
+//////////////////////////////////
+
+func (C *CPU) setU(val bool) {
+	if val {
+		C.S |= ^B_mask
+	} else {
+		C.S &= B_mask
+	}
+}
+
+//////////////////////////////////
+///////// Overflow Flag //////////
+//////////////////////////////////
+
+func (C *CPU) updateV(m, n, result byte) {
+	if (m^result)&(n^result)&0x80 != 0 {
+		C.S |= ^V_mask
+	} else {
+		C.S &= V_mask
+	}
+}
+
+func (C *CPU) issetV() bool {
+	return C.S & ^V_mask > 0
+}
+
+func (C *CPU) setV(val bool) {
+	if val {
+		C.S |= ^V_mask
+	} else {
+		C.S &= V_mask
+	}
+}
+
+//////////////////////////////////
+///////// Decimal Flag ///////////
+//////////////////////////////////
+
+func (C *CPU) setD(val bool) {
+	if val {
+		C.S |= ^D_mask
+	} else {
+		C.S &= D_mask
+	}
+}
+
+//////////////////////////////////
+//////// Interrupt Flag //////////
+//////////////////////////////////
+
+func (C *CPU) setI(val bool) {
+	if val {
+		C.S |= ^I_mask
+	} else {
+		C.S &= I_mask
+	}
 }

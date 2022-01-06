@@ -1,35 +1,97 @@
 package mos6510
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func (C *CPU) bit() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	var val, oper byte
+
+	switch C.inst.addr {
+	case zeropage:
+		oper = C.ram.Read(C.oper)
+		C.setN(oper&^N_mask > 0)
+		C.setV(oper&^V_mask > 0)
+		val = C.A & oper
+	case absolute:
+		oper = C.ram.Read(C.oper)
+		C.setN(oper&^N_mask > 0)
+		C.setV(oper&^V_mask > 0)
+		val = C.A & oper
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateZ(val)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) clc() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setC(false)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) cld() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setD(false)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) cli() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setI(false)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) clv() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setV(false)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) sec() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setC(true)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) sed() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setD(true)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) sei() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.setI(true)
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }

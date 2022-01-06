@@ -1,27 +1,76 @@
 package mos6510
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func (C *CPU) tax() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.X = C.A
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.X)
+	C.updateZ(C.X)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) tay() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.Y = C.A
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.Y)
+	C.updateZ(C.Y)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) tsx() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.X = C.SP
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.X)
+	C.updateZ(C.X)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) txa() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.A = C.X
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.A)
+	C.updateZ(C.A)
+	fmt.Printf("\n")
 }
 
 func (C *CPU) txs() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.SP = C.X
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	fmt.Printf("\n")
 }
 
 func (C *CPU) tya() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	switch C.inst.addr {
+	case implied:
+		C.Y = C.X
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	C.updateN(C.A)
+	C.updateZ(C.A)
+	fmt.Printf("\n")
 }

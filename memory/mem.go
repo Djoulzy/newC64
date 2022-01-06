@@ -59,7 +59,7 @@ func (M *MEM) GetView(start int, size int) interface{} {
 		Size:          size,
 		readOnly:      M.readOnly,
 		StartLocation: 0,
-		Cells:         M.Cells[start : start+size-1],
+		Cells:         M.Cells[start : start+size],
 	}
 	return &view
 }
