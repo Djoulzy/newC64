@@ -1,12 +1,9 @@
 package pla906114
 
-type memory interface {
-	Init()
-	Clear()
-	Load(string)
-	Read(uint16) byte
-	Write(uint16, byte)
-	GetView(int, int) interface{}
+type MEM struct {
+	Size     int
+	readOnly bool
+	Cells    []byte
 }
 
 type MemType int
@@ -47,5 +44,5 @@ const (
 type PLA struct {
 	setting       byte
 	startLocation [5]int
-	mem           [5]memory
+	Mem           [5]MEM
 }

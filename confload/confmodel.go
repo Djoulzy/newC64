@@ -6,6 +6,7 @@ type Globals struct {
 	FileLog      string
 	Disassamble  bool
 	LogLevel     int
+	Display      bool
 }
 
 type Debug struct {

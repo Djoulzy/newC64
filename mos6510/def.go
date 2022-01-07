@@ -1,6 +1,9 @@
 package mos6510
 
-import "newC64/confload"
+import (
+	"newC64/confload"
+	"newC64/pla906114"
+)
 
 //
 const (
@@ -55,16 +58,6 @@ const (
 	compute
 )
 
-type ram interface {
-	Init()
-	Clear()
-	Load(string)
-	Read(uint16) byte
-	Write(uint16, byte)
-	GetView(int, int) interface{}
-	Dump(uint16)
-}
-
 // CPU :
 type CPU struct {
 	PC uint16
@@ -75,8 +68,8 @@ type CPU struct {
 	S  byte
 
 	conf       *confload.ConfigData
-	ram        ram
-	stack      ram
+	ram        *pla906114.PLA
+	stack      []byte
 	instStart  uint16
 	instDump   string
 	inst       instruction

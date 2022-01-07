@@ -1,26 +1,55 @@
 package pla906114
 
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
+	"log"
+	"time"
+)
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
+}
 
 func (P *PLA) Init() {
-	P.mem[RAM].Init()
-	P.mem[IO].Init()
 	P.setting = 7
-	fmt.Printf("pla906114 - Settings: %d\n", P.setting)
 }
 
-func (P *PLA) Clear() {
-	P.mem[RAM].Clear()
+func (P *PLA) Attach(mem []byte, memtype MemType, startLocation int) {
+	P.Mem[memtype].Cells = mem
+	P.Mem[memtype].readOnly = false
+	P.Mem[memtype].Size = len(mem)
+	P.startLocation[memtype] = startLocation
 }
 
-func (P *PLA) Load(filename string) {
-
+func (P *PLA) Clear(memtype MemType) {
+	cpt := 0
+	fill := byte(0x00)
+	for i := range P.Mem[memtype].Cells {
+		P.Mem[memtype].Cells[i] = fill
+		cpt++
+		if cpt == 0x40 {
+			fill = ^fill
+			cpt = 0
+		}
+	}
 }
 
-func (P *PLA) Attach(mem interface{}, memtype interface{}, startLocation int) {
-	selectedType := memtype.(MemType)
-	P.mem[selectedType] = mem.(memory)
-	P.startLocation[selectedType] = startLocation
+func (P *PLA) Load(memtype MemType, filename string) {
+
+	P.Mem[memtype].readOnly = true
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+	if len(data) != P.Mem[memtype].Size {
+		panic("Bad ROM Size")
+	}
+	for i := 0; i < P.Mem[memtype].Size; i++ {
+		P.Mem[memtype].Cells[i] = byte(data[i])
+	}
 }
 
 func (P *PLA) getChip(addr uint16) MemType {
@@ -59,21 +88,24 @@ func (P *PLA) getChip(addr uint16) MemType {
 }
 
 func (P *PLA) Read(addr uint16) byte {
+	// defer timeTrack(time.Now(), "Read")
 	dest := P.getChip(addr)
 	destAddr := addr - uint16(P.startLocation[dest])
 	// fmt.Printf("pla906114 - Read - %04X - Zone: %d\n", addr, dest)
-	return P.mem[dest].Read(destAddr)
+	return P.Mem[dest].Cells[destAddr]
 }
 
 func (P *PLA) Write(addr uint16, value byte) {
 	dest := P.getChip(addr)
-	// fmt.Printf("pla906114 - Write - %04X - Zone: %d\n", addr, dest)
+	if P.Mem[dest].readOnly {
+		return
+	}
 	destAddr := addr - uint16(P.startLocation[dest])
-	P.mem[dest].Write(destAddr, value)
+	P.Mem[dest].Cells[destAddr] = value
 }
 
-func (P *PLA) GetView(start int, size int) interface{} {
-	return P.mem[RAM].GetView(start, size)
+func (P *PLA) GetView(start int, size int) []byte {
+	return P.Mem[RAM].Cells[start : start+size]
 }
 
 func (P *PLA) Dump(startAddr uint16) {

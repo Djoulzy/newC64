@@ -4,7 +4,18 @@ import (
 	"fmt"
 	"log"
 	"newC64/confload"
+	"newC64/pla906114"
+	"time"
 )
+
+func (C *CPU) timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	if elapsed > time.Microsecond {
+		log.Printf("%s took %s", name, elapsed)
+		C.disassemble()
+		fmt.Printf("\n")
+	}
+}
 
 func (C *CPU) Reset() {
 	C.A = 0xAA
@@ -13,7 +24,7 @@ func (C *CPU) Reset() {
 	C.S = 0b00100000
 	C.SP = 0xFF
 
-	C.ram.Clear()
+	C.ram.Clear(pla906114.RAM)
 	// PLA Settings (Bank switching)
 	C.ram.Write(0x0000, 0x2F)
 	C.ram.Write(0x0001, 0x37)
@@ -24,12 +35,11 @@ func (C *CPU) Reset() {
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
 }
 
-func (C *CPU) Init(mem interface{}, conf *confload.ConfigData) {
+func (C *CPU) Init(mem *pla906114.PLA, conf *confload.ConfigData) {
 	fmt.Printf("mos6510 - Init\n")
 	C.conf = conf
-	C.ram = mem.(ram)
-	C.ram.Init()
-	C.stack = (C.ram.GetView(StackStart, 256)).(ram)
+	C.ram = mem
+	C.stack = C.ram.GetView(StackStart, 256)
 	C.initLanguage()
 	C.Reset()
 }
@@ -114,7 +124,7 @@ func (C *CPU) readWord(addr uint16) uint16 {
 
 // Byte
 func (C *CPU) pushByteStack(val byte) {
-	C.stack.Write(uint16(C.SP), val)
+	C.stack[C.SP] = val
 	C.SP--
 }
 
@@ -123,7 +133,7 @@ func (C *CPU) pullByteStack() byte {
 		log.Fatal("Stack overflow")
 	}
 	C.SP++
-	return C.stack.Read(uint16(C.SP))
+	return C.stack[C.SP]
 }
 
 // Word
@@ -157,7 +167,12 @@ func (C *CPU) computeInstruction() {
 }
 
 func (C *CPU) NextCycle() {
+	// defer C.timeTrack(time.Now(), "CPU")
 	var ok bool
+
+	if C.conf.Breakpoint == C.PC {
+		C.ram.Dump(C.conf.Dump)
+	}
 
 	C.cycleCount++
 	switch C.state {
@@ -182,7 +197,9 @@ func (C *CPU) NextCycle() {
 		}
 	case readOperLO:
 		C.oper = uint16(C.ram.Read(C.PC + 1))
-		C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
+		if C.conf.Disassamble {
+			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
+		}
 		if C.inst.bytes > 2 {
 			C.state = readOperHI
 		} else {
@@ -191,7 +208,9 @@ func (C *CPU) NextCycle() {
 			C.computeInstruction()
 		}
 	case readOperHI:
-		C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
+		if C.conf.Disassamble {
+			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
+		}
 		C.oper += uint16(C.ram.Read(C.PC+2)) << 8
 		C.state = compute
 		C.PC += 3

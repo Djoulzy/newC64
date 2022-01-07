@@ -4,15 +4,6 @@ import (
 	"newC64/graphic"
 )
 
-type memory interface {
-	Init()
-	Clear()
-	Load(string)
-	Read(uint16) byte
-	Write(uint16, byte)
-	GetView(int, int) interface{}
-}
-
 var (
 	Black      byte = 0
 	White      byte = 1
@@ -75,11 +66,11 @@ type VIC struct {
 	RasterIRQ uint16
 	graph     graphic.Driver
 
-	chargen memory
-	io      memory
-	color   memory
-	ram     memory
-	screen  memory
+	chargen []byte
+	io      []byte
+	color   []byte
+	ram     []byte
+	screen  []byte
 }
 
 const (

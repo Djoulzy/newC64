@@ -157,7 +157,7 @@ func (C *CPU) jmp() {
 func (C *CPU) jsr() {
 	switch C.inst.addr {
 	case absolute:
-		C.pushWordStack(C.PC - 1)
+		C.pushWordStack(C.PC - 2)
 		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
@@ -185,7 +185,7 @@ func (C *CPU) rti() {
 func (C *CPU) rts() {
 	switch C.inst.addr {
 	case implied:
-		C.PC = C.pullWordStack() + 1
+		C.PC = C.pullWordStack() + 2
 	default:
 		log.Fatal("Bad addressing mode")
 	}
