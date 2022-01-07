@@ -1,5 +1,7 @@
 package mos6510
 
+import "newC64/confload"
+
 //
 const (
 	C_mask byte = 0b11111110
@@ -72,6 +74,7 @@ type CPU struct {
 	Y  byte
 	S  byte
 
+	conf       *confload.ConfigData
 	ram        ram
 	stack      ram
 	instStart  uint16

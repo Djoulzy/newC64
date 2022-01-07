@@ -15,7 +15,7 @@ var mem *memory.MEM
 
 func TestMain(m *testing.M) {
 	mem = &memory.MEM{Size: memorySize}
-	proc.Init(mem)
+	proc.Init(mem, nil)
 	os.Exit(m.Run())
 }
 

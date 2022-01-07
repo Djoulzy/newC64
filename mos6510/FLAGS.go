@@ -23,7 +23,9 @@ func (C *CPU) bit() {
 		log.Fatal("Bad addressing mode")
 	}
 	C.updateZ(val)
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) clc() {
@@ -33,7 +35,9 @@ func (C *CPU) clc() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) cld() {
@@ -43,7 +47,9 @@ func (C *CPU) cld() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) cli() {
@@ -53,7 +59,9 @@ func (C *CPU) cli() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) clv() {
@@ -63,7 +71,9 @@ func (C *CPU) clv() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) sec() {
@@ -73,7 +83,9 @@ func (C *CPU) sec() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) sed() {
@@ -83,7 +95,9 @@ func (C *CPU) sed() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) sei() {
@@ -93,5 +107,7 @@ func (C *CPU) sei() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }

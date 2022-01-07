@@ -1,5 +1,7 @@
 package main
 
+import "newC64/confload"
+
 type MEM interface {
 	Init()
 	Clear()
@@ -22,7 +24,8 @@ type PLA interface {
 }
 
 type CPU interface {
-	Init(interface{})
+	Init(interface{}, *confload.ConfigData)
 	Reset()
 	NextCycle()
+	GoTo(uint16)
 }

@@ -62,7 +62,9 @@ func (C *CPU) adc() {
 	}
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) sbc() {
@@ -122,5 +124,7 @@ func (C *CPU) sbc() {
 	}
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }

@@ -12,7 +12,9 @@ func (C *CPU) pha() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) php() {
@@ -24,7 +26,9 @@ func (C *CPU) php() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) pla() {
@@ -36,7 +40,9 @@ func (C *CPU) pla() {
 	}
 	C.updateN(C.A)
 	C.updateZ(C.A)
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) plp() {
@@ -48,5 +54,7 @@ func (C *CPU) plp() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }

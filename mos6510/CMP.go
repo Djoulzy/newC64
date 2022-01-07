@@ -31,7 +31,9 @@ func (C *CPU) cmp() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) cpx() {
@@ -50,7 +52,9 @@ func (C *CPU) cpx() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) cpy() {
@@ -69,5 +73,7 @@ func (C *CPU) cpy() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }

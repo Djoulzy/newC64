@@ -52,6 +52,10 @@ func (P *PLA) getChip(addr uint16) MemType {
 			return KERNAL
 		}
 	}
+	// if addr >= KernalStart {
+	// 	return KERNAL
+	// }
+	// return RAM
 }
 
 func (P *PLA) Read(addr uint16) byte {

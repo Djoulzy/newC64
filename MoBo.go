@@ -1,13 +1,18 @@
 package main
 
 import (
+	"newC64/clog"
+	"newC64/confload"
 	"newC64/graphic"
 	"newC64/memory"
 	"newC64/mos6510"
 	"newC64/pla906114"
 	"newC64/vic6569"
+	"os"
 	"runtime"
 )
+
+var conf = &confload.ConfigData{}
 
 const (
 	memorySize = 65536
@@ -53,18 +58,32 @@ func setup() {
 
 	// CPU Setup
 	cpu = &mos6510.CPU{}
-	cpu.Init(pla)
+	cpu.Init(pla, conf)
 
-	// video = &graphic.SDLDriver{}
-	// vic = vic6569.VIC{}
-	// vic.Init(mem, io, chargen, video)
+	video = &graphic.SDLDriver{}
+	vic = vic6569.VIC{}
+	vic.Init(mem, io, chargen, video)
 }
 
 func main() {
+	args := os.Args
+	confload.Load("config.ini", conf)
+
+	clog.LogLevel = conf.LogLevel
+	clog.StartLogging = conf.StartLogging
+	if conf.FileLog != "" {
+		clog.EnableFileLog(conf.FileLog)
+	}
+
 	setup()
 
+	if len(args) > 1 {
+		addr, _ := LoadPRG(mem, args[1])
+		cpu.GoTo(addr)
+	}
+
 	for {
-		// vic.Run()
+		vic.Run()
 		cpu.NextCycle()
 	}
 }

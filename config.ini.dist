@@ -1,0 +1,11 @@
+[Globals]
+StartLogging    = true
+LogLevel        = 5
+FileLog         = 'log/go6502.log'
+Disassamble     = false
+
+[Debug]
+Dump            = 0xFF00
+Zone            = 1             ; RAM = 0 - KERNAL = 1 - BASIC = 1 - IO = 1 - CHAR = 2 - CART = 2
+; Breakpoint      = 0xFCE2 ; Colde start
+; Breakpoint      = 0xB9B0

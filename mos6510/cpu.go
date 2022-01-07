@@ -3,7 +3,7 @@ package mos6510
 import (
 	"fmt"
 	"log"
-	"os"
+	"newC64/confload"
 )
 
 func (C *CPU) Reset() {
@@ -24,8 +24,9 @@ func (C *CPU) Reset() {
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
 }
 
-func (C *CPU) Init(mem interface{}) {
+func (C *CPU) Init(mem interface{}, conf *confload.ConfigData) {
 	fmt.Printf("mos6510 - Init\n")
+	C.conf = conf
 	C.ram = mem.(ram)
 	C.ram.Init()
 	C.stack = (C.ram.GetView(StackStart, 256)).(ram)
@@ -83,13 +84,11 @@ func (C *CPU) ReadIndirectY(addr uint16) byte {
 
 func (C *CPU) WriteIndirectX(addr uint16, val byte) {
 	dest := addr + uint16(C.X)
-	fmt.Printf("(%04X)", (uint16(C.ram.Read(dest+1))<<8)+uint16(C.ram.Read(dest)))
 	C.ram.Write((uint16(C.ram.Read(dest+1))<<8)+uint16(C.ram.Read(dest)), val)
 }
 
 func (C *CPU) WriteIndirectY(addr uint16, val byte) {
 	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
-	fmt.Printf("(%04X)", dest+uint16(C.Y))
 	C.ram.Write(dest+uint16(C.Y), val)
 }
 
@@ -143,14 +142,17 @@ func (C *CPU) pullWordStack() uint16 {
 ///////////// Running ////////////
 //////////////////////////////////
 
+func (C *CPU) GoTo(addr uint16) {
+	C.PC = addr
+}
+
 func (C *CPU) computeInstruction() {
 	if C.cycleCount == C.inst.cycles {
 		C.state = readInstruction
-		C.disassemble()
-		C.inst.action()
-		if C.PC == 0xFD7E {
-			os.Exit(0)
+		if C.conf.Disassamble {
+			C.disassemble()
 		}
+		C.inst.action()
 	}
 }
 
@@ -165,7 +167,9 @@ func (C *CPU) NextCycle() {
 	case readInstruction:
 		C.cycleCount = 1
 		C.instStart = C.PC
-		C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
+		if C.conf.Disassamble {
+			C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
+		}
 		if C.inst, ok = mnemonic[C.ram.Read(C.PC)]; !ok {
 			log.Fatal(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
 		}

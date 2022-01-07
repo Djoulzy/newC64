@@ -15,7 +15,9 @@ func (C *CPU) bcc() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) bcs() {
@@ -28,7 +30,9 @@ func (C *CPU) bcs() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) beq() {
@@ -41,7 +45,9 @@ func (C *CPU) beq() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) bmi() {
@@ -54,7 +60,9 @@ func (C *CPU) bmi() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) bne() {
@@ -67,7 +75,9 @@ func (C *CPU) bne() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) bpl() {
@@ -80,7 +90,9 @@ func (C *CPU) bpl() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) brk() {
@@ -93,7 +105,9 @@ func (C *CPU) brk() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) bvc() {
@@ -106,7 +120,9 @@ func (C *CPU) bvc() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) bvs() {
@@ -119,7 +135,9 @@ func (C *CPU) bvs() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("(%04X)\n", dest)
+	if C.conf.Disassamble {
+		fmt.Printf("(%04X)\n", dest)
+	}
 }
 
 func (C *CPU) jmp() {
@@ -131,7 +149,9 @@ func (C *CPU) jmp() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) jsr() {
@@ -142,7 +162,9 @@ func (C *CPU) jsr() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) rti() {
@@ -155,7 +177,9 @@ func (C *CPU) rti() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }
 
 func (C *CPU) rts() {
@@ -165,5 +189,7 @@ func (C *CPU) rts() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	fmt.Printf("\n")
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
 }

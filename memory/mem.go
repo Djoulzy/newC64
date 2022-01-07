@@ -3,7 +3,6 @@ package memory
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 )
 
 // Init :
@@ -49,8 +48,7 @@ func (M *MEM) Read(addr uint16) byte {
 
 func (M *MEM) Write(addr uint16, value byte) {
 	if M.readOnly {
-		fmt.Printf("Try to write protected area: %04X\n", addr)
-		log.Fatal("--EXIT--")
+		return
 	}
 	M.Cells[addr] = value
 }
