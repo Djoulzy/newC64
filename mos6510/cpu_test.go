@@ -1,6 +1,7 @@
 package mos6510
 
 import (
+	"log"
 	"newC64/confload"
 	"newC64/pla906114"
 	"os"
@@ -30,6 +31,27 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestStack(t *testing.T) {
+	for i := 0; i <= 0xFF; i++ {
+		proc.pushByteStack(byte(i))
+	}
+	for i := 0xFF; i >= 0; i-- {
+		if proc.pullByteStack() != byte(i) {
+			t.Errorf("Bad stack operation")
+		}
+	}
+
+	for i := 0; i <= 0x7F; i++ {
+		proc.pushWordStack(uint16(i))
+	}
+	for i := 0x7F; i >= 0; i-- {
+		if proc.pullWordStack() != uint16(i) {
+			t.Errorf("Bad stack operation")
+		}
+	}
+	log.Printf("Stack OK")
+}
+
 func TestLDA(t *testing.T) {
 	proc.inst = mnemonic[0xA9]
 	tables := []struct {
@@ -54,6 +76,7 @@ func TestLDA(t *testing.T) {
 			t.Errorf("LDA #$%02X - Incorrect assignement - get: %02X - want: %02X", proc.oper, proc.A, table.res)
 		}
 	}
+	log.Printf("LDA OK")
 }
 
 func TestBNE(t *testing.T) {
@@ -77,6 +100,7 @@ func TestBNE(t *testing.T) {
 			t.Errorf("BNE #$%02X - Incorrect status - get: %04X - want: %04X", proc.oper, proc.PC, table.res)
 		}
 	}
+	log.Printf("BNE OK")
 }
 
 func TestCMP(t *testing.T) {
@@ -132,4 +156,5 @@ func TestCMP(t *testing.T) {
 			t.Errorf("LDA #$%02X;CMP ($%02X),Y - Incorrect status - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.flag)
 		}
 	}
+	log.Printf("CMP OK")
 }

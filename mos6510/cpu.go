@@ -12,7 +12,7 @@ func (C *CPU) timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	if elapsed > time.Microsecond {
 		log.Printf("%s took %s", name, elapsed)
-		C.disassemble()
+		C.Disassemble()
 		fmt.Printf("\n")
 	}
 }
@@ -23,13 +23,14 @@ func (C *CPU) Reset() {
 	C.Y = 0
 	C.S = 0b00100000
 	C.SP = 0xFF
+	C.fullCycles = 0
 
 	C.ram.Clear(pla906114.RAM)
 	// PLA Settings (Bank switching)
-	C.ram.Write(0x0000, 0x2F)
-	C.ram.Write(0x0001, 0x37)
+	// C.ram.Write(0x0000, 0x2F)
+	C.ram.Write(0x0001, 0x1F)
 
-	C.state = readInstruction
+	C.State = ReadInstruction
 	// Cold Start:
 	C.PC = C.readWord(COLDSTART_Vector)
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
@@ -44,11 +45,25 @@ func (C *CPU) Init(mem *pla906114.PLA, conf *confload.ConfigData) {
 	C.Reset()
 }
 
-func (C *CPU) disassemble() {
+func (C *CPU) registers() string {
+	var i, mask byte
+	res := ""
+	for i = 0; i < 8; i++ {
+		mask = 1 << i
+		if C.S&mask == mask {
+			res = regString[i] + res
+		} else {
+			res = "-" + res
+		}
+	}
+	return res
+}
+
+func (C *CPU) Disassemble() {
 	var buf string
 
-	fmt.Printf("%08b - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m\t\t", C.S, 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
-	fmt.Printf("%04X: %-10s %03s ", C.instStart, C.instDump, C.inst.name)
+	fmt.Printf("%10d - %s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m -- ", C.fullCycles, C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
+	fmt.Printf("%04X: %-10s %03s ", C.InstStart, C.instDump, C.inst.name)
 	switch C.inst.addr {
 	case implied:
 		buf = fmt.Sprintf("")
@@ -129,17 +144,20 @@ func (C *CPU) pushByteStack(val byte) {
 }
 
 func (C *CPU) pullByteStack() byte {
-	if C.SP == 0xFF {
-		log.Fatal("Stack overflow")
-	}
 	C.SP++
+	// if C.SP == 0x00 {
+	// 	C.ram.DumpStack(C.SP)
+	// 	log.Fatal("Stack overflow")
+	// }
 	return C.stack[C.SP]
 }
 
 // Word
 func (C *CPU) pushWordStack(val uint16) {
-	C.pushByteStack(byte(val >> 8)) // HI
-	C.pushByteStack(byte(val))      // LO
+	low := byte(val)
+	hi := byte(val >> 8)
+	C.pushByteStack(hi)
+	C.pushByteStack(low)
 }
 
 func (C *CPU) pullWordStack() uint16 {
@@ -156,13 +174,13 @@ func (C *CPU) GoTo(addr uint16) {
 	C.PC = addr
 }
 
-func (C *CPU) computeInstruction() {
+func (C *CPU) ComputeInstruction() {
 	if C.cycleCount == C.inst.cycles {
-		C.state = readInstruction
-		if C.conf.Disassamble {
-			C.disassemble()
-		}
+		C.State = ReadInstruction
 		C.inst.action()
+		if C.conf.Disassamble {
+			C.Disassemble()
+		}
 	}
 }
 
@@ -170,18 +188,15 @@ func (C *CPU) NextCycle() {
 	// defer C.timeTrack(time.Now(), "CPU")
 	var ok bool
 
-	if C.conf.Breakpoint == C.PC {
-		C.ram.Dump(C.conf.Dump)
-	}
-
 	C.cycleCount++
-	switch C.state {
-	case idle:
+	C.fullCycles++
+	switch C.State {
+	case Idle:
 		C.cycleCount = 0
-		C.state++
-	case readInstruction:
+		C.State++
+	case ReadInstruction:
 		C.cycleCount = 1
-		C.instStart = C.PC
+		C.InstStart = C.PC
 		if C.conf.Disassamble {
 			C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
 		}
@@ -189,34 +204,34 @@ func (C *CPU) NextCycle() {
 			log.Fatal(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
 		}
 		if C.inst.bytes > 1 {
-			C.state = readOperLO
+			C.State = ReadOperLO
 		} else {
-			C.state = compute
+			C.State = Compute
 			C.PC += 1
-			C.computeInstruction()
+			C.ComputeInstruction()
 		}
-	case readOperLO:
+	case ReadOperLO:
 		C.oper = uint16(C.ram.Read(C.PC + 1))
 		if C.conf.Disassamble {
 			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
 		}
 		if C.inst.bytes > 2 {
-			C.state = readOperHI
+			C.State = ReadOperHI
 		} else {
-			C.state = compute
+			C.State = Compute
 			C.PC += 2
-			C.computeInstruction()
+			C.ComputeInstruction()
 		}
-	case readOperHI:
+	case ReadOperHI:
 		if C.conf.Disassamble {
 			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
 		}
 		C.oper += uint16(C.ram.Read(C.PC+2)) << 8
-		C.state = compute
+		C.State = Compute
 		C.PC += 3
-		C.computeInstruction()
-	case compute:
-		C.computeInstruction()
+		C.ComputeInstruction()
+	case Compute:
+		C.ComputeInstruction()
 	default:
 		log.Fatal("Unknown CPU state\n")
 	}

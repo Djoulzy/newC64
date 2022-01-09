@@ -19,9 +19,11 @@ const (
 	StackStart = 0x0100
 
 	NMI_Vector       = 0xFFFA
-	COLDSTART_Vector = 0xFFFC
+	COLDSTART_Vector = 0xFFFC // Go to 0xFCE2
 	IRQBRK_Vector    = 0xFFFE
 )
+
+var regString [8]string = [8]string{"C", "Z", "I", "D", "B", "U", "V", "N"}
 
 type addressing int
 
@@ -51,11 +53,11 @@ type instruction struct {
 type cpuState int
 
 const (
-	idle cpuState = iota
-	readInstruction
-	readOperLO
-	readOperHI
-	compute
+	Idle cpuState = iota
+	ReadInstruction
+	ReadOperLO
+	ReadOperHI
+	Compute
 )
 
 // CPU :
@@ -70,12 +72,13 @@ type CPU struct {
 	conf       *confload.ConfigData
 	ram        *pla906114.PLA
 	stack      []byte
-	instStart  uint16
+	InstStart  uint16
 	instDump   string
 	inst       instruction
 	oper       uint16
+	fullCycles uint64
 	cycleCount int
-	state      cpuState
+	State      cpuState
 }
 
 // Mnemonic :

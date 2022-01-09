@@ -97,11 +97,11 @@ func (C *CPU) bpl() {
 
 func (C *CPU) brk() {
 	switch C.inst.addr {
-	case implied:
-		C.pushWordStack(C.PC + 1)
-		C.setB(true)
-		C.pushByteStack(C.S)
-		C.PC = C.readWord(IRQBRK_Vector)
+	// case implied:
+	// 	C.pushWordStack(C.PC + 1)
+	// 	C.setB(true)
+	// 	C.pushByteStack(C.S)
+	// 	C.PC = C.readWord(IRQBRK_Vector)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -157,7 +157,7 @@ func (C *CPU) jmp() {
 func (C *CPU) jsr() {
 	switch C.inst.addr {
 	case absolute:
-		C.pushWordStack(C.PC - 2)
+		C.pushWordStack(C.InstStart + 2)
 		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
@@ -185,7 +185,28 @@ func (C *CPU) rti() {
 func (C *CPU) rts() {
 	switch C.inst.addr {
 	case implied:
-		C.PC = C.pullWordStack() + 2
+		C.PC = C.pullWordStack() + 1
+	default:
+		log.Fatal("Bad addressing mode")
+	}
+	if C.conf.Disassamble {
+		fmt.Printf("\n")
+	}
+}
+
+func (C *CPU) nop() {
+	switch C.inst.addr {
+	case implied:
+		fallthrough
+	case immediate:
+		fallthrough
+	case zeropage:
+		fallthrough
+	case zeropageX:
+		fallthrough
+	case absolute:
+		fallthrough
+	case absoluteX:
 	default:
 		log.Fatal("Bad addressing mode")
 	}

@@ -74,7 +74,6 @@ type VIC struct {
 }
 
 const (
-	CharStart   = 0xD000
 	IOStart     = 0xD000
 	colorStart  = 0x0800 // 0xD800 translated
 	screenStart = 0x0400

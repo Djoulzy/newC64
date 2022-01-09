@@ -15,6 +15,8 @@ import (
 )
 
 var conf = &confload.ConfigData{}
+var run bool
+var step bool
 
 const (
 	ramSize     = 65536
@@ -38,6 +40,7 @@ var (
 
 	video       graphic.Driver
 	exitProcess chan bool
+	cmd         chan rune
 )
 
 func init() {
@@ -77,18 +80,12 @@ func setup() {
 
 func input() {
 	exitProcess = make(chan bool)
+	cmd = make(chan rune)
 	var keyb *tty.TTY
 	keyb, _ = tty.Open()
 	for {
-		r, err := keyb.ReadRune()
-		if err != nil {
-			log.Fatal(err)
-		}
-		switch r {
-		case 'q':
-			exitProcess <- true
-		default:
-		}
+		r, _ := keyb.ReadRune()
+		cmd <- r
 	}
 }
 
@@ -116,21 +113,51 @@ func main() {
 		cpu.GoTo(addr)
 	}
 
+	run = true
+	step = false
 	go input()
 
-	// cycles = 0
 ENDPROCESS:
 	for {
-		// cycles++
-		// fmt.Printf("Cycles: %d\n", cycles)
 		select {
-		case <-exitProcess:
-			break ENDPROCESS
-		default:
-			if conf.Display {
-				vic.Run()
+		case ch := <-cmd:
+			switch ch {
+			case 's':
+				cpu.Disassemble()
+				pla.DumpStack(cpu.SP)
+			case 'd':
+				cpu.Disassemble()
+				pla.Dump(conf.Dump)
+			case 'z':
+				cpu.Disassemble()
+				pla.Dump(0)
+			case 'c':
+				run = true
+				step = false
+			case ' ':
+				step = true
+				run = !run
+			case 'q':
+				break ENDPROCESS
+			case 't':
+				log.Println("test")
 			}
-			cpu.NextCycle()
+		default:
+			if run {
+				if conf.Display {
+					vic.Run()
+				}
+				cpu.NextCycle()
+			}
+			if step {
+				if cpu.State == mos6510.ReadInstruction {
+					run = false
+				}
+			}
+			if conf.Breakpoint == cpu.InstStart && cpu.State == mos6510.ReadInstruction {
+				run = false
+				step = true
+			}
 		}
 	}
 }

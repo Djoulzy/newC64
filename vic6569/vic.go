@@ -43,8 +43,8 @@ func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video graphic.Driver) 
 	V.ram = ram
 	V.io = io
 	V.chargen = chargen
-	V.color = V.io[colorStart : colorStart+1024]
-	V.screen = V.ram[screenStart : screenStart+1024]
+	V.color = io[colorStart : colorStart+1024]
+	V.screen = ram[screenStart : screenStart+1024]
 
 	V.io[REG_EC] = 0xFE  // Border Color : Lightblue
 	V.io[REG_B0C] = 0xF6 // Background Color : Blue
@@ -118,7 +118,7 @@ func (V *VIC) registersManagement() {
 }
 
 func (V *VIC) Run() {
-	V.registersManagement()
+	// V.registersManagement()
 
 	V.visibleArea = (V.beamY > lastVBlankLine) && (V.beamY < firstVBlankLine)
 	// V.displayArea = (V.beamY >= firstDisplayLine) && (V.beamY <= lastDisplayLine) && V.visibleArea
