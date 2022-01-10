@@ -229,7 +229,8 @@ func (C *CPU) NextCycle() {
 			C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
 		}
 		if C.inst, ok = mnemonic[C.ram.Read(C.PC)]; !ok {
-			log.Fatal(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
+			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
+			C.State = Idle
 		}
 		if C.inst.bytes > 1 {
 			C.State = ReadOperLO

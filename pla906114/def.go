@@ -21,6 +21,12 @@ const (
 )
 
 const (
+	LORAM  = 0b00000001
+	HIRAM  = 0b00000010
+	CHAREN = 0b00000100
+)
+
+const (
 	StackStart  = 0x0100
 	StackEnd    = 0x01FF
 	ScreenStart = 0x0400
@@ -44,7 +50,7 @@ const (
 
 // RAM :
 type PLA struct {
-	setting       byte
+	setting       *byte
 	startLocation [5]int
 	Mem           [5]*memory.MEM
 }

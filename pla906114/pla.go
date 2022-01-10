@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"newC64/memory"
+	"os"
 	"time"
 )
 
@@ -12,8 +13,8 @@ func timeTrack(start time.Time, name string) {
 	log.Printf("%s took %s", name, elapsed)
 }
 
-func (P *PLA) Init() {
-	P.setting = 7
+func (P *PLA) Init(settings *byte) {
+	P.setting = settings
 }
 
 func (P *PLA) Attach(mem *memory.MEM, memtype MemType, startLocation int) {
@@ -25,69 +26,42 @@ func (P *PLA) Clear(memtype MemType) {
 	P.Mem[memtype].Clear()
 }
 
-// func (P *PLA) Load(memtype MemType, filename string) {
-
-// 	P.Mem[memtype].readOnly = true
-
-// 	data, err := ioutil.ReadFile(filename)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	if len(data) != P.Mem[memtype].Size {
-// 		panic("Bad ROM Size")
-// 	}
-// 	for i := 0; i < P.Mem[memtype].Size; i++ {
-// 		P.Mem[memtype].Cells[i] = byte(data[i])
-// 	}
-// }
-
 func (P *PLA) getChip(addr uint16) MemType {
-	switch {
-	case addr < BasicStart:
+	if addr < BasicStart { // Premiere Zone de RAM: 0000 -> A000
 		return RAM
-	case addr < BasicEnd:
-		if P.setting&3 == 3 {
+	}
+	if addr < BasicEnd {
+		if *P.setting&3 == 3 {
 			return BASIC
 		} else {
 			return RAM
 		}
-	case addr < CharStart:
+
+	}
+	if addr < IOStart {
 		return RAM
-	case addr < KernalStart:
-		if P.setting&3 == 0 {
+	}
+	if addr < KernalStart {
+		if *P.setting&(HIRAM|LORAM) == 0 {
 			return RAM
-		} else if P.setting&4 == 0 {
+		}
+		if *P.setting&CHAREN == 0 {
 			return CHAR
-		} else if P.setting == 1 {
-			return RAM
-		} else {
+		}
+		if *P.setting&CHAREN == CHAREN {
 			return IO
 		}
-	default:
-		if P.setting&3 < 2 {
-			return RAM
-		} else {
+	}
+	if addr > CharEnd {
+		if *P.setting&HIRAM == HIRAM {
 			return KERNAL
+		} else {
+			return RAM
 		}
 	}
+	log.Fatal("Bad memory zone")
+	return RAM
 }
-
-// func (P *PLA) getChip(addr uint16) MemType {
-// 	if addr >= KernalStart {
-// 		return KERNAL
-// 	}
-// 	if addr >= IOStart {
-// 		return IO
-// 	}
-// 	if addr > BasicEnd {
-// 		return RAM
-// 	}
-// 	if addr >= BasicStart {
-// 		return BASIC
-// 	}
-
-// 	return RAM
-// }
 
 func (P *PLA) Read(addr uint16) byte {
 	// defer timeTrack(time.Now(), "Read")
@@ -98,6 +72,9 @@ func (P *PLA) Read(addr uint16) byte {
 }
 
 func (P *PLA) Write(addr uint16, value byte) {
+	if addr > 0x0400 && addr < 0x07E7 {
+		os.Exit(1)
+	}
 	if P.getChip(addr) == IO {
 		if addr < 0xD400 {
 			P.Mem[IO].VicRegWrite(addr-uint16(P.startLocation[IO]), value)
@@ -143,6 +120,17 @@ func (P *PLA) DumpStack(sp byte) {
 			} else {
 				fmt.Printf("%02X ", P.Mem[RAM].Val[cpt])
 			}
+			cpt++
+		}
+		fmt.Println()
+	}
+}
+
+func (P *PLA) DumpChar(screenCode byte) {
+	cpt := uint16(screenCode) << 3
+	for j := 0; j < 4; j++ {
+		for i := 0; i < 8; i++ {
+			fmt.Printf("%04X : %08b\n", cpt, P.Mem[CHAR].Val[cpt])
 			cpt++
 		}
 		fmt.Println()

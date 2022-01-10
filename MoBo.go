@@ -62,7 +62,7 @@ func setup() {
 	chargen.Init(chargenSize, "assets/roms/char.bin")
 
 	// PLA Setup
-	pla.Init()
+	pla.Init(&mem.Val[1])
 	pla.Attach(&mem, pla906114.RAM, 0)
 	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
 	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
@@ -118,6 +118,7 @@ func main() {
 	// defer pprof.StopCPUProfile()
 
 	setup()
+	pla.DumpChar(0xD8)
 
 	if len(args) > 1 {
 		// addr, _ := LoadPRG(mem, args[1])

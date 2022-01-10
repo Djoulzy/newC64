@@ -46,10 +46,10 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video g
 	V.io = io.GetView(0, 0x0400)
 	V.chargen = chargen
 	V.color = io.GetView(colorStart, 1024)
-	V.screen = ram.GetView(screenStart, 1024)
+	V.screen = ram // ram.GetView(screenStart, 1024)
 
-	// V.io.VicRegWrite(REG_EC,0xFE)  // Border Color : Lightblue
-	// V.io.VicRegWrite(REG_B0C,0xF6) // Background Color : Blue
+	V.io.VicRegWrite(REG_EC, 0xFE)  // Border Color : Lightblue
+	V.io.VicRegWrite(REG_B0C, 0xF6) // Background Color : Blue
 	// V.io.VicRegWrite(REG_CTRL1,0b10011011)
 	// V.io.VicRegWrite(REG_RASTER,0b00000000)
 	// V.io.VicRegWrite(REG_CTRL2,0b00001000)
@@ -82,6 +82,7 @@ func (V *VIC) readVideoMatrix() {
 	if !V.BA {
 		V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
 		V.CharBuffer[V.VMLI] = V.screen.Val[V.VC]
+		fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
 	}
 }
 
@@ -91,7 +92,7 @@ func (V *VIC) drawChar(X int, Y int) {
 		charData := V.chargen.Val[charAddr]
 		// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
 		// if V.CharBuffer[V.VMLI] == 0 {
-		// fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])
+		// 	fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])
 		// }
 		for column := 0; column < 8; column++ {
 			bit := byte(0b10000000 >> column)

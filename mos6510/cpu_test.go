@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	io.Init(ioSize, "")
 	kernal.Init(kernalSize, "../assets/roms/kernal.bin")
 
-	pla.Init()
+	pla.Init(&mem.Val[1])
 	pla.Attach(&mem, pla906114.RAM, 0)
 	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
 	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
