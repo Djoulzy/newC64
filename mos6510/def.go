@@ -62,23 +62,25 @@ const (
 
 // CPU :
 type CPU struct {
-	PC uint16
-	SP byte
-	A  byte
-	X  byte
-	Y  byte
-	S  byte
+	PC  uint16
+	SP  byte
+	A   byte
+	X   byte
+	Y   byte
+	S   byte
+	IRQ int
+	NMI int
 
-	conf       *confload.ConfigData
-	ram        *pla906114.PLA
-	stack      []byte
-	InstStart  uint16
-	instDump   string
-	inst       instruction
-	oper       uint16
-	fullCycles uint64
-	cycleCount int
-	State      cpuState
+	conf        *confload.ConfigData
+	ram         *pla906114.PLA
+	stack       []byte
+	InstStart   uint16
+	instDump    string
+	inst        instruction
+	oper        uint16
+	cycleCount  int
+	State       cpuState
+	ClockCycles *uint16
 }
 
 // Mnemonic :

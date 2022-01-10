@@ -97,11 +97,11 @@ func (C *CPU) bpl() {
 
 func (C *CPU) brk() {
 	switch C.inst.addr {
-	// case implied:
-	// 	C.pushWordStack(C.PC + 1)
-	// 	C.setB(true)
-	// 	C.pushByteStack(C.S)
-	// 	C.PC = C.readWord(IRQBRK_Vector)
+	case implied:
+		C.pushWordStack(C.PC + 1)
+		C.setB(true)
+		C.pushByteStack(C.S)
+		C.PC = C.readWord(IRQBRK_Vector)
 	default:
 		log.Fatal("Bad addressing mode")
 	}

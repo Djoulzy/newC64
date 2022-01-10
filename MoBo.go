@@ -2,9 +2,11 @@ package main
 
 import (
 	"log"
+	"newC64/cia6526"
 	"newC64/clog"
 	"newC64/confload"
 	"newC64/graphic"
+	"newC64/memory"
 	"newC64/mos6510"
 	"newC64/pla906114"
 	"newC64/vic6569"
@@ -27,14 +29,16 @@ const (
 )
 
 var (
-	cpu mos6510.CPU
-	pla pla906114.PLA
+	cpu  mos6510.CPU
+	pla  pla906114.PLA
+	cia1 cia6526.CIA
+	cia2 cia6526.CIA
 
-	mem     []byte
-	kernal  []byte
-	basic   []byte
-	chargen []byte
-	io      []byte
+	mem     memory.MEM
+	kernal  memory.MEM
+	basic   memory.MEM
+	chargen memory.MEM
+	io      memory.MEM
 	vic     vic6569.VIC
 	cycles  int32
 
@@ -51,31 +55,36 @@ func init() {
 
 func setup() {
 	// ROMs & RAM Setup
-	mem = make([]byte, ramSize)
-	io = make([]byte, ioSize)
-	kernal = make([]byte, kernalSize)
-	basic = make([]byte, basicSize)
-	chargen = make([]byte, chargenSize)
+	mem.Init(ramSize, "")
+	io.Init(ioSize, "")
+	kernal.Init(kernalSize, "assets/roms/kernal.bin")
+	basic.Init(basicSize, "assets/roms/basic.bin")
+	chargen.Init(chargenSize, "assets/roms/char.bin")
 
 	// PLA Setup
 	pla.Init()
-	pla.Attach(mem, pla906114.RAM, 0)
-	pla.Attach(io, pla906114.IO, pla906114.IOStart)
-	pla.Attach(kernal, pla906114.KERNAL, pla906114.KernalStart)
-	pla.Attach(basic, pla906114.BASIC, pla906114.BasicStart)
-	pla.Attach(chargen, pla906114.CHAR, pla906114.CharStart)
-
-	pla.Load(pla906114.KERNAL, "assets/roms/kernal.bin")
-	pla.Load(pla906114.BASIC, "assets/roms/basic.bin")
-	pla.Load(pla906114.CHAR, "assets/roms/char.bin")
-
-	// CPU Setup
-	cpu.Init(&pla, conf)
+	pla.Attach(&mem, pla906114.RAM, 0)
+	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
+	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
+	pla.Attach(&basic, pla906114.BASIC, pla906114.BasicStart)
+	pla.Attach(&chargen, pla906114.CHAR, pla906114.CharStart)
 
 	if conf.Display {
 		video = &graphic.SDLDriver{}
-		vic.Init(mem, io, chargen, video)
+		vic.Init(&mem, &io, &chargen, video)
+	} else {
+		vic.SystemClock = 0
 	}
+
+	// CPU Setup
+	cpu.Init(&pla, &vic.SystemClock, conf)
+
+	cia1.Init("CIA1", io.GetView(0x0C00, 0x0200), &vic.SystemClock)
+	cia2.Init("CIA2", io.GetView(0x0D00, 0x0200), &vic.SystemClock)
+
+	vic.IRQ_Pin = &cpu.IRQ
+	cia1.Signal_Pin = &cpu.IRQ
+	cia2.Signal_Pin = &cpu.NMI
 }
 
 func input() {
@@ -90,6 +99,8 @@ func input() {
 }
 
 func main() {
+	var cpuTurn bool
+
 	args := os.Args
 	confload.Load("config.ini", conf)
 
@@ -109,12 +120,13 @@ func main() {
 	setup()
 
 	if len(args) > 1 {
-		addr, _ := LoadPRG(mem, args[1])
-		cpu.GoTo(addr)
+		// addr, _ := LoadPRG(mem, args[1])
+		// cpu.GoTo(addr)
 	}
 
 	run = true
 	step = false
+	cpuTurn = true
 	go input()
 
 ENDPROCESS:
@@ -145,9 +157,15 @@ ENDPROCESS:
 		default:
 			if run {
 				if conf.Display {
-					vic.Run()
+					cpuTurn = vic.Run()
+				} else {
+					vic.SystemClock++
 				}
-				cpu.NextCycle()
+				if cpuTurn {
+					cpu.NextCycle()
+				}
+				cia1.Run()
+				cia2.Run()
 			}
 			if step {
 				if cpu.State == mos6510.ReadInstruction {

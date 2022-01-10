@@ -1,5 +1,7 @@
 package pla906114
 
+import "newC64/memory"
+
 type MEM struct {
 	Size     int
 	readOnly bool
@@ -44,5 +46,5 @@ const (
 type PLA struct {
 	setting       byte
 	startLocation [5]int
-	Mem           [5]MEM
+	Mem           [5]*memory.MEM
 }

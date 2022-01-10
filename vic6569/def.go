@@ -2,6 +2,7 @@ package vic6569
 
 import (
 	"newC64/graphic"
+	"newC64/memory"
 )
 
 var (
@@ -44,12 +45,13 @@ var Colors [16]graphic.RGB = [16]graphic.RGB{
 
 // VIC :
 type VIC struct {
-	VML    [40]uint16 // Video Matrix Line
-	VMLI   byte       // Video Matrix Line Indexer
-	VC     uint16     // Vide Counter
-	VCBASE uint16     // Video Counter Base
-	RC     byte       // Row counter
-	BA     bool       // High: normal / Low: BadLine
+	VML         [40]uint16 // Video Matrix Line
+	VMLI        byte       // Video Matrix Line Indexer
+	VC          uint16     // Vide Counter
+	VCBASE      uint16     // Video Counter Base
+	RC          byte       // Row counter
+	BA          bool       // High: normal / Low: BadLine
+	SystemClock uint16
 
 	beamX int
 	beamY int
@@ -66,15 +68,14 @@ type VIC struct {
 	RasterIRQ uint16
 	graph     graphic.Driver
 
-	chargen []byte
-	io      []byte
-	color   []byte
-	ram     []byte
-	screen  []byte
+	chargen *memory.MEM
+	io      *memory.MEM
+	color   *memory.MEM
+	ram     *memory.MEM
+	screen  *memory.MEM
 }
 
 const (
-	IOStart     = 0xD000
 	colorStart  = 0x0800 // 0xD800 translated
 	screenStart = 0x0400
 

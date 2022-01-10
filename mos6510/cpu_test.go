@@ -3,31 +3,38 @@ package mos6510
 import (
 	"log"
 	"newC64/confload"
+	"newC64/memory"
 	"newC64/pla906114"
 	"os"
 	"testing"
 )
 
 const (
-	memorySize = 65536
+	ramSize    = 65536
 	kernalSize = 8192
+	ioSize     = 4096
 )
 
 var proc CPU
 var pla pla906114.PLA
 var conf confload.ConfigData
+var mem, io, kernal memory.MEM
+var SystemClock uint16
 
 func TestMain(m *testing.M) {
 	conf.Disassamble = false
+	SystemClock = 0
 
-	mem := make([]byte, memorySize)
-	kernal := make([]byte, kernalSize)
+	mem.Init(ramSize, "")
+	io.Init(ioSize, "")
+	kernal.Init(kernalSize, "../assets/roms/kernal.bin")
 
 	pla.Init()
-	pla.Attach(mem, pla906114.RAM, 0)
-	pla.Attach(kernal, pla906114.KERNAL, pla906114.KernalStart)
+	pla.Attach(&mem, pla906114.RAM, 0)
+	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
+	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
 
-	proc.Init(&pla, &conf)
+	proc.Init(&pla, &SystemClock, &conf)
 	os.Exit(m.Run())
 }
 

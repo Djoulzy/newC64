@@ -23,7 +23,6 @@ func (C *CPU) Reset() {
 	C.Y = 0
 	C.S = 0b00100000
 	C.SP = 0xFF
-	C.fullCycles = 0
 
 	C.ram.Clear(pla906114.RAM)
 	// PLA Settings (Bank switching)
@@ -36,9 +35,10 @@ func (C *CPU) Reset() {
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
 }
 
-func (C *CPU) Init(mem *pla906114.PLA, conf *confload.ConfigData) {
+func (C *CPU) Init(mem *pla906114.PLA, clock *uint16, conf *confload.ConfigData) {
 	fmt.Printf("mos6510 - Init\n")
 	C.conf = conf
+	C.ClockCycles = clock
 	C.ram = mem
 	C.stack = C.ram.GetView(StackStart, 256)
 	C.initLanguage()
@@ -62,7 +62,7 @@ func (C *CPU) registers() string {
 func (C *CPU) Disassemble() {
 	var buf string
 
-	fmt.Printf("%10d - %s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m -- ", C.fullCycles, C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
+	fmt.Printf("%10d - %s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m -- ", *C.ClockCycles, C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
 	fmt.Printf("%04X: %-10s %03s ", C.InstStart, C.instDump, C.inst.name)
 	switch C.inst.addr {
 	case implied:
@@ -167,6 +167,27 @@ func (C *CPU) pullWordStack() uint16 {
 }
 
 //////////////////////////////////
+/////////// Interrupts ///////////
+//////////////////////////////////
+
+func (C *CPU) irq() {
+	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
+	// C.IRQ = 0
+	C.pushWordStack(C.PC)
+	C.pushByteStack(C.S)
+	C.setI(true)
+	C.PC = C.readWord(0xFFFE)
+}
+
+func (C *CPU) nmi() {
+	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
+	// C.NMI = 0
+	C.pushWordStack(C.PC)
+	C.pushByteStack(C.S)
+	C.PC = C.readWord(0xFFFA)
+}
+
+//////////////////////////////////
 ///////////// Running ////////////
 //////////////////////////////////
 
@@ -176,6 +197,7 @@ func (C *CPU) GoTo(addr uint16) {
 
 func (C *CPU) ComputeInstruction() {
 	if C.cycleCount == C.inst.cycles {
+		// defer C.timeTrack(time.Now(), "ComputeInstruction")
 		C.State = ReadInstruction
 		C.inst.action()
 		if C.conf.Disassamble {
@@ -185,17 +207,23 @@ func (C *CPU) ComputeInstruction() {
 }
 
 func (C *CPU) NextCycle() {
-	// defer C.timeTrack(time.Now(), "CPU")
 	var ok bool
 
 	C.cycleCount++
-	C.fullCycles++
 	switch C.State {
 	case Idle:
 		C.cycleCount = 0
 		C.State++
 	case ReadInstruction:
 		C.cycleCount = 1
+		if C.NMI > 0 {
+			// log.Printf("NMI")
+			C.nmi()
+		}
+		if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
+			// log.Printf("IRQ")
+			C.irq()
+		}
 		C.InstStart = C.PC
 		if C.conf.Disassamble {
 			C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
