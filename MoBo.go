@@ -11,7 +11,6 @@ import (
 	"newC64/pla906114"
 	"newC64/vic6569"
 	"os"
-	"runtime"
 	"strconv"
 
 	"github.com/mattn/go-tty"
@@ -48,11 +47,11 @@ var (
 	cmd          chan rune
 )
 
-func init() {
-	// This is needed to arrange that main() runs on main thread.
-	// See documentation for functions that are only allowed to be called from the main thread.
-	runtime.LockOSThread()
-}
+// func init() {
+// 	// This is needed to arrange that main() runs on main thread.
+// 	// See documentation for functions that are only allowed to be called from the main thread.
+// 	runtime.LockOSThread()
+// }
 
 func setup() {
 	// ROMs & RAM Setup
@@ -72,7 +71,7 @@ func setup() {
 
 	if conf.Display {
 		outputDriver = &graphic.SDLDriver{}
-		vic.Init(&mem, &io, &chargen, outputDriver)
+		vic.Init(&mem, &io, &chargen, outputDriver, conf)
 	} else {
 		vic.SystemClock = 0
 	}
@@ -97,6 +96,10 @@ func input() {
 		r, _ := keyb.ReadRune()
 		cmd <- r
 	}
+}
+
+func Disassamble() {
+	fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
 }
 
 func main() {
@@ -138,10 +141,10 @@ ENDPROCESS:
 		case ch := <-cmd:
 			switch ch {
 			case 's':
-				cpu.Disassemble()
+				Disassamble()
 				pla.DumpStack(cpu.SP)
 			case 'z':
-				cpu.Disassemble()
+				Disassamble()
 				pla.Dump(0)
 			case 'f':
 				fill := byte(0x00)
@@ -166,6 +169,7 @@ ENDPROCESS:
 			case ' ':
 				step = true
 				run = !run
+				Disassamble()
 				fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
 			case 'q':
 				break ENDPROCESS
@@ -180,7 +184,7 @@ ENDPROCESS:
 			}
 		default:
 			if run {
-				if conf.Display {
+				if conf.Globals.Display {
 					cpuTurn = vic.Run()
 				} else {
 					vic.SystemClock++
@@ -191,14 +195,16 @@ ENDPROCESS:
 				cia1.Run()
 				cia2.Run()
 			}
-			if step {
-				if cpu.State == mos6510.ReadInstruction {
-					run = false
-				}
+			if step && cpu.State == mos6510.ReadInstruction {
+				run = false
 			}
 			if conf.Breakpoint == cpu.InstStart && cpu.State == mos6510.ReadInstruction {
+				conf.Globals.Disassamble = true
 				run = false
 				step = true
+			}
+			if conf.Globals.Disassamble && run && cpu.State == mos6510.ReadInstruction {
+				Disassamble()
 			}
 		}
 	}

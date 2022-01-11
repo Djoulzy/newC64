@@ -62,38 +62,38 @@ func (C *CPU) registers() string {
 	return res
 }
 
-func (C *CPU) Disassemble() {
-	var buf string
+func (C *CPU) Disassemble() string {
+	var buf, token string
 
-	fmt.Printf("%10d - %s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m -- ", *C.ClockCycles, C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
-	fmt.Printf("%04X: %-10s %03s ", C.InstStart, C.instDump, C.inst.name)
+	buf = fmt.Sprintf("%s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m - ", C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
+	buf = fmt.Sprintf("%s%04X: %-8s %03s ", buf, C.InstStart, C.instDump, C.inst.name)
 	switch C.inst.addr {
 	case implied:
-		buf = fmt.Sprintf("")
+		token = fmt.Sprintf("")
 	case immediate:
-		buf = fmt.Sprintf("#$%02X", C.oper)
+		token = fmt.Sprintf("#$%02X", C.oper)
 	case relative:
-		buf = fmt.Sprintf("$%02X", C.oper)
+		token = fmt.Sprintf("$%02X", C.oper)
 	case zeropage:
-		buf = fmt.Sprintf("$%02X", C.oper)
+		token = fmt.Sprintf("$%02X", C.oper)
 	case zeropageX:
-		buf = fmt.Sprintf("$%02X,X", C.oper)
+		token = fmt.Sprintf("$%02X,X", C.oper)
 	case zeropageY:
-		buf = fmt.Sprintf("$%02X,Y", C.oper)
+		token = fmt.Sprintf("$%02X,Y", C.oper)
 	case absolute:
-		buf = fmt.Sprintf("$%04X", C.oper)
+		token = fmt.Sprintf("$%04X", C.oper)
 	case absoluteX:
-		buf = fmt.Sprintf("$%04X,X", C.oper)
+		token = fmt.Sprintf("$%04X,X", C.oper)
 	case absoluteY:
-		buf = fmt.Sprintf("$%04X,Y", C.oper)
+		token = fmt.Sprintf("$%04X,Y", C.oper)
 	case indirect:
-		buf = fmt.Sprintf("($%04X)", C.oper)
+		token = fmt.Sprintf("($%04X)", C.oper)
 	case indirectX:
-		buf = fmt.Sprintf("($%02X,X)", C.oper)
+		token = fmt.Sprintf("($%02X,X)", C.oper)
 	case indirectY:
-		buf = fmt.Sprintf("($%02X),Y", C.oper)
+		token = fmt.Sprintf("($%02X),Y", C.oper)
 	}
-	fmt.Printf("%-10s\t", buf)
+	return fmt.Sprintf("%s%-10s\t", buf, token)
 }
 
 //////////////////////////////////
@@ -203,9 +203,6 @@ func (C *CPU) ComputeInstruction() {
 		// defer C.timeTrack(time.Now(), "ComputeInstruction")
 		C.State = ReadInstruction
 		C.inst.action()
-		if C.conf.Disassamble {
-			C.Disassemble()
-		}
 		if C.NMI > 0 {
 			// log.Printf("NMI")
 			C.nmi()

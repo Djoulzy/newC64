@@ -1,6 +1,7 @@
 package vic6569
 
 import (
+	"newC64/confload"
 	"newC64/graphic"
 	"newC64/memory"
 )
@@ -53,8 +54,9 @@ type VIC struct {
 	BA          bool       // High: normal / Low: BadLine
 	SystemClock uint16
 
-	beamX int
-	beamY int
+	conf  *confload.ConfigData
+	BeamX int
+	BeamY int
 	cycle int
 
 	visibleArea bool

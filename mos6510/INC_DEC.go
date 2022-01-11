@@ -30,9 +30,7 @@ func (C *CPU) dec() {
 	}
 	C.updateN(val)
 	C.updateZ(val)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) dex() {
@@ -44,9 +42,7 @@ func (C *CPU) dex() {
 	}
 	C.updateN(C.X)
 	C.updateZ(C.X)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) dey() {
@@ -58,9 +54,7 @@ func (C *CPU) dey() {
 	}
 	C.updateN(C.Y)
 	C.updateZ(C.Y)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) inc() {
@@ -84,9 +78,7 @@ func (C *CPU) inc() {
 	}
 	C.updateN(val)
 	C.updateZ(val)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) inx() {
@@ -98,9 +90,7 @@ func (C *CPU) inx() {
 	}
 	C.updateN(C.X)
 	C.updateZ(C.X)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) iny() {
@@ -112,9 +102,7 @@ func (C *CPU) iny() {
 	}
 	C.updateN(C.Y)
 	C.updateZ(C.Y)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) isc() {

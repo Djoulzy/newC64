@@ -1,7 +1,6 @@
 package mos6510
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -31,9 +30,7 @@ func (C *CPU) cmp() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) cpx() {
@@ -52,9 +49,7 @@ func (C *CPU) cpx() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) cpy() {
@@ -73,7 +68,5 @@ func (C *CPU) cpy() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }

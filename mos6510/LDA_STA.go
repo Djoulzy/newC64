@@ -1,7 +1,6 @@
 package mos6510
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -28,9 +27,7 @@ func (C *CPU) lda() {
 	}
 	C.updateN(C.A)
 	C.updateZ(C.A)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) sta() {
@@ -52,9 +49,7 @@ func (C *CPU) sta() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) ldx() {
@@ -74,9 +69,7 @@ func (C *CPU) ldx() {
 	}
 	C.updateN(C.X)
 	C.updateZ(C.X)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) stx() {
@@ -90,9 +83,7 @@ func (C *CPU) stx() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) ldy() {
@@ -112,9 +103,7 @@ func (C *CPU) ldy() {
 	}
 	C.updateN(C.Y)
 	C.updateZ(C.Y)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) sty() {
@@ -128,7 +117,5 @@ func (C *CPU) sty() {
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }

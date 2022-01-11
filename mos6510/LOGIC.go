@@ -28,9 +28,7 @@ func (C *CPU) and() {
 	}
 	C.updateN(C.A)
 	C.updateZ(C.A)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) asl() {
@@ -58,9 +56,7 @@ func (C *CPU) asl() {
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
 	C.setC(val > 0x00FF)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) eor() {
@@ -86,9 +82,7 @@ func (C *CPU) eor() {
 	}
 	C.updateN(C.A)
 	C.updateZ(C.A)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) lsr() {
@@ -124,9 +118,7 @@ func (C *CPU) lsr() {
 	}
 	C.setN(false)
 	C.updateZ(byte(val))
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) ora() {
@@ -152,9 +144,7 @@ func (C *CPU) ora() {
 	}
 	C.updateN(C.A)
 	C.updateZ(C.A)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) rla() {
@@ -201,9 +191,7 @@ func (C *CPU) rol() {
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
 	C.setC(val > 0x00FF)
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) ror() {
@@ -254,9 +242,7 @@ func (C *CPU) ror() {
 	}
 	C.setN(false)
 	C.updateZ(byte(val))
-	if C.conf.Disassamble {
-		fmt.Printf("\n")
-	}
+
 }
 
 func (C *CPU) sax() {
