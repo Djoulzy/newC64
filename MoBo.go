@@ -43,9 +43,9 @@ var (
 	vic     vic6569.VIC
 	cycles  int32
 
-	video       graphic.Driver
-	exitProcess chan bool
-	cmd         chan rune
+	outputDriver graphic.Driver
+	exitProcess  chan bool
+	cmd          chan rune
 )
 
 func init() {
@@ -71,8 +71,8 @@ func setup() {
 	pla.Attach(&chargen, pla906114.CHAR, pla906114.CharStart)
 
 	if conf.Display {
-		video = &graphic.SDLDriver{}
-		vic.Init(&mem, &io, &chargen, video)
+		outputDriver = &graphic.SDLDriver{}
+		vic.Init(&mem, &io, &chargen, outputDriver)
 	} else {
 		vic.SystemClock = 0
 	}
@@ -143,13 +143,30 @@ ENDPROCESS:
 			case 'z':
 				cpu.Disassemble()
 				pla.Dump(0)
-			case 'c':
+			case 'f':
+				fill := byte(0x00)
+				i := uint16(0)
+				for i = 0x0400; i < 0x07FF; i++ {
+					pla.Write(i, fill)
+					fill++
+				}
+				for i = 0xD800; i < 0xDBFF; i++ {
+					pla.Write(i, fill)
+					fill++
+					if fill > 0x0F {
+						fill = 0x00
+					}
+					if fill == 6 {
+						fill++
+					}
+				}
+			case 'r':
 				run = true
 				step = false
 			case ' ':
 				step = true
 				run = !run
-				fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (c) Continue - (sp) Pause / unpause > ")
+				fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
 			case 'q':
 				break ENDPROCESS
 			default:

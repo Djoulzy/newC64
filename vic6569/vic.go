@@ -46,17 +46,15 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video g
 	V.io = io.GetView(0, 0x0400)
 	V.chargen = chargen
 	V.color = io.GetView(colorStart, 1024)
-	V.screen = ram // ram.GetView(screenStart, 1024)
+	V.screen = ram.GetView(screenStart, 1024)
 
-	V.io.VicRegWrite(REG_EC, 0xFE)  // Border Color : Lightblue
-	V.io.VicRegWrite(REG_B0C, 0xF6) // Background Color : Blue
+	V.io.VicRegWrite(REG_EC, 0xFE, memory.NONE)  // Border Color : Lightblue
+	V.io.VicRegWrite(REG_B0C, 0xF6, memory.NONE) // Background Color : Blue
 	// V.io.VicRegWrite(REG_CTRL1,0b10011011)
 	// V.io.VicRegWrite(REG_RASTER,0b00000000)
 	// V.io.VicRegWrite(REG_CTRL2,0b00001000)
 	// V.io.VicRegWrite(REG_IRQ,0b00001111)
 	// V.io.VicRegWrite(REG_SETIRQ,0b00000000)
-
-	V.ram.Val[PALNTSC] = 0x01 // PAL
 
 	V.BA = true
 	V.VCBASE = 0
@@ -68,12 +66,12 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video g
 }
 
 func (V *VIC) saveRasterPos(val int) {
-	V.io.VicRegWrite(REG_RASTER, byte(val))
+	V.io.VicRegWrite(REG_RASTER, byte(val), memory.NONE)
 	raster := V.io.Val[REG_CTRL1]
 	if (byte(uint16(val) >> 8)) == 0x1 {
-		V.io.VicRegWrite(REG_CTRL1, raster|RST8)
+		V.io.VicRegWrite(REG_CTRL1, raster|RST8, memory.NONE)
 	} else {
-		V.io.VicRegWrite(REG_CTRL1, raster & ^RST8)
+		V.io.VicRegWrite(REG_CTRL1, raster & ^RST8, memory.NONE)
 	}
 	// fmt.Printf("val: %d - RST8: %08b - RASTER: %08b\n", val, V.ram.Data[REG_RST8], V.ram.Data[REG_RASTER])
 }
@@ -114,17 +112,16 @@ func (V *VIC) drawChar(X int, Y int) {
 func (V *VIC) registersManagement() {
 	V.saveRasterPos(V.beamY)
 
-	if V.io.Written[REG_CTRL1] || V.io.Written[REG_RASTER] {
+	if V.io.LastAccess[REG_CTRL1] == memory.WRITE || V.io.LastAccess[REG_RASTER] == memory.WRITE {
 		V.RasterIRQ = uint16(V.io.Val[REG_CTRL1]&0b10000000) << 8
 		V.RasterIRQ += uint16(V.io.Val[REG_RASTER])
-		V.io.Written[REG_CTRL1] = false
-		V.io.Written[REG_RASTER] = false
+		V.io.LastAccess[REG_CTRL1] = memory.NONE
+		V.io.LastAccess[REG_RASTER] = memory.NONE
 	}
 
-	if V.io.Written[REG_IRQ] {
-		V.io.VicRegWrite(REG_IRQ, V.io.Val[REG_IRQ]&0b01111111)
+	if V.io.LastAccess[REG_IRQ] == memory.WRITE {
+		V.io.VicRegWrite(REG_IRQ, V.io.Val[REG_IRQ]&0b01111111, memory.NONE)
 		// *V.IRQ_Pin = 0
-		V.io.Written[REG_IRQ] = false
 	}
 }
 
@@ -152,7 +149,7 @@ func (V *VIC) Run() bool {
 				fmt.Println("Rastrer Interrupt")
 				*V.IRQ_Pin = 1
 				regIRQ := V.io.Val[REG_IRQ]
-				V.io.VicRegWrite(REG_IRQ, regIRQ|0b10000001)
+				V.io.VicRegWrite(REG_IRQ, regIRQ|0b10000001, memory.NONE)
 			}
 		}
 	case 2:

@@ -68,6 +68,7 @@ func (P *PLA) Read(addr uint16) byte {
 	dest := P.getChip(addr)
 	destAddr := addr - uint16(P.startLocation[dest])
 	// fmt.Printf("pla906114 - Read - %04X - Zone: %d\n", addr, dest)
+	P.Mem[dest].LastAccess[destAddr] = memory.READ
 	return P.Mem[dest].Val[destAddr]
 }
 
@@ -79,16 +80,16 @@ func (P *PLA) Write(addr uint16, value byte) {
 	if P.getChip(addr) == IO {
 		transAddr = addr - uint16(P.startLocation[IO])
 		if addr < 0xD400 {
-			P.Mem[IO].VicRegWrite(transAddr, value)
+			P.Mem[IO].VicRegWrite(transAddr, value, memory.WRITE)
 			return
 		}
 		if addr < 0xDC00 {
 			P.Mem[IO].Val[transAddr] = value
-			P.Mem[IO].Written[transAddr] = true
+			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
 		if addr < 0xDE00 {
-			P.Mem[IO].CiaRegWrite(transAddr, value)
+			P.Mem[IO].CiaRegWrite(transAddr, value, memory.WRITE)
 			return
 		} else {
 			log.Fatal("Bad IO addr")
@@ -113,14 +114,20 @@ func (P *PLA) Dump(startAddr uint16) {
 			zone = P.getChip(cpt)
 			transAddr = cpt - uint16(P.startLocation[zone])
 			val = P.Mem[zone].Val[transAddr]
-			if P.Mem[zone].Written[transAddr] {
-				clog.CPrintf("white", "red", "%02X", val)
-				fmt.Print(" ")
-			} else if val != 0x00 && val != 0xFF {
+			switch P.Mem[zone].LastAccess[transAddr] {
+			case memory.NONE:
+				if val != 0x00 && val != 0xFF {
+					clog.CPrintf("white", "black", "%02X", val)
+					fmt.Print(" ")
+				} else {
+					fmt.Printf("%02X ", val)
+				}
+			case memory.READ:
 				clog.CPrintf("white", "blue", "%02X", val)
 				fmt.Print(" ")
-			} else {
-				fmt.Printf("%02X ", val)
+			case memory.WRITE:
+				clog.CPrintf("white", "red", "%02X", val)
+				fmt.Print(" ")
 			}
 			cpt++
 		}

@@ -9,6 +9,8 @@ func (C *CPU) adc() {
 	var val uint16
 	var oper byte
 
+	// log.Printf("%04X - %s", C.InstStart, C.registers())
+	// log.Fatal("ADC")
 	switch C.inst.addr {
 	case immediate:
 		val = uint16(C.A) + C.oper + uint16(C.getC())

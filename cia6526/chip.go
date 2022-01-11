@@ -52,21 +52,21 @@ func (C *CIA) updateStates() {
 	// 	C.mem[ICR].IsRead = false
 	// }
 
-	if C.io.Written[ICR] {
+	if C.io.LastAccess[ICR] == memory.WRITE {
 		order := C.io.Val[ICR]
 		mask := order & 0b00001111
 		if mask > 0 {
 			if order&0b10000000 > 0 { // 7eme bit = 1 -> mask set
-				C.io.CiaRegWrite(ICR, C.io.Val[ICR]|mask)
+				C.io.CiaRegWrite(ICR, C.io.Val[ICR]|mask, memory.NONE)
 			} else {
-				C.io.CiaRegWrite(ICR, C.io.Val[ICR] & ^mask)
+				C.io.CiaRegWrite(ICR, C.io.Val[ICR] & ^mask, memory.NONE)
 			}
+		} else {
+			C.io.LastAccess[ICR] = memory.NONE
 		}
-		C.io.Written[ICR] = false
 	}
 
-	if C.io.Written[CRA] {
-		C.io.Written[CRA] = false
+	if C.io.LastAccess[CRA] == memory.WRITE {
 		// Load Latch Once
 		if C.io.Val[CRA]&0b00010000 > 0 {
 			C.timerAlatch = int32(C.io.Val[TAHI])<<8 + int32(C.io.Val[TALO])
@@ -77,11 +77,10 @@ func (C *CIA) updateStates() {
 		} else {
 			C.timerAstate = false
 		}
-		C.io.CiaRegWrite(CRA, C.io.Val[CRA]&0b11101111)
+		C.io.CiaRegWrite(CRA, C.io.Val[CRA]&0b11101111, memory.NONE)
 	}
 
-	if C.io.Written[CRB] {
-		C.io.Written[CRB] = false
+	if C.io.LastAccess[CRB] == memory.WRITE {
 		// Load Latch Once
 		if C.io.Val[CRB]&0b00010000 > 0 {
 			C.timerBlatch = int32(C.io.Val[TBHI])<<8 + int32(C.io.Val[TBLO])
@@ -92,23 +91,23 @@ func (C *CIA) updateStates() {
 		} else {
 			C.timerBstate = false
 		}
-		C.io.CiaRegWrite(CRB, C.io.Val[CRB]&0b11101111)
+		C.io.CiaRegWrite(CRB, C.io.Val[CRB]&0b11101111, memory.NONE)
 	}
 
-	if C.io.Written[TALO] {
-		C.io.Written[TALO] = false
+	if C.io.LastAccess[TALO] == memory.WRITE {
+		C.io.LastAccess[TALO] = memory.NONE
 		C.timerAlatch = int32(C.io.Val[TAHI])<<8 + int32(C.io.Val[TALO])
 	}
-	if C.io.Written[TAHI] {
-		C.io.Written[TAHI] = false
+	if C.io.LastAccess[TAHI] == memory.WRITE {
+		C.io.LastAccess[TAHI] = memory.NONE
 		C.timerAlatch = int32(C.io.Val[TAHI])<<8 + int32(C.io.Val[TALO])
 	}
-	if C.io.Written[TBLO] {
-		C.io.Written[TBLO] = false
+	if C.io.LastAccess[TBLO] == memory.WRITE {
+		C.io.LastAccess[TBLO] = memory.NONE
 		C.timerBlatch = int32(C.io.Val[TBHI])<<8 + int32(C.io.Val[TBLO])
 	}
-	if C.io.Written[TBHI] {
-		C.io.Written[TBHI] = false
+	if C.io.LastAccess[TBHI] == memory.WRITE {
+		C.io.LastAccess[TBHI] = memory.NONE
 		C.timerBlatch = int32(C.io.Val[TBHI])<<8 + int32(C.io.Val[TBLO])
 	}
 }
