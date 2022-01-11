@@ -82,7 +82,7 @@ func (V *VIC) readVideoMatrix() {
 	if !V.BA {
 		V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
 		V.CharBuffer[V.VMLI] = V.screen.Val[V.VC]
-		fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
+		// fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
 	}
 }
 

@@ -1,6 +1,8 @@
 package cia6526
 
-import "newC64/memory"
+import (
+	"newC64/memory"
+)
 
 type CIA struct {
 	name        string
@@ -9,10 +11,10 @@ type CIA struct {
 	systemCycle *uint16
 
 	timerAlatch int32
-	timerAcom   chan int
+	timerAstate bool
 
 	timerBlatch int32
-	timerBcom   chan int
+	timerBstate bool
 }
 
 const (
@@ -40,43 +42,8 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.systemCycle = timer
 
 	C.timerAlatch = 0
-	C.timerAcom = make(chan int)
 	C.timerBlatch = 0
-	C.timerBcom = make(chan int)
-
-	// C.SetValue(PRA, 0x0)
-	// C.SetValue(PRB, 0xFF)
-	// C.SetValue(DDRA, 0)
-	// C.SetValue(DDRB, 0)
-	// C.SetValue(TALO, 0xFF)
-	// C.SetValue(TAHI, 0xFF)
-	// C.SetValue(TBLO, 0xFF)
-	// C.SetValue(TBHI, 0xFF)
-	// C.SetValue(TOD10THS, 0)
-	// C.SetValue(TODSEC, 0)
-	// C.SetValue(TODMIN, 0)
-	// C.SetValue(TODHR, 0x01)
-	// C.SetValue(SRD, 0)
-	// C.SetValue(ICR, 0)
-	// C.mem[ICR].Zone[mem.RAM] = 0b00001111
-	// C.SetValue(CRA, 0)
-	// C.SetValue(CRB, 0)
 }
-
-// func (C *CIA) SetValue(port byte, value byte) {
-// 	for i := 0; i < 16; i++ {
-// 		zone := port + byte(16*i)
-// 		C.mem[zone].Zone[mem.IO] = value
-// 		C.mem[zone].Zone[mem.RAM] = value
-// 	}
-// }
-
-// func (C *CIA) execTimerA() {
-// 	reg := C.mem[CRA].Zone[mem.IO]
-// 	if reg&0x00000001 != 0 {
-
-// 	}
-// }
 
 func (C *CIA) updateStates() {
 	// if C.mem[ICR].IsRead {
@@ -106,10 +73,9 @@ func (C *CIA) updateStates() {
 		}
 		// Start or stop timer
 		if C.io.Val[CRA]&0b00000001 == 1 {
-			go C.TimerA()
-		}
-		if C.io.Val[CRA]&0b00000001 == 0 {
-			C.timerAcom <- 1
+			C.timerAstate = true
+		} else {
+			C.timerAstate = false
 		}
 		C.io.CiaRegWrite(CRA, C.io.Val[CRA]&0b11101111)
 	}
@@ -122,10 +88,9 @@ func (C *CIA) updateStates() {
 		}
 		// Start or stop timer
 		if C.io.Val[CRB]&0b00000001 == 1 {
-			go C.TimerB()
-		}
-		if C.io.Val[CRB]&0b00000001 == 0 {
-			C.timerBcom <- 1
+			C.timerBstate = true
+		} else {
+			C.timerBstate = false
 		}
 		C.io.CiaRegWrite(CRB, C.io.Val[CRB]&0b11101111)
 	}
@@ -150,4 +115,10 @@ func (C *CIA) updateStates() {
 
 func (C *CIA) Run() {
 	C.updateStates()
+	if C.timerAstate {
+		C.TimerA()
+	}
+	if C.timerBstate {
+		C.TimerB()
+	}
 }

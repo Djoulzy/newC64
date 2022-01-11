@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"newC64/cia6526"
 	"newC64/clog"
 	"newC64/confload"
@@ -12,6 +12,7 @@ import (
 	"newC64/vic6569"
 	"os"
 	"runtime"
+	"strconv"
 
 	"github.com/mattn/go-tty"
 )
@@ -128,6 +129,7 @@ func main() {
 	run = true
 	step = false
 	cpuTurn = true
+	dumpAddr := ""
 	go input()
 
 ENDPROCESS:
@@ -138,9 +140,6 @@ ENDPROCESS:
 			case 's':
 				cpu.Disassemble()
 				pla.DumpStack(cpu.SP)
-			case 'd':
-				cpu.Disassemble()
-				pla.Dump(conf.Dump)
 			case 'z':
 				cpu.Disassemble()
 				pla.Dump(0)
@@ -150,10 +149,17 @@ ENDPROCESS:
 			case ' ':
 				step = true
 				run = !run
+				fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (c) Continue - (sp) Pause / unpause > ")
 			case 'q':
 				break ENDPROCESS
-			case 't':
-				log.Println("test")
+			default:
+				dumpAddr += string(ch)
+				fmt.Printf("%c", ch)
+				if len(dumpAddr) == 4 {
+					hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
+					pla.Dump(uint16(hx))
+					dumpAddr = ""
+				}
 			}
 		default:
 			if run {

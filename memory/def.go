@@ -1,6 +1,8 @@
 package memory
 
-import "io/ioutil"
+import (
+	"io/ioutil"
+)
 
 type MEM struct {
 	Size     int
@@ -63,14 +65,16 @@ func (M *MEM) GetView(start int, size int) *MEM {
 
 func (M *MEM) VicRegWrite(addr uint16, val byte) {
 	var i uint16
-	for i=0; i<10; i++ {
-		M.Val[addr + i*0x40] = val
+	for i = 0; i < 10; i++ {
+		M.Val[addr+i*0x40] = val
+		M.Written[addr+i*0x40] = true
 	}
 }
 
 func (M *MEM) CiaRegWrite(addr uint16, val byte) {
 	var i uint16
 	for i = 0; i < 16; i++ {
-		M.Val[addr + (16*i)] = val
+		M.Val[addr+(16*i)] = val
+		M.Written[addr+(16*i)] = true
 	}
 }

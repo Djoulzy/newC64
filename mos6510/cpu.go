@@ -24,6 +24,9 @@ func (C *CPU) Reset() {
 	C.S = 0b00100000
 	C.SP = 0xFF
 
+	C.IRQ = 0
+	C.NMI = 0
+
 	C.ram.Clear(pla906114.RAM)
 	// PLA Settings (Bank switching)
 	// C.ram.Write(0x0000, 0x2F)
@@ -203,6 +206,14 @@ func (C *CPU) ComputeInstruction() {
 		if C.conf.Disassamble {
 			C.Disassemble()
 		}
+		if C.NMI > 0 {
+			// log.Printf("NMI")
+			C.nmi()
+		}
+		if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
+			log.Printf("IRQ")
+			C.irq()
+		}
 	}
 }
 
@@ -216,21 +227,13 @@ func (C *CPU) NextCycle() {
 		C.State++
 	case ReadInstruction:
 		C.cycleCount = 1
-		if C.NMI > 0 {
-			// log.Printf("NMI")
-			C.nmi()
-		}
-		if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
-			// log.Printf("IRQ")
-			C.irq()
-		}
 		C.InstStart = C.PC
 		if C.conf.Disassamble {
 			C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
 		}
 		if C.inst, ok = mnemonic[C.ram.Read(C.PC)]; !ok {
 			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
-			C.State = Idle
+			// C.State = Idle
 		}
 		if C.inst.bytes > 1 {
 			C.State = ReadOperLO
