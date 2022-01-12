@@ -50,13 +50,9 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video g
 	V.color = io.GetView(colorStart, 1024)
 	V.screen = ram.GetView(screenStart, 1024)
 
-	V.io.VicRegWrite(REG_EC, 0xFE, memory.NONE)  // Border Color : Lightblue
-	V.io.VicRegWrite(REG_B0C, 0xF6, memory.NONE) // Background Color : Blue
-	V.io.VicRegWrite(REG_CTRL1,0b10011011, memory.NONE)
-	V.io.VicRegWrite(REG_RASTER,0b00000000, memory.NONE)
-	V.io.VicRegWrite(REG_CTRL2,0b00001000, memory.NONE)
-	V.io.VicRegWrite(REG_IRQ,0b00001111, memory.NONE)
-	V.io.VicRegWrite(REG_SETIRQ,0b00000000, memory.NONE)
+	for i := range V.Reg {
+		V.Reg[i] = 0
+	}
 
 	V.BA = true
 	V.VCBASE = 0
@@ -74,12 +70,12 @@ func (V *VIC) Disassemble() string {
 }
 
 func (V *VIC) saveRasterPos(val int) {
-	V.io.VicRegWrite(REG_RASTER, byte(val), memory.NONE)
+	V.SpreadWrite(REG_RASTER, byte(val))
 	raster := V.io.Val[REG_CTRL1]
-	if (byte(uint16(val) >> 8)) == 0x1 {
-		V.io.VicRegWrite(REG_CTRL1, raster|RST8, memory.NONE)
+	if (val & 0x8000) > 0 {
+		V.SpreadWrite(REG_CTRL1, raster|RST8)
 	} else {
-		V.io.VicRegWrite(REG_CTRL1, raster & ^RST8, memory.NONE)
+		V.SpreadWrite(REG_CTRL1, raster & ^RST8)
 	}
 	// fmt.Printf("val: %d - RST8: %08b - RASTER: %08b\n", val, V.ram.Data[REG_RST8], V.ram.Data[REG_RASTER])
 }
@@ -117,25 +113,9 @@ func (V *VIC) drawChar(X int, Y int) {
 	}
 }
 
-func (V *VIC) registersManagement() {
-	V.saveRasterPos(V.BeamY)
-
-	if V.io.LastAccess[REG_CTRL1] == memory.WRITE || V.io.LastAccess[REG_RASTER] == memory.WRITE {
-		V.RasterIRQ = uint16(V.io.Val[REG_CTRL1]&0b10000000) << 8
-		V.RasterIRQ += uint16(V.io.Val[REG_RASTER])
-		V.io.LastAccess[REG_CTRL1] = memory.NONE
-		V.io.LastAccess[REG_RASTER] = memory.NONE
-	}
-
-	if V.io.LastAccess[REG_IRQ] == memory.WRITE {
-		V.io.VicRegWrite(REG_IRQ, V.io.Val[REG_IRQ]&0b01111111, memory.NONE)
-		// *V.IRQ_Pin = 0
-	}
-}
-
 func (V *VIC) Run() bool {
 	V.SystemClock++
-	V.registersManagement()
+	V.saveRasterPos(V.BeamY)
 
 	V.visibleArea = (V.BeamY > lastVBlankLine) && (V.BeamY < firstVBlankLine)
 	// V.displayArea = (V.BeamY >= firstDisplayLine) && (V.BeamY <= lastDisplayLine) && V.visibleArea
@@ -151,13 +131,12 @@ func (V *VIC) Run() bool {
 
 	switch V.cycle {
 	case 1:
-		if V.io.Val[REG_SETIRQ]&IRQ_RASTER > 0 {
+		if V.testBit(REG_SETIRQ, IRQ_RST) {
 			if V.RasterIRQ == uint16(V.BeamY) {
 				//fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
 				fmt.Println("Rastrer Interrupt")
+				V.SpreadWrite(REG_IRQ, V.Reg[REG_IRQ]|0b10000001)
 				*V.IRQ_Pin = 1
-				regIRQ := V.io.Val[REG_IRQ]
-				V.io.VicRegWrite(REG_IRQ, regIRQ|0b10000001, memory.NONE)
 			}
 		}
 	case 2:

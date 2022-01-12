@@ -63,6 +63,13 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.timerBlatch = 0
 }
 
+func (C *CIA) Write(reg uint16, val byte) {
+}
+
+func (C *CIA) Read(reg uint16) byte {
+	return 0
+}
+
 func (C *CIA) updateStates() {
 	// if C.mem[ICR].IsRead {
 	// 	C.mem[ICR].Zone[mem.IO] = 0

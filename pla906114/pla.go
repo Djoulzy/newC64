@@ -44,7 +44,6 @@ func (P *PLA) getChip(addr uint16) MemType {
 		} else {
 			return RAM
 		}
-
 	}
 	if addr < IOStart {
 		return RAM
@@ -74,10 +73,34 @@ func (P *PLA) getChip(addr uint16) MemType {
 func (P *PLA) Read(addr uint16) byte {
 	// defer timeTrack(time.Now(), "Read")
 	dest := P.getChip(addr)
-	destAddr := addr - uint16(P.startLocation[dest])
+	transAddr := addr - uint16(P.startLocation[dest])
+
+	if P.getChip(addr) == IO {
+		if addr < 0xD400 {
+			return P.vic.Read(transAddr)
+		}
+		if addr < 0xD800 {
+			// log.Fatal("SID Not implemented")
+			P.Mem[IO].LastAccess[transAddr] = memory.READ
+			return P.Mem[IO].Val[transAddr]
+		}
+		if addr < 0xDC00 {
+			P.Mem[IO].LastAccess[transAddr] = memory.READ
+			return P.Mem[IO].Val[transAddr]
+		}
+		if addr < 0xDD00 {
+			return P.cia1.Read(transAddr)
+		}
+		if addr < 0xDE00 {
+			return P.cia2.Read(transAddr)
+		} else {
+			log.Fatal("Bad IO addr")
+		}
+	}
+
 	// fmt.Printf("pla906114 - Read - %04X - Zone: %d\n", addr, dest)
-	P.Mem[dest].LastAccess[destAddr] = memory.READ
-	return P.Mem[dest].Val[destAddr]
+	P.Mem[dest].LastAccess[transAddr] = memory.READ
+	return P.Mem[dest].Val[transAddr]
 }
 
 func (P *PLA) Write(addr uint16, value byte) {
@@ -88,7 +111,13 @@ func (P *PLA) Write(addr uint16, value byte) {
 	if P.getChip(addr) == IO {
 		transAddr = addr - uint16(P.startLocation[IO])
 		if addr < 0xD400 {
-			P.Mem[IO].VicRegWrite(transAddr, value, memory.WRITE)
+			P.vic.Write(transAddr, value)
+			return
+		}
+		if addr < 0xD800 {
+			// log.Fatal("SID Not implemented")
+			P.Mem[IO].Val[transAddr] = value
+			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
 		if addr < 0xDC00 {
@@ -96,8 +125,12 @@ func (P *PLA) Write(addr uint16, value byte) {
 			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
+		if addr < 0xDD00 {
+			P.cia1.Write(transAddr, value)
+			return
+		}
 		if addr < 0xDE00 {
-			P.Mem[IO].CiaRegWrite(transAddr, value, memory.WRITE)
+			P.cia2.Write(transAddr, value)
 			return
 		} else {
 			log.Fatal("Bad IO addr")

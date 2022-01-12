@@ -53,6 +53,7 @@ type VIC struct {
 	RC          byte       // Row counter
 	BA          bool       // High: normal / Low: BadLine
 	SystemClock uint16
+	Reg         [47]byte
 
 	conf  *confload.ConfigData
 	BeamX int
@@ -97,8 +98,8 @@ const (
 	ECM     byte = 0b01000000 // rom REG_CTRL1 : 1 = Extended background mode on.
 	RST8    byte = 0b10000000 // rom REG_CTRL1 : Read: Current raster line (bit #8). Write: Raster line to generate interrupt at (bit #8).
 
-	IRQ_RASTER    byte = 0b00000001
-	IRQ_SPRT_BG   byte = 0b00000010
-	IRQ_SPRT_SPRT byte = 0b00000100
-	IRQ_LGTPEN    byte = 0b00001000
+	IRQ_RST byte = 0b00000001 // Raster line interrupt
+	IRQ_MBC byte = 0b00000010 // Sprite collision with background
+	IRQ_MMC byte = 0b00000100 // Sprite vs sprite collision
+	IRQ_LP  byte = 0b00001000 // Light pen negative edge
 )
