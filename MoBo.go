@@ -124,7 +124,6 @@ func main() {
 	// defer pprof.StopCPUProfile()
 
 	setup()
-	pla.DumpChar(0xD8)
 
 	if len(args) > 1 {
 		// addr, _ := LoadPRG(mem, args[1])

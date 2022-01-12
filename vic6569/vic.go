@@ -45,13 +45,13 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video g
 	V.conf = conf
 
 	V.ram = ram
-	V.io = io.GetView(0, 0x0400)
+	// V.io = io.GetView(0, 0x0400)
 	V.chargen = chargen
 	V.color = io.GetView(colorStart, 1024)
 	V.screen = ram.GetView(screenStart, 1024)
 
 	for i := range V.Reg {
-		V.Reg[i] = 0
+		V.Reg[i] = 0x00
 	}
 
 	V.BA = true
@@ -70,10 +70,10 @@ func (V *VIC) Disassemble() string {
 }
 
 func (V *VIC) saveRasterPos(val int) {
-	V.SpreadWrite(REG_RASTER, byte(val))
-	mask := byte(val >> 8) & RST8
+	V.Reg[REG_RASTER] = byte(val)
+	mask := byte(val>>8) & RST8
 	res := V.Reg[REG_CTRL1] & 0b01111111
-	V.SpreadWrite(REG_CTRL1, res|mask)
+	V.Reg[REG_CTRL1] = res | mask
 }
 
 func (V *VIC) readVideoMatrix() {
@@ -97,14 +97,14 @@ func (V *VIC) drawChar(X int, Y int) {
 			if charData&bit > 0 {
 				V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
 			} else {
-				V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_B0C]&0b00001111])
+				V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BGCOLOR_0]&0b00001111])
 			}
 		}
 		V.VMLI++
 		V.VC++
 	} else if V.visibleArea {
 		for column := 0; column < 8; column++ {
-			V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_EC]&0b00001111])
+			V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BORDER_COL]&0b00001111])
 		}
 	}
 }
@@ -127,11 +127,11 @@ func (V *VIC) Run() bool {
 
 	switch V.cycle {
 	case 1:
-		if V.testBit(REG_SETIRQ, IRQ_RST) {
+		if V.testBit(REG_IRQ_ENABLED, IRQ_RST) {
 			if V.RasterIRQ == uint16(V.BeamY) {
 				//fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
 				fmt.Println("Rastrer Interrupt")
-				V.SpreadWrite(REG_IRQ, V.Reg[REG_IRQ]|0b10000001)
+				V.Reg[REG_IRQ] = V.Reg[REG_IRQ] | 0b10000001
 				*V.IRQ_Pin = 1
 			}
 		}

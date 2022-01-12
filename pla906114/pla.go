@@ -16,7 +16,9 @@ func timeTrack(start time.Time, name string) {
 }
 
 func (P *PLA) Init(settings *byte) {
-	P.setting = settings
+	var test byte = 7
+	// P.setting = settings
+	P.setting = &test
 }
 
 func (P *PLA) Attach(mem *memory.MEM, memtype MemType, startLocation int) {
@@ -58,6 +60,7 @@ func (P *PLA) getChip(addr uint16) MemType {
 		if *P.setting&CHAREN == CHAREN {
 			return IO
 		}
+		log.Fatal("Bad memory zone")
 	}
 	if addr > CharEnd {
 		if *P.setting&HIRAM == HIRAM {
@@ -75,10 +78,9 @@ func (P *PLA) Read(addr uint16) byte {
 	dest := P.getChip(addr)
 	transAddr := addr - uint16(P.startLocation[dest])
 
-	if P.getChip(addr) == IO {
+	if dest == IO {
 		if transAddr < 0x0400 {
-			log.Printf("here")
-			return P.vic.Read(transAddr >> 6)
+			return P.vic.Read(transAddr)
 		}
 		if transAddr < 0x0800 {
 			// log.Fatal("SID Not implemented")
@@ -90,12 +92,14 @@ func (P *PLA) Read(addr uint16) byte {
 			return P.Mem[IO].Val[transAddr]
 		}
 		if transAddr < 0x0D00 {
-			return P.cia1.Read(transAddr)
+			return P.cia1.Read(transAddr - 0x0C00)
 		}
 		if transAddr < 0x0E00 {
-			return P.cia2.Read(transAddr)
+			return P.cia2.Read(transAddr - 0x0D00)
 		} else {
-			log.Fatal("Bad IO addr")
+			// log.Fatal("I/O Not implemented")
+			P.Mem[IO].LastAccess[transAddr] = memory.READ
+			return P.Mem[IO].Val[transAddr]
 		}
 	}
 
@@ -127,14 +131,17 @@ func (P *PLA) Write(addr uint16, value byte) {
 			return
 		}
 		if transAddr < 0x0D00 {
-			P.cia1.Write(transAddr, value)
+			P.cia1.Write(transAddr-0x0C00, value)
 			return
 		}
 		if transAddr < 0x0E00 {
-			P.cia2.Write(transAddr, value)
+			P.cia2.Write(transAddr-0x0D00, value)
 			return
 		} else {
-			log.Fatal("Bad IO addr")
+			// log.Fatal("I/O Not implemented")
+			P.Mem[IO].Val[transAddr] = value
+			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
+			return
 		}
 	}
 	P.Mem[RAM].Val[addr] = value
@@ -151,6 +158,7 @@ func (P *PLA) Dump(startAddr uint16) {
 	for j := 0; j < 16; j++ {
 		fmt.Printf("%04X : ", cpt)
 		for i := 0; i < 16; i++ {
+			// fmt.Printf("getChip: %04X -> %d\n", cpt, P.getChip(cpt))
 			val = P.Read(cpt)
 			// switch P.Mem[zone].LastAccess[transAddr] {
 			// case memory.NONE:

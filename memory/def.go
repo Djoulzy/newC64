@@ -36,16 +36,16 @@ func (M *MEM) load(filename string) {
 }
 
 func (M *MEM) Clear() {
-	cpt := 0
-	fill := byte(0x00)
-	for i := range M.Val {
-		M.Val[i] = fill
-		cpt++
-		if cpt == 0x40 {
-			fill = ^fill
-			cpt = 0
-		}
-	}
+	// cpt := 0
+	// fill := byte(0x00)
+	// for i := range M.Val {
+	// 	M.Val[i] = fill
+	// 	cpt++
+	// 	if cpt == 0x40 {
+	// 		fill = ^fill
+	// 		cpt = 0
+	// 	}
+	// }
 }
 
 func (M *MEM) Init(size int, file string) {

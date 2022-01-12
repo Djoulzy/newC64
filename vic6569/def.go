@@ -53,7 +53,7 @@ type VIC struct {
 	RC          byte       // Row counter
 	BA          bool       // High: normal / Low: BadLine
 	SystemClock uint16
-	Reg         [47]byte
+	Reg         [64]byte
 
 	conf  *confload.ConfigData
 	BeamX int
@@ -72,24 +72,67 @@ type VIC struct {
 	graph     graphic.Driver
 
 	chargen *memory.MEM
-	io      *memory.MEM
-	color   *memory.MEM
-	ram     *memory.MEM
-	screen  *memory.MEM
+	// io      *memory.MEM
+	color  *memory.MEM
+	ram    *memory.MEM
+	screen *memory.MEM
 }
+
+const (
+	REG_X_SPRT_0           uint16 = iota // X coordinate sprite 0
+	REG_Y_SPRT_0                         // Y coordinate sprite 0
+	REG_X_SPRT_1                         // X coordinate sprite 1
+	REG_Y_SPRT_1                         // Y coordinate sprite 1
+	REG_X_SPRT_2                         // X coordinate sprite 2
+	REG_Y_SPRT_2                         // Y coordinate sprite 2
+	REG_X_SPRT_3                         // X coordinate sprite 3
+	REG_Y_SPRT_3                         // Y coordinate sprite 3
+	REG_X_SPRT_4                         // X coordinate sprite 4
+	REG_Y_SPRT_4                         // Y coordinate sprite 4
+	REG_X_SPRT_5                         // X coordinate sprite 5
+	REG_Y_SPRT_5                         // Y coordinate sprite 5
+	REG_X_SPRT_6                         // X coordinate sprite 6
+	REG_Y_SPRT_6                         // Y coordinate sprite 6
+	REG_X_SPRT_7                         // X coordinate sprite 7
+	REG_Y_SPRT_7                         // Y coordinate sprite 7
+	REG_MSBS_X_COOR                      // MSBs of X coordinates
+	REG_CTRL1                            // Control register 1
+	REG_RASTER                           // Raster counter
+	REG_LP_X                             // Light pen X
+	REG_LP_Y                             // Light pen Y
+	REG_SPRT_ENABLED                     // Sprite enabled
+	REG_CTRL2                            // Control register 2
+	REG_SPRT_Y_EXP                       // Sprite Y expansion
+	REG_MEM_LOC                          // Memory pointers
+	REG_IRQ                              // Interrupt register
+	REG_IRQ_ENABLED                      // Interrupt enabled
+	REG_SPRT_DATA_PRIORITY               // Sprite data priority
+	REG_SPRT_MLTCOLOR                    // Sprite multicolor
+	REG_SPRT_X_EXP                       // Sprite X expansion
+	REG_SPRT_SPRT_COLL                   // Spritesprite collision
+	REG_SPRT_DATA_COLL                   // Spritedata collision
+	REG_BORDER_COL                       // Border color
+	REG_BGCOLOR_0                        // Background color 0
+	REG_BGCOLOR_1                        // Background color 1
+	REG_BGCOLOR_2                        // Background color 2
+	REG_BGCOLOR_3                        // Background color 3
+	REG_SPRT_MLTCOLOR_0                  // Sprite multicolor 0
+	REG_SPRT_MLTCOLOR_1                  // Sprite multicolor 1
+	REG_COLOR_SPRT_0                     // Color sprite 0
+	REG_COLOR_SPRT_1                     // Color sprite 1
+	REG_COLOR_SPRT_2                     // Color sprite 2
+	REG_COLOR_SPRT_3                     // Color sprite 3
+	REG_COLOR_SPRT_4                     // Color sprite 4
+	REG_COLOR_SPRT_5                     // Color sprite 5
+	REG_COLOR_SPRT_6                     // Color sprite 6
+	REG_COLOR_SPRT_7                     // Color sprite 7
+)
 
 const (
 	colorStart  = 0x0800 // 0xD800 translated
 	screenStart = 0x0400
 
-	REG_CTRL1  uint16 = 0x0011 // 0xD011: Screen control (0b01111111)
-	REG_RASTER uint16 = 0x0012 // 0xD012: Raster 8 first bits
-	REG_CTRL2  uint16 = 0x0016 // 0xD016: Screen control (0b01111111)
-	REG_IRQ    uint16 = 0x0019 // 0xD019: IRQ Register
-	REG_SETIRQ uint16 = 0x001A // 0xD01A: IRQ Enabler
-	REG_EC     uint16 = 0x0020 // 0xD020: Border Color
-	REG_B0C    uint16 = 0x0021 // 0xD021: Background color 0
-	PALNTSC    uint16 = 0x02A6
+	PALNTSC uint16 = 0x02A6
 
 	YSCROLL byte = 0b00000111 // From REG_CTRL1
 	RSEL    byte = 0b00001000 // rom REG_CTRL1 : 0 = 24 rows; 1 = 25 rows.
