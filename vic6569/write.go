@@ -11,7 +11,8 @@ func (V *VIC) SpreadWrite(reg uint16, val byte) {
 func (V *VIC) Write(reg uint16, val byte) {
 	switch reg {
 	case REG_CTRL1:
-		V.RasterIRQ &= uint16(val&RST8) << 8
+		V.RasterIRQ &= 0x7FFF
+		V.RasterIRQ |= uint16(val&RST8) << 8
 		V.SpreadWrite(REG_CTRL1, val)
 	case REG_RASTER:
 		V.RasterIRQ = V.RasterIRQ&0x8000 + uint16(val)

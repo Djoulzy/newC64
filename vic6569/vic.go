@@ -71,13 +71,9 @@ func (V *VIC) Disassemble() string {
 
 func (V *VIC) saveRasterPos(val int) {
 	V.SpreadWrite(REG_RASTER, byte(val))
-	raster := V.io.Val[REG_CTRL1]
-	if (val & 0x8000) > 0 {
-		V.SpreadWrite(REG_CTRL1, raster|RST8)
-	} else {
-		V.SpreadWrite(REG_CTRL1, raster & ^RST8)
-	}
-	// fmt.Printf("val: %d - RST8: %08b - RASTER: %08b\n", val, V.ram.Data[REG_RST8], V.ram.Data[REG_RASTER])
+	mask := byte(val >> 8) & RST8
+	res := V.Reg[REG_CTRL1] & 0b01111111
+	V.SpreadWrite(REG_CTRL1, res|mask)
 }
 
 func (V *VIC) readVideoMatrix() {
@@ -89,7 +85,7 @@ func (V *VIC) readVideoMatrix() {
 }
 
 func (V *VIC) drawChar(X int, Y int) {
-	if V.drawArea && (V.io.Val[REG_CTRL1]&DEN > 0) {
+	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
 		charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
 		charData := V.chargen.Val[charAddr]
 		// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
@@ -101,14 +97,14 @@ func (V *VIC) drawChar(X int, Y int) {
 			if charData&bit > 0 {
 				V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
 			} else {
-				V.graph.DrawPixel(X+column, Y, Colors[V.io.Val[REG_B0C]&0b00001111])
+				V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_B0C]&0b00001111])
 			}
 		}
 		V.VMLI++
 		V.VC++
 	} else if V.visibleArea {
 		for column := 0; column < 8; column++ {
-			V.graph.DrawPixel(X+column, Y, Colors[V.io.Val[REG_EC]&0b00001111])
+			V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_EC]&0b00001111])
 		}
 	}
 }

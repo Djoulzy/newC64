@@ -76,22 +76,23 @@ func (P *PLA) Read(addr uint16) byte {
 	transAddr := addr - uint16(P.startLocation[dest])
 
 	if P.getChip(addr) == IO {
-		if addr < 0xD400 {
-			return P.vic.Read(transAddr)
+		if transAddr < 0x0400 {
+			log.Printf("here")
+			return P.vic.Read(transAddr >> 6)
 		}
-		if addr < 0xD800 {
+		if transAddr < 0x0800 {
 			// log.Fatal("SID Not implemented")
 			P.Mem[IO].LastAccess[transAddr] = memory.READ
 			return P.Mem[IO].Val[transAddr]
 		}
-		if addr < 0xDC00 {
+		if transAddr < 0x0C00 {
 			P.Mem[IO].LastAccess[transAddr] = memory.READ
 			return P.Mem[IO].Val[transAddr]
 		}
-		if addr < 0xDD00 {
+		if transAddr < 0x0D00 {
 			return P.cia1.Read(transAddr)
 		}
-		if addr < 0xDE00 {
+		if transAddr < 0x0E00 {
 			return P.cia2.Read(transAddr)
 		} else {
 			log.Fatal("Bad IO addr")
@@ -110,26 +111,26 @@ func (P *PLA) Write(addr uint16, value byte) {
 	// }
 	if P.getChip(addr) == IO {
 		transAddr = addr - uint16(P.startLocation[IO])
-		if addr < 0xD400 {
+		if transAddr < 0x0400 {
 			P.vic.Write(transAddr, value)
 			return
 		}
-		if addr < 0xD800 {
+		if transAddr < 0x0800 {
 			// log.Fatal("SID Not implemented")
 			P.Mem[IO].Val[transAddr] = value
 			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
-		if addr < 0xDC00 {
+		if transAddr < 0x0C00 {
 			P.Mem[IO].Val[transAddr] = value
 			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
-		if addr < 0xDD00 {
+		if transAddr < 0x0D00 {
 			P.cia1.Write(transAddr, value)
 			return
 		}
-		if addr < 0xDE00 {
+		if transAddr < 0x0E00 {
 			P.cia2.Write(transAddr, value)
 			return
 		} else {
@@ -145,30 +146,32 @@ func (P *PLA) GetView(start int, size int) []byte {
 
 func (P *PLA) Dump(startAddr uint16) {
 	var val byte
-	var zone MemType
-	var transAddr uint16
 	cpt := startAddr
 	fmt.Printf("\n")
 	for j := 0; j < 16; j++ {
 		fmt.Printf("%04X : ", cpt)
 		for i := 0; i < 16; i++ {
-			zone = P.getChip(cpt)
-			transAddr = cpt - uint16(P.startLocation[zone])
-			val = P.Mem[zone].Val[transAddr]
-			switch P.Mem[zone].LastAccess[transAddr] {
-			case memory.NONE:
-				if val != 0x00 && val != 0xFF {
-					clog.CPrintf("white", "black", "%02X", val)
-					fmt.Print(" ")
-				} else {
-					fmt.Printf("%02X ", val)
-				}
-			case memory.READ:
-				clog.CPrintf("white", "blue", "%02X", val)
+			val = P.Read(cpt)
+			// switch P.Mem[zone].LastAccess[transAddr] {
+			// case memory.NONE:
+			// 	if val != 0x00 && val != 0xFF {
+			// 		clog.CPrintf("white", "black", "%02X", val)
+			// 		fmt.Print(" ")
+			// 	} else {
+			// 		fmt.Printf("%02X ", val)
+			// 	}
+			// case memory.READ:
+			// 	clog.CPrintf("white", "blue", "%02X", val)
+			// 	fmt.Print(" ")
+			// case memory.WRITE:
+			// 	clog.CPrintf("white", "red", "%02X", val)
+			// 	fmt.Print(" ")
+			// }
+			if val != 0x00 && val != 0xFF {
+				clog.CPrintf("white", "black", "%02X", val)
 				fmt.Print(" ")
-			case memory.WRITE:
-				clog.CPrintf("white", "red", "%02X", val)
-				fmt.Print(" ")
+			} else {
+				fmt.Printf("%02X ", val)
 			}
 			cpt++
 		}
