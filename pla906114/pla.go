@@ -16,9 +16,7 @@ func timeTrack(start time.Time, name string) {
 }
 
 func (P *PLA) Init(settings *byte) {
-	var test byte = 7
-	// P.setting = settings
-	P.setting = &test
+	P.setting = settings
 }
 
 func (P *PLA) Attach(mem *memory.MEM, memtype MemType, startLocation int) {
