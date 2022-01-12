@@ -2,11 +2,12 @@ package cia6526
 
 import (
 	"newC64/memory"
+	"newC64/register"
 )
 
 type CIA struct {
 	name        string
-	io          *memory.MEM
+	reg         []register.REG
 	Signal_Pin  *int
 	systemCycle *uint16
 
@@ -38,8 +39,25 @@ const (
 
 func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.name = name
-	C.io = memCells
+	C.reg = make([]register.REG, CRB+1)
 	C.systemCycle = timer
+
+	C.reg[PRA].Init(memCells, PRA, 0x81)
+	C.reg[PRB].Init(memCells, PRB, 0xFF)
+	C.reg[DDRA].Init(memCells, DDRA, 0x00)
+	C.reg[DDRB].Init(memCells, DDRB, 0x00)
+	C.reg[TALO].Init(memCells, TALO, 0xFF)
+	C.reg[TAHI].Init(memCells, TAHI, 0xFF)
+	C.reg[TBLO].Init(memCells, TBLO, 0xFF)
+	C.reg[TBHI].Init(memCells, TBHI, 0xFF)
+	C.reg[TOD10THS].Init(memCells, TOD10THS, 0x00)
+	C.reg[TODSEC].Init(memCells, TODSEC, 0x00)
+	C.reg[TODMIN].Init(memCells, TODMIN, 0x00)
+	C.reg[TODHR].Init(memCells, TODHR, 0x01)
+	C.reg[SRD].Init(memCells, SRD, 0x00)
+	C.reg[ICR].Init(memCells, ICR, 0x00)
+	C.reg[CRA].Init(memCells, CRA, 0x00)
+	C.reg[CRB].Init(memCells, CRB, 0x00)
 
 	C.timerAlatch = 0
 	C.timerBlatch = 0
@@ -52,63 +70,70 @@ func (C *CIA) updateStates() {
 	// 	C.mem[ICR].IsRead = false
 	// }
 
-	if C.io.LastAccess[ICR] == memory.WRITE {
-		order := C.io.Val[ICR]
+	if C.reg[ICR].IsMofied() {
+		order := C.reg[ICR].Input()
 		mask := order & 0b00001111
 		if mask > 0 {
 			if order&0b10000000 > 0 { // 7eme bit = 1 -> mask set
-				C.io.CiaRegWrite(ICR, C.io.Val[ICR]|mask, memory.NONE)
+				C.reg[ICR].Output(C.reg[ICR].Val | mask)
 			} else {
-				C.io.CiaRegWrite(ICR, C.io.Val[ICR] & ^mask, memory.NONE)
+				C.reg[ICR].Output(C.reg[ICR].Val & ^mask)
 			}
 		} else {
-			C.io.LastAccess[ICR] = memory.NONE
+			C.reg[ICR].Reset()
 		}
 	}
 
-	if C.io.LastAccess[CRA] == memory.WRITE {
+	if C.reg[CRA].IsMofied() {
+		order := C.reg[CRA].Input()
 		// Load Latch Once
-		if C.io.Val[CRA]&0b00010000 > 0 {
-			C.timerAlatch = int32(C.io.Val[TAHI])<<8 + int32(C.io.Val[TALO])
+		if order&0b00010000 > 0 {
+			C.timerAlatch = int32(C.reg[TAHI].Val)<<8 + int32(C.reg[TALO].Val)
+
 		}
 		// Start or stop timer
-		if C.io.Val[CRA]&0b00000001 == 1 {
+		if order&0b00000001 == 1 {
 			C.timerAstate = true
 		} else {
 			C.timerAstate = false
 		}
-		C.io.CiaRegWrite(CRA, C.io.Val[CRA]&0b11101111, memory.NONE)
+		C.reg[CRA].Output(order & 0b11101111)
 	}
 
-	if C.io.LastAccess[CRB] == memory.WRITE {
+	if C.reg[CRB].IsMofied() {
+		order := C.reg[CRB].Input()
 		// Load Latch Once
-		if C.io.Val[CRB]&0b00010000 > 0 {
-			C.timerBlatch = int32(C.io.Val[TBHI])<<8 + int32(C.io.Val[TBLO])
+		if order&0b00010000 > 0 {
+			C.timerAlatch = int32(C.reg[TBHI].Val)<<8 + int32(C.reg[TBLO].Val)
 		}
 		// Start or stop timer
-		if C.io.Val[CRB]&0b00000001 == 1 {
+		if order&0b00000001 == 1 {
 			C.timerBstate = true
 		} else {
 			C.timerBstate = false
 		}
-		C.io.CiaRegWrite(CRB, C.io.Val[CRB]&0b11101111, memory.NONE)
+		C.reg[CRB].Output(order & 0b11101111)
 	}
 
-	if C.io.LastAccess[TALO] == memory.WRITE {
-		C.io.LastAccess[TALO] = memory.NONE
-		C.timerAlatch = int32(C.io.Val[TAHI])<<8 + int32(C.io.Val[TALO])
+	if C.reg[TALO].IsMofied() {
+		order := C.reg[TALO].Input()
+		C.timerAlatch = int32(C.reg[TAHI].Val)<<8 + int32(order)
+		C.reg[TALO].Reset()
 	}
-	if C.io.LastAccess[TAHI] == memory.WRITE {
-		C.io.LastAccess[TAHI] = memory.NONE
-		C.timerAlatch = int32(C.io.Val[TAHI])<<8 + int32(C.io.Val[TALO])
+	if C.reg[TAHI].IsMofied() {
+		order := C.reg[TAHI].Input()
+		C.timerAlatch = int32(order)<<8 + int32(C.reg[TALO].Val)
+		C.reg[TAHI].Reset()
 	}
-	if C.io.LastAccess[TBLO] == memory.WRITE {
-		C.io.LastAccess[TBLO] = memory.NONE
-		C.timerBlatch = int32(C.io.Val[TBHI])<<8 + int32(C.io.Val[TBLO])
+	if C.reg[TBLO].IsMofied() {
+		order := C.reg[TBLO].Input()
+		C.timerBlatch = int32(C.reg[TBHI].Val)<<8 + int32(order)
+		C.reg[TBLO].Reset()
 	}
-	if C.io.LastAccess[TBHI] == memory.WRITE {
-		C.io.LastAccess[TBHI] = memory.NONE
-		C.timerBlatch = int32(C.io.Val[TBHI])<<8 + int32(C.io.Val[TBLO])
+	if C.reg[TBHI].IsMofied() {
+		order := C.reg[TBHI].Input()
+		C.timerBlatch = int32(order)<<8 + int32(C.reg[TBLO].Val)
+		C.reg[TBHI].Reset()
 	}
 }
 

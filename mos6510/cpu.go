@@ -208,7 +208,7 @@ func (C *CPU) ComputeInstruction() {
 			C.nmi()
 		}
 		if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
-			log.Printf("IRQ")
+			// log.Printf("IRQ")
 			C.irq()
 		}
 	}

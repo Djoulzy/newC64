@@ -82,6 +82,8 @@ func setup() {
 	cia1.Init("CIA1", io.GetView(0x0C00, 0x0200), &vic.SystemClock)
 	cia2.Init("CIA2", io.GetView(0x0D00, 0x0200), &vic.SystemClock)
 
+	pla.Connect(&vic, &cia1, &cia2)
+
 	vic.IRQ_Pin = &cpu.IRQ
 	cia1.Signal_Pin = &cpu.IRQ
 	cia2.Signal_Pin = &cpu.NMI

@@ -3,8 +3,10 @@ package pla906114
 import (
 	"fmt"
 	"log"
+	"newC64/cia6526"
 	"newC64/clog"
 	"newC64/memory"
+	"newC64/vic6569"
 	"time"
 )
 
@@ -20,6 +22,12 @@ func (P *PLA) Init(settings *byte) {
 func (P *PLA) Attach(mem *memory.MEM, memtype MemType, startLocation int) {
 	P.Mem[memtype] = mem
 	P.startLocation[memtype] = startLocation
+}
+
+func (P *PLA) Connect(vic *vic6569.VIC, cia1 *cia6526.CIA, cia2 *cia6526.CIA) {
+	P.vic = vic
+	P.cia1 = cia1
+	P.cia2 = cia2
 }
 
 func (P *PLA) Clear(memtype MemType) {

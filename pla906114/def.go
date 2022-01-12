@@ -1,6 +1,10 @@
 package pla906114
 
-import "newC64/memory"
+import (
+	"newC64/cia6526"
+	"newC64/memory"
+	"newC64/vic6569"
+)
 
 type MEM struct {
 	Size     int
@@ -53,4 +57,8 @@ type PLA struct {
 	setting       *byte
 	startLocation [5]int
 	Mem           [5]*memory.MEM
+
+	vic  *vic6569.VIC
+	cia1 *cia6526.CIA
+	cia2 *cia6526.CIA
 }

@@ -52,11 +52,11 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video g
 
 	V.io.VicRegWrite(REG_EC, 0xFE, memory.NONE)  // Border Color : Lightblue
 	V.io.VicRegWrite(REG_B0C, 0xF6, memory.NONE) // Background Color : Blue
-	// V.io.VicRegWrite(REG_CTRL1,0b10011011)
-	// V.io.VicRegWrite(REG_RASTER,0b00000000)
-	// V.io.VicRegWrite(REG_CTRL2,0b00001000)
-	// V.io.VicRegWrite(REG_IRQ,0b00001111)
-	// V.io.VicRegWrite(REG_SETIRQ,0b00000000)
+	V.io.VicRegWrite(REG_CTRL1,0b10011011, memory.NONE)
+	V.io.VicRegWrite(REG_RASTER,0b00000000, memory.NONE)
+	V.io.VicRegWrite(REG_CTRL2,0b00001000, memory.NONE)
+	V.io.VicRegWrite(REG_IRQ,0b00001111, memory.NONE)
+	V.io.VicRegWrite(REG_SETIRQ,0b00000000, memory.NONE)
 
 	V.BA = true
 	V.VCBASE = 0
