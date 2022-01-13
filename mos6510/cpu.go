@@ -142,6 +142,9 @@ func (C *CPU) readWord(addr uint16) uint16 {
 
 // Byte
 func (C *CPU) pushByteStack(val byte) {
+	// if C.SP < 90 {
+	// 	os.Exit(1)
+	// }
 	C.stack[C.SP] = val
 	C.SP--
 }
