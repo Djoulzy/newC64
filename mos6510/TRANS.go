@@ -65,7 +65,7 @@ func (C *CPU) txs() {
 func (C *CPU) tya() {
 	switch C.inst.addr {
 	case implied:
-		C.Y = C.X
+		C.A = C.Y
 	default:
 		log.Fatal("Bad addressing mode")
 	}

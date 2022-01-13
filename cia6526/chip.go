@@ -10,13 +10,13 @@ type CIA struct {
 	Signal_Pin  *int
 	systemCycle *uint16
 
-	timerA_latchLO uint16
-	timerA_latchHI uint16
-	timerAstate    bool
+	timerA_latchLO byte
+	timerA_latchHI byte
 
-	timerB_latchLO uint16
-	timerB_latchHI uint16
-	timerBstate    bool
+	timerB_latchLO byte
+	timerB_latchHI byte
+
+	interrupt_mask byte
 }
 
 const (
@@ -36,6 +36,15 @@ const (
 	ICR // Interrupt control register
 	CRA // Timer A Control
 	CRB // Timer B Control
+)
+
+const (
+	INT_UNDERFL_TA      = 0b00000001
+	INT_UNDERFL_TB      = 0b00000010
+	INT_ALARM           = 0b00000100
+	INT_SDR             = 0b00001000
+	INT_INCOMING_SIGNAL = 0b00010000
+	INT_SET             = 0b10000000
 )
 
 func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
@@ -80,18 +89,18 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 
 	C.timerA_latchLO = 0xFF
 	C.timerA_latchHI = 0xFF
-	C.timerAstate = false
 
 	C.timerB_latchLO = 0xFF
 	C.timerB_latchHI = 0xFF
-	C.timerBstate = false
+
+	C.interrupt_mask = 0
 }
 
 func (C *CIA) Run() {
-	if C.timerAstate {
+	if C.Reg[CRA]&CTRL_START_STOP > 0 {
 		C.TimerA()
 	}
-	if C.timerBstate {
+	if C.Reg[CRB]&CTRL_START_STOP > 0 {
 		C.TimerB()
 	}
 }

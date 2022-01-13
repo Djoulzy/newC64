@@ -10,13 +10,13 @@ func (C *CIA) Write(addr uint16, val byte) {
 	case DDRA:
 	case DDRB:
 	case TALO:
-		C.timerAlatch = int32(C.Reg[TAHI])<<8 + int32(val)
+		C.timerA_latchLO = val
 	case TAHI:
-		C.timerAlatch = int32(val)<<8 + int32(C.Reg[TALO])
+		C.timerA_latchHI = val
 	case TBLO:
-		C.timerBlatch = int32(C.Reg[TBHI])<<8 + int32(val)
+		C.timerB_latchLO = val
 	case TBHI:
-		C.timerBlatch = int32(val)<<8 + int32(C.Reg[TBLO])
+		C.timerB_latchHI = val
 	case TOD10THS:
 	case TODSEC:
 	case TODMIN:
@@ -33,27 +33,24 @@ func (C *CIA) Write(addr uint16, val byte) {
 		}
 	case CRA:
 		// Load Latch Once
-		if val&0b00010000 > 0 {
-			C.timerAlatch = int32(C.Reg[TAHI])<<8 + int32(C.Reg[TALO])
+		if val&CTRL_LOAD_LATCH > 0 {
+			C.Reg[TAHI] = C.timerA_latchHI
+			C.Reg[TALO] = C.timerA_latchLO
 		}
-		// Start or stop timer
-		if val&0b00000001 == 1 {
-			C.timerAstate = true
-		} else {
-			C.timerAstate = false
-		}
-		C.Reg[CRA] = val & 0b11101111
+		C.Reg[CRA] = val & 0b11100111
 	case CRB:
 		// Load Latch Once
-		if val&0b00010000 > 0 {
-			C.timerAlatch = int32(C.Reg[TBHI])<<8 + int32(C.Reg[TBLO])
+		if val&CTRL_LOAD_LATCH > 0 {
+			C.Reg[TBHI] = C.timerB_latchHI
+			C.Reg[TBLO] = C.timerB_latchLO
 		}
-		// Start or stop timer
-		if val&0b00000001 == 1 {
-			C.timerBstate = true
-		} else {
-			C.timerBstate = false
-		}
-		C.Reg[CRB] = val & 0b11101111
+		C.Reg[CRB] = val & 0b11100111
 	}
+}
+
+func (C *CIA) testBit(reg uint16, mask byte) bool {
+	if C.Reg[reg]&mask == mask {
+		return true
+	}
+	return false
 }
