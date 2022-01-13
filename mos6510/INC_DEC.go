@@ -106,6 +106,6 @@ func (C *CPU) iny() {
 }
 
 func (C *CPU) isc() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.inst)
 	// log.Fatal("fichier INC_DEC")
 }

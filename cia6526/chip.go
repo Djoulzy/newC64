@@ -10,11 +10,13 @@ type CIA struct {
 	Signal_Pin  *int
 	systemCycle *uint16
 
-	timerAlatch int32
-	timerAstate bool
+	timerA_latchLO uint16
+	timerA_latchHI uint16
+	timerAstate    bool
 
-	timerBlatch int32
-	timerBstate bool
+	timerB_latchLO uint16
+	timerB_latchHI uint16
+	timerBstate    bool
 }
 
 const (
@@ -76,8 +78,13 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 		// C.Reg[CRB] = 0x00
 	}
 
-	C.timerAlatch = 0
-	C.timerBlatch = 0
+	C.timerA_latchLO = 0xFF
+	C.timerA_latchHI = 0xFF
+	C.timerAstate = false
+
+	C.timerB_latchLO = 0xFF
+	C.timerB_latchHI = 0xFF
+	C.timerBstate = false
 }
 
 func (C *CIA) Run() {

@@ -108,7 +108,7 @@ func (P *PLA) Read(addr uint16) byte {
 
 func (P *PLA) Write(addr uint16, value byte) {
 	var transAddr uint16
-	// if addr == 0x07E7 {
+	// if addr == 0x0199 {
 	// 	os.Exit(1)
 	// }
 	if P.getChip(addr) == IO {

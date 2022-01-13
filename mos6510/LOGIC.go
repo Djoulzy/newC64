@@ -42,14 +42,16 @@ func (C *CPU) asl() {
 		val = uint16(C.ram.Read(C.oper)) << 1
 		C.ram.Write(C.oper, byte(val))
 	case zeropageX:
-		val = uint16(C.ram.Read(C.oper+uint16(C.X))) << 1
-		C.ram.Write(C.oper, byte(val))
+		dest := C.oper+uint16(C.X)
+		val = uint16(C.ram.Read(dest)) << 1
+		C.ram.Write(dest, byte(val))
 	case absolute:
 		val = uint16(C.ram.Read(C.oper)) << 1
 		C.ram.Write(C.oper, byte(val))
 	case absoluteX:
-		val = uint16(C.ram.Read(C.oper+uint16(C.X))) << 1
-		C.ram.Write(C.oper, byte(val))
+		dest := C.oper+uint16(C.X)
+		val = uint16(C.ram.Read(dest)) << 1
+		C.ram.Write(dest, byte(val))
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -99,20 +101,22 @@ func (C *CPU) lsr() {
 		val >>= 1
 		C.ram.Write(C.oper, val)
 	case zeropageX:
-		val = C.ram.Read(C.oper + uint16(C.X))
+		dest := C.oper + uint16(C.X)
+		val = C.ram.Read(dest)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
-		C.ram.Write(C.oper, val)
+		C.ram.Write(dest, val)
 	case absolute:
 		val = C.ram.Read(C.oper)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
 		C.ram.Write(C.oper, val)
 	case absoluteX:
-		val = C.ram.Read(C.oper + uint16(C.X))
+		dest := C.oper + uint16(C.X)
+		val = C.ram.Read(dest)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
-		C.ram.Write(C.oper, val)
+		C.ram.Write(dest, val)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -148,7 +152,7 @@ func (C *CPU) ora() {
 }
 
 func (C *CPU) rla() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.inst)
 }
 
 func (C *CPU) rol() {
@@ -168,11 +172,12 @@ func (C *CPU) rol() {
 		}
 		C.ram.Write(C.oper, byte(val))
 	case zeropageX:
-		val = uint16(C.ram.Read(C.oper+uint16(C.X))) << 1
+		dest := C.oper+uint16(C.X)
+		val = uint16(C.ram.Read(dest)) << 1
 		if C.issetC() {
 			val++
 		}
-		C.ram.Write(C.oper, byte(val))
+		C.ram.Write(dest, byte(val))
 	case absolute:
 		val = uint16(C.ram.Read(C.oper)) << 1
 		if C.issetC() {
@@ -180,11 +185,12 @@ func (C *CPU) rol() {
 		}
 		C.ram.Write(C.oper, byte(val))
 	case absoluteX:
-		val = uint16(C.ram.Read(C.oper+uint16(C.X))) << 1
+		dest := C.oper+uint16(C.X)
+		val = uint16(C.ram.Read(dest)) << 1
 		if C.issetC() {
 			val++
 		}
-		C.ram.Write(C.oper, byte(val))
+		C.ram.Write(dest, byte(val))
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -214,13 +220,14 @@ func (C *CPU) ror() {
 		}
 		C.ram.Write(C.oper, val)
 	case zeropageX:
-		val = C.ram.Read(C.oper + uint16(C.X))
+		dest := C.oper + uint16(C.X)
+		val = C.ram.Read(dest)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
 		if C.issetC() {
 			val |= 0b10000000
 		}
-		C.ram.Write(C.oper, val>>1)
+		C.ram.Write(dest, val>>1)
 	case absolute:
 		val = C.ram.Read(C.oper)
 		C.setC(val&0x01 == 0x01)
@@ -230,13 +237,14 @@ func (C *CPU) ror() {
 		}
 		C.ram.Write(C.oper, val)
 	case absoluteX:
-		val = C.ram.Read(C.oper + uint16(C.X))
+		dest := C.oper + uint16(C.X)
+		val = C.ram.Read(dest)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
 		if C.issetC() {
 			val |= 0b10000000
 		}
-		C.ram.Write(C.oper, val>>1)
+		C.ram.Write(dest, val>>1)
 	default:
 		log.Fatal("Bad addressing mode")
 	}

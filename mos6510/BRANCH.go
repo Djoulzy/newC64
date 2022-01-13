@@ -8,8 +8,9 @@ import (
 func (C *CPU) bcc() {
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetC() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -19,8 +20,9 @@ func (C *CPU) bcc() {
 func (C *CPU) bcs() {
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetC() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -30,8 +32,9 @@ func (C *CPU) bcs() {
 func (C *CPU) beq() {
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetZ() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -41,8 +44,9 @@ func (C *CPU) beq() {
 func (C *CPU) bmi() {
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetN() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -52,8 +56,9 @@ func (C *CPU) bmi() {
 func (C *CPU) bne() {
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetZ() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -63,8 +68,9 @@ func (C *CPU) bne() {
 func (C *CPU) bpl() {
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetN() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -87,8 +93,9 @@ func (C *CPU) bvc() {
 	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetV() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
@@ -102,8 +109,9 @@ func (C *CPU) bvs() {
 	dest := C.getRelativeAddr(C.oper)
 	switch C.inst.addr {
 	case relative:
+		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetV() {
-			C.PC = C.getRelativeAddr(C.oper)
+			C.PC = C.oper
 		}
 	default:
 		log.Fatal("Bad addressing mode")
