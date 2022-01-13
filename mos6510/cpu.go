@@ -27,7 +27,6 @@ func (C *CPU) Reset() {
 	C.IRQ = 0
 	C.NMI = 0
 
-	C.ram.Clear(pla906114.RAM)
 	// PLA Settings (Bank switching)
 	// C.ram.Write(0x0000, 0x2F)
 	C.ram.Write(0x0001, 0x1F)

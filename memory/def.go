@@ -35,17 +35,24 @@ func (M *MEM) load(filename string) {
 	}
 }
 
-func (M *MEM) Clear() {
-	// cpt := 0
-	// fill := byte(0x00)
-	// for i := range M.Val {
-	// 	M.Val[i] = fill
-	// 	cpt++
-	// 	if cpt == 0x40 {
-	// 		fill = ^fill
-	// 		cpt = 0
-	// 	}
-	// }
+func (M *MEM) Clear(pattern bool) {
+	if pattern {
+		cpt := 0
+		fill := byte(0x00)
+		for i := range M.Val {
+			M.Val[i] = fill
+			cpt++
+			if cpt == 0x40 {
+				fill = ^fill
+				cpt = 0
+			}
+		}
+	} else {
+		fill := byte(0xFF)
+		for i := range M.Val {
+			M.Val[i] = fill
+		}
+	}
 }
 
 func (M *MEM) Init(size int, file string) {
@@ -56,7 +63,7 @@ func (M *MEM) Init(size int, file string) {
 		M.load(file)
 		M.ReadOnly = true
 	} else {
-		M.Clear()
+		M.Clear(false)
 		M.ReadOnly = false
 	}
 }

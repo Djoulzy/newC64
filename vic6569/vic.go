@@ -306,10 +306,14 @@ func (V *VIC) Run() bool {
 		if V.BeamY >= screenHeightPAL {
 			V.BeamY = 0
 			V.VCBASE = 0
-			V.graph.UpdateFrame()
+			if V.conf.Globals.Display {
+				V.graph.UpdateFrame()
+			}
 		}
 		if V.conf.Globals.Disassamble == true {
-			V.graph.UpdateFrame()
+			if V.conf.Globals.Display {
+				V.graph.UpdateFrame()
+			}
 		}
 	}
 	return V.BA

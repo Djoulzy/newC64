@@ -69,12 +69,8 @@ func setup() {
 	pla.Attach(&basic, pla906114.BASIC, pla906114.BasicStart)
 	pla.Attach(&chargen, pla906114.CHAR, pla906114.CharStart)
 
-	if conf.Display {
-		outputDriver = &graphic.SDLDriver{}
-		vic.Init(&mem, &io, &chargen, outputDriver, conf)
-	} else {
-		vic.SystemClock = 0
-	}
+	outputDriver = &graphic.SDLDriver{}
+	vic.Init(&mem, &io, &chargen, outputDriver, conf)
 
 	// CPU Setup
 	cpu.Init(&pla, &vic.SystemClock, conf)
@@ -138,6 +134,7 @@ func main() {
 
 ENDPROCESS:
 	for {
+
 		select {
 		case ch := <-cmd:
 			switch ch {
@@ -184,18 +181,16 @@ ENDPROCESS:
 				}
 			}
 		default:
+
 			if run {
-				if conf.Globals.Display {
-					cpuTurn = vic.Run()
-				} else {
-					vic.SystemClock++
-				}
+				cpuTurn = vic.Run()
 				if cpuTurn {
 					cpu.NextCycle()
 				}
 				cia1.Run()
 				cia2.Run()
 			}
+
 			if step && cpu.State == mos6510.ReadInstruction {
 				run = false
 			}

@@ -31,7 +31,7 @@ func (P *PLA) Connect(vic *vic6569.VIC, cia1 *cia6526.CIA, cia2 *cia6526.CIA) {
 }
 
 func (P *PLA) Clear(memtype MemType) {
-	P.Mem[memtype].Clear()
+	P.Mem[memtype].Clear(false)
 }
 
 func (P *PLA) getChip(addr uint16) MemType {
