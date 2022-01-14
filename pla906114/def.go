@@ -2,6 +2,7 @@ package pla906114
 
 import (
 	"newC64/cia6526"
+	"newC64/confload"
 	"newC64/memory"
 	"newC64/vic6569"
 )
@@ -57,6 +58,8 @@ type PLA struct {
 	setting       *byte
 	startLocation [5]int
 	Mem           [5]*memory.MEM
+	conf          *confload.ConfigData
+	count         byte
 
 	vic  *vic6569.VIC
 	cia1 *cia6526.CIA

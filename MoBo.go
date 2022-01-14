@@ -62,7 +62,7 @@ func setup() {
 	chargen.Init(chargenSize, "assets/roms/char.bin")
 
 	// PLA Setup
-	pla.Init(&mem.Val[1])
+	pla.Init(&mem.Val[1], conf)
 	pla.Attach(&mem, pla906114.RAM, 0)
 	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
 	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
@@ -144,23 +144,23 @@ ENDPROCESS:
 			case 'z':
 				Disassamble()
 				pla.Dump(0)
-			case 'f':
-				fill := byte(0x00)
-				i := uint16(0)
-				for i = 0x0400; i < 0x07FF; i++ {
-					pla.Write(i, fill)
-					fill++
-				}
-				for i = 0xD800; i < 0xDBFF; i++ {
-					pla.Write(i, fill)
-					fill++
-					if fill > 0x0F {
-						fill = 0x00
-					}
-					if fill == 6 {
-						fill++
-					}
-				}
+			// case 'f':
+			// 	fill := byte(0x00)
+			// 	i := uint16(0)
+			// 	for i = 0x0400; i < 0x07FF; i++ {
+			// 		pla.Write(i, fill)
+			// 		fill++
+			// 	}
+			// 	for i = 0xD800; i < 0xDBFF; i++ {
+			// 		pla.Write(i, fill)
+			// 		fill++
+			// 		if fill > 0x0F {
+			// 			fill = 0x00
+			// 		}
+			// 		if fill == 6 {
+			// 			fill++
+			// 		}
+			// 	}
 			case 'r':
 				run = true
 				step = false

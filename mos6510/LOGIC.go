@@ -205,45 +205,50 @@ func (C *CPU) ror() {
 
 	switch C.inst.addr {
 	case implied:
-		C.setC(C.A&0x01 == 0x01)
-		val = C.A >> 1
+		carry := C.A&0b00000001 > 0
+		C.A >>= 1
 		if C.issetC() {
 			C.A |= 0b10000000
 		}
-		C.A = val
+		C.setC(carry)
+		val = C.A
 	case zeropage:
 		val = C.ram.Read(C.oper)
-		C.setC(val&0x01 == 0x01)
+		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
 			val |= 0b10000000
 		}
+		C.setC(carry)
 		C.ram.Write(C.oper, val)
 	case zeropageX:
 		dest := C.oper + uint16(C.X)
 		val = C.ram.Read(dest)
-		C.setC(val&0x01 == 0x01)
+		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
 			val |= 0b10000000
 		}
+		C.setC(carry)
 		C.ram.Write(dest, val>>1)
 	case absolute:
 		val = C.ram.Read(C.oper)
-		C.setC(val&0x01 == 0x01)
+		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
 			val |= 0b10000000
 		}
+		C.setC(carry)
 		C.ram.Write(C.oper, val)
 	case absoluteX:
 		dest := C.oper + uint16(C.X)
 		val = C.ram.Read(dest)
-		C.setC(val&0x01 == 0x01)
+		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
 			val |= 0b10000000
 		}
+		C.setC(carry)
 		C.ram.Write(dest, val>>1)
 	default:
 		log.Fatal("Bad addressing mode")

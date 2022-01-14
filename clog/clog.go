@@ -147,6 +147,12 @@ func CPrintf(fgcolor string, bgcolor string, format string, vars ...interface{})
 	fmt.Printf(tmp, vars...)
 }
 
+//CPrintf is a Printf colored string
+func CSprintf(fgcolor string, bgcolor string, format string, vars ...interface{}) string {
+	tmp := GetColoredString(format, fgcolor, bgcolor)
+	return fmt.Sprintf(tmp, vars...)
+}
+
 //Output log mechanism
 func Output(str string, vars ...interface{}) {
 	before := fmt.Sprintf("%s", str)

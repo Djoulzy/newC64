@@ -5,7 +5,9 @@ import (
 	"log"
 	"newC64/cia6526"
 	"newC64/clog"
+	"newC64/confload"
 	"newC64/memory"
+	"newC64/trace"
 	"newC64/vic6569"
 	"time"
 )
@@ -15,8 +17,10 @@ func timeTrack(start time.Time, name string) {
 	log.Printf("%s took %s", name, elapsed)
 }
 
-func (P *PLA) Init(settings *byte) {
+func (P *PLA) Init(settings *byte, conf *confload.ConfigData) {
 	P.setting = settings
+	P.conf = conf
+	P.count = 0
 }
 
 func (P *PLA) Attach(mem *memory.MEM, memtype MemType, startLocation int) {
@@ -108,8 +112,12 @@ func (P *PLA) Read(addr uint16) byte {
 
 func (P *PLA) Write(addr uint16, value byte) {
 	var transAddr uint16
-	// if addr == 0x0199 {
-	// 	os.Exit(1)
+	// if addr == 0x0065 {
+
+	// 	P.count++
+	// 	if P.count > 1 {
+	// 		P.conf.Disassamble = true
+	// 	}
 	// }
 	if P.getChip(addr) == IO {
 		transAddr = addr - uint16(P.startLocation[IO])
@@ -151,37 +159,30 @@ func (P *PLA) GetView(start int, size int) []byte {
 
 func (P *PLA) Dump(startAddr uint16) {
 	var val byte
+	var line string
+	var ascii string
+
 	cpt := startAddr
 	fmt.Printf("\n")
 	for j := 0; j < 16; j++ {
 		fmt.Printf("%04X : ", cpt)
+		line = ""
+		ascii = ""
 		for i := 0; i < 16; i++ {
-			// fmt.Printf("getChip: %04X -> %d\n", cpt, P.getChip(cpt))
 			val = P.Read(cpt)
-			// switch P.Mem[zone].LastAccess[transAddr] {
-			// case memory.NONE:
-			// 	if val != 0x00 && val != 0xFF {
-			// 		clog.CPrintf("white", "black", "%02X", val)
-			// 		fmt.Print(" ")
-			// 	} else {
-			// 		fmt.Printf("%02X ", val)
-			// 	}
-			// case memory.READ:
-			// 	clog.CPrintf("white", "blue", "%02X", val)
-			// 	fmt.Print(" ")
-			// case memory.WRITE:
-			// 	clog.CPrintf("white", "red", "%02X", val)
-			// 	fmt.Print(" ")
-			// }
 			if val != 0x00 && val != 0xFF {
-				clog.CPrintf("white", "black", "%02X", val)
-				fmt.Print(" ")
+				line = line + clog.CSprintf("white", "black", "%02X", val) + " "
 			} else {
-				fmt.Printf("%02X ", val)
+				line = fmt.Sprintf("%s%02X ", line, val)
+			}
+			if _, ok := trace.PETSCII[val]; ok {
+				ascii += fmt.Sprintf("%s", string(trace.PETSCII[val]))
+			} else {
+				ascii += "."
 			}
 			cpt++
 		}
-		fmt.Println()
+		fmt.Printf("%s - %s\n", line, ascii)
 	}
 }
 
