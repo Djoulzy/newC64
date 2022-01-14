@@ -26,9 +26,9 @@ func (C *CIA) Write(addr uint16, val byte) {
 		mask := val & 0b00001111
 		if mask > 0 {
 			if val&0b10000000 > 0 { // 7eme bit = 1 -> mask set
-				C.Reg[ICR] = C.Reg[ICR] | mask
+				C.interrupt_mask = C.interrupt_mask | mask
 			} else {
-				C.Reg[ICR] = C.Reg[ICR] & ^mask
+				C.interrupt_mask = C.interrupt_mask & ^mask
 			}
 		}
 	case CRA:
