@@ -39,6 +39,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestStack(t *testing.T) {
+	mem.Clear(false)
 	for i := 0; i <= 0xFF; i++ {
 		proc.pushByteStack(byte(i))
 	}
@@ -60,6 +61,7 @@ func TestStack(t *testing.T) {
 }
 
 func TestLDA(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0xA9]
 	tables := []struct {
 		oper byte
@@ -87,6 +89,7 @@ func TestLDA(t *testing.T) {
 }
 
 func TestBNE(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0xD0]
 	tables := []struct {
 		s    byte
@@ -111,6 +114,7 @@ func TestBNE(t *testing.T) {
 }
 
 func TestADC(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0x75] // ZeropageX
 	tables := []struct {
 		acc     byte
@@ -133,13 +137,14 @@ func TestADC(t *testing.T) {
 		proc.oper = uint16(table.oper)
 		proc.adc()
 		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result - get: %04X - want: %04X", proc.A, proc.oper, proc.A, table.res)
+			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
 		}
 		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result Flags - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.resFlag)
+			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
 		}
 	}
 
+	mem.Clear(false)
 	tables = []struct {
 		acc     byte
 		x       byte
@@ -163,13 +168,14 @@ func TestADC(t *testing.T) {
 		proc.oper = uint16(table.oper)
 		proc.adc()
 		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC ($%02X,X) - Incorrect result - get: %04X - want: %04X", proc.A, proc.oper, proc.A, table.res)
+			t.Errorf("A: %02X / ADC ($%02X,X) - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
 		}
 		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / ADC ($%02X,X) - Incorrect result Flags - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.resFlag)
+			t.Errorf("A: %02X / ADC ($%02X,X) - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
 		}
 	}
 
+	mem.Clear(false)
 	tables = []struct {
 		acc     byte
 		x       byte
@@ -193,16 +199,17 @@ func TestADC(t *testing.T) {
 		proc.oper = uint16(table.oper)
 		proc.adc()
 		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC ($%02X),Y - Incorrect result - get: %04X - want: %04X", proc.A, proc.oper, proc.A, table.res)
+			t.Errorf("A: %02X / ADC ($%02X),Y - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
 		}
 		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / ADC ($%02X),Y - Incorrect result Flags - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.resFlag)
+			t.Errorf("A: %02X / ADC ($%02X),Y - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
 		}
 	}
 	log.Printf("ADC OK")
 }
 
 func TestSBC(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0xE9] // ZeropageX
 	tableIm := []struct {
 		acc     byte
@@ -227,9 +234,11 @@ func TestSBC(t *testing.T) {
 		}
 	}
 
+	mem.Clear(false)
 	proc.inst = mnemonic[0xF5] // ZeropageX
 	tables := []struct {
 		mem     byte
+		memVal  byte
 		acc     byte
 		x       byte
 		oper    byte
@@ -237,8 +246,8 @@ func TestSBC(t *testing.T) {
 		res     byte
 		resFlag byte
 	}{
-		{0x06, 0x01, 0x04, 0x10, 0b00110000, 0xFA, 0b10110000},
-		{0x06, 0x20, 0x04, 0x10, 0b00110000, 0x19, 0b00110001},
+		{0x06, 0x0E, 0x01, 0x04, 0x10, 0b00110000, 0xFA, 0b10110000},
+		{0x06, 0x0E, 0x20, 0x04, 0x10, 0b00110000, 0x19, 0b00110001},
 	}
 
 	for _, table := range tables {
@@ -256,8 +265,10 @@ func TestSBC(t *testing.T) {
 		}
 	}
 
+	mem.Clear(false)
 	tables = []struct {
 		mem     byte
+		memVal  byte
 		acc     byte
 		x       byte
 		oper    byte
@@ -265,17 +276,17 @@ func TestSBC(t *testing.T) {
 		res     byte
 		resFlag byte
 	}{
-		{0x06, 0x20, 0x04, 0x10, 0b00110000, 0x11, 0b00110001},
-		{0x06, 0x01, 0x04, 0x10, 0b00110001, 0xF3, 0b10110000},
-		{0x06, 0xA0, 0x04, 0x10, 0b00110000, 0x91, 0b10110001},
-		{0x06, 0xFE, 0x04, 0x10, 0b00110001, 0xF0, 0b10110001},
+		{0x06, 0x0E, 0x20, 0x04, 0x10, 0b00110000, 0x11, 0b00110001},
+		{0x06, 0x0E, 0x01, 0x04, 0x10, 0b00110001, 0xF3, 0b10110000},
+		{0x06, 0x0E, 0xA0, 0x04, 0x10, 0b00110000, 0x91, 0b10110001},
+		{0x06, 0x0E, 0xFE, 0x04, 0x10, 0b00110001, 0xF0, 0b10110001},
 	}
 
 	proc.inst = mnemonic[0xE1] // IndirectX
 	for _, table := range tables {
 		proc.ram.Write(0x0014, table.mem)
 		proc.ram.Write(0x0015, 0x02)
-		proc.ram.Write(0x0206, 0x0E)
+		proc.ram.Write(0x0206, table.memVal)
 		proc.S = table.flag
 		proc.A = table.acc
 		proc.X = table.x
@@ -289,8 +300,22 @@ func TestSBC(t *testing.T) {
 		}
 	}
 
+	// LDA #$06
+	// STA $0014
+	// LDA #$02
+	// STA $0015
+
+	// LDA #$0E
+	// STA $020A
+
+	// LDY #$04
+	// LDA #$fe
+	// SEC
+	// SBC ($14),Y
+	mem.Clear(false)
 	tables = []struct {
 		mem     byte
+		memVal  byte
 		acc     byte
 		x       byte
 		oper    byte
@@ -298,34 +323,36 @@ func TestSBC(t *testing.T) {
 		res     byte
 		resFlag byte
 	}{
-		{0x06, 0x20, 0x04, 0x14, 0b00110000, 0x11, 0b00110001},
-		{0x06, 0x01, 0x04, 0x14, 0b00110001, 0xF3, 0b10110000},
-		{0x06, 0xA0, 0x04, 0x14, 0b00110000, 0x91, 0b10110001},
-		{0x06, 0xFE, 0x04, 0x14, 0b00110001, 0xF0, 0b10110001},
+		{0x06, 0x0E, 0x20, 0x04, 0x14, 0b00110000, 0x11, 0b00110001},
+		{0x06, 0x0E, 0x01, 0x04, 0x14, 0b00110001, 0xF3, 0b10110000},
+		{0x06, 0x0E, 0xA0, 0x04, 0x14, 0b00110000, 0x91, 0b10110001},
+		{0x06, 0x0E, 0xFE, 0x04, 0x14, 0b00110001, 0xF0, 0b10110001},
+		// {0x06, 0x0E, 0x03, 0x08, 0b00110000, 0xFA, 0b10110000},
+		// {0x06, 0x0E, 0x03, 0x08, 0b00110001, 0xFB, 0b10110000},
 	}
 	proc.ram.Write(0x0015, 0x02)
-	proc.ram.Write(0x020A, 0x0E)
 	proc.inst = mnemonic[0xF1] // IndirectY
 	for _, table := range tables {
 		proc.ram.Write(0x0014, table.mem)
 		proc.ram.Write(0x0015, 0x02)
-		proc.ram.Write(0x0206, 0x0E)
+		proc.ram.Write(0x020A, table.memVal)
 		proc.S = table.flag
 		proc.A = table.acc
 		proc.Y = table.x
 		proc.oper = uint16(table.oper)
 		proc.sbc()
 		if proc.A != table.res {
-			t.Errorf("A: %02X / SBC ($%02X),Y - Incorrect result - get: %04X - want: %04X", proc.A, proc.oper, proc.A, table.res)
+			t.Errorf("A: %02X / SBC ($%02X),Y - Incorrect RESULT - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
 		}
 		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / SBC ($%02X),Y - Incorrect result Flags - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.resFlag)
+			t.Errorf("A: %02X / SBC ($%02X),Y - Incorrect FLAGS - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
 		}
 	}
 	log.Printf("SBC OK")
 }
 
 func TestCMP(t *testing.T) {
+	mem.Clear(false)
 	tables := []struct {
 		acc  byte
 		oper byte
@@ -351,6 +378,7 @@ func TestCMP(t *testing.T) {
 		}
 	}
 
+	mem.Clear(false)
 	tables = []struct {
 		acc  byte
 		oper byte
@@ -382,6 +410,7 @@ func TestCMP(t *testing.T) {
 }
 
 func TestROR(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0x76] // ZeropageX
 	tables := []struct {
 		val     byte
@@ -413,6 +442,7 @@ func TestROR(t *testing.T) {
 }
 
 func TestROL(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0x76] // ZeropageX
 	tables := []struct {
 		val     byte
@@ -447,6 +477,7 @@ func TestROL(t *testing.T) {
 }
 
 func TestLSR(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0x56] // ZeropageX
 	tables := []struct {
 		val     byte
@@ -481,6 +512,7 @@ func TestLSR(t *testing.T) {
 }
 
 func TestASL(t *testing.T) {
+	mem.Clear(false)
 	proc.inst = mnemonic[0x16] // ZeropageX
 	tables := []struct {
 		val     byte
@@ -521,6 +553,7 @@ func TestEOR(t *testing.T) {
 	// CLC
 	// LDA #$11
 	// EOR $10,X
+	mem.Clear(false)
 	proc.inst = mnemonic[0x55] // ZeropageX
 	tables := []struct {
 		val     byte
@@ -561,6 +594,7 @@ func TestBIT(t *testing.T) {
 	// CLC
 	// LDA #$11
 	// BIT $14
+	mem.Clear(false)
 	proc.inst = mnemonic[0x24] // Zeropage
 	tables := []struct {
 		val     byte
