@@ -203,8 +203,33 @@ func TestADC(t *testing.T) {
 }
 
 func TestSBC(t *testing.T) {
+	proc.inst = mnemonic[0xE9] // ZeropageX
+	tableIm := []struct {
+		acc     byte
+		oper    byte
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0x03, 0x08, 0b00110000, 0xFA, 0b10110000},
+		{0x03, 0x08, 0b00110001, 0xFB, 0b10110000},
+	}
+	for _, table := range tableIm {
+		proc.S = table.flag
+		proc.A = table.acc
+		proc.oper = uint16(table.oper)
+		proc.sbc()
+		if proc.A != table.res {
+			t.Errorf("A: %02X / SBC #$%02X - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("A: %02X / SBC #$%02X - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
+		}
+	}
+
 	proc.inst = mnemonic[0xF5] // ZeropageX
 	tables := []struct {
+		mem     byte
 		acc     byte
 		x       byte
 		oper    byte
@@ -212,11 +237,12 @@ func TestSBC(t *testing.T) {
 		res     byte
 		resFlag byte
 	}{
-		{0x01, 0x04, 0x10, 0b00110000, 0xFA, 0b10110000},
-		{0x20, 0x04, 0x10, 0b00110000, 0x19, 0b00110001},
+		{0x06, 0x01, 0x04, 0x10, 0b00110000, 0xFA, 0b10110000},
+		{0x06, 0x20, 0x04, 0x10, 0b00110000, 0x19, 0b00110001},
 	}
-	proc.ram.Write(0x0014, 0x06)
+
 	for _, table := range tables {
+		proc.ram.Write(0x0014, table.mem)
 		proc.S = table.flag
 		proc.A = table.acc
 		proc.X = table.x
@@ -231,6 +257,7 @@ func TestSBC(t *testing.T) {
 	}
 
 	tables = []struct {
+		mem     byte
 		acc     byte
 		x       byte
 		oper    byte
@@ -238,15 +265,17 @@ func TestSBC(t *testing.T) {
 		res     byte
 		resFlag byte
 	}{
-		{0x20, 0x04, 0x10, 0b00110000, 0x11, 0b00110001},
-		{0x01, 0x04, 0x10, 0b00110001, 0xF3, 0b10110000},
-		{0xA0, 0x04, 0x10, 0b00110000, 0x91, 0b10110001},
-		{0xFE, 0x04, 0x10, 0b00110001, 0xF0, 0b10110001},
+		{0x06, 0x20, 0x04, 0x10, 0b00110000, 0x11, 0b00110001},
+		{0x06, 0x01, 0x04, 0x10, 0b00110001, 0xF3, 0b10110000},
+		{0x06, 0xA0, 0x04, 0x10, 0b00110000, 0x91, 0b10110001},
+		{0x06, 0xFE, 0x04, 0x10, 0b00110001, 0xF0, 0b10110001},
 	}
-	proc.ram.Write(0x0015, 0x02)
-	proc.ram.Write(0x0206, 0x0E)
+
 	proc.inst = mnemonic[0xE1] // IndirectX
 	for _, table := range tables {
+		proc.ram.Write(0x0014, table.mem)
+		proc.ram.Write(0x0015, 0x02)
+		proc.ram.Write(0x0206, 0x0E)
 		proc.S = table.flag
 		proc.A = table.acc
 		proc.X = table.x
@@ -261,6 +290,7 @@ func TestSBC(t *testing.T) {
 	}
 
 	tables = []struct {
+		mem     byte
 		acc     byte
 		x       byte
 		oper    byte
@@ -268,15 +298,18 @@ func TestSBC(t *testing.T) {
 		res     byte
 		resFlag byte
 	}{
-		{0x20, 0x04, 0x14, 0b00110000, 0x11, 0b00110001},
-		{0x01, 0x04, 0x14, 0b00110001, 0xF3, 0b10110000},
-		{0xA0, 0x04, 0x14, 0b00110000, 0x91, 0b10110001},
-		{0xFE, 0x04, 0x14, 0b00110001, 0xF0, 0b10110001},
+		{0x06, 0x20, 0x04, 0x14, 0b00110000, 0x11, 0b00110001},
+		{0x06, 0x01, 0x04, 0x14, 0b00110001, 0xF3, 0b10110000},
+		{0x06, 0xA0, 0x04, 0x14, 0b00110000, 0x91, 0b10110001},
+		{0x06, 0xFE, 0x04, 0x14, 0b00110001, 0xF0, 0b10110001},
 	}
 	proc.ram.Write(0x0015, 0x02)
 	proc.ram.Write(0x020A, 0x0E)
 	proc.inst = mnemonic[0xF1] // IndirectY
 	for _, table := range tables {
+		proc.ram.Write(0x0014, table.mem)
+		proc.ram.Write(0x0015, 0x02)
+		proc.ram.Write(0x0206, 0x0E)
 		proc.S = table.flag
 		proc.A = table.acc
 		proc.Y = table.x
@@ -346,4 +379,211 @@ func TestCMP(t *testing.T) {
 		}
 	}
 	log.Printf("CMP OK")
+}
+
+func TestROR(t *testing.T) {
+	proc.inst = mnemonic[0x76] // ZeropageX
+	tables := []struct {
+		val     byte
+		x       byte
+		oper    byte
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0x06, 0x04, 0x10, 0b00110000, 0x03, 0b00110000},
+		{0x06, 0x04, 0x10, 0b00110001, 0x83, 0b10110000},
+	}
+
+	for _, table := range tables {
+		proc.ram.Write(0x0014, table.val)
+		proc.S = table.flag
+		proc.X = table.x
+		proc.oper = uint16(table.oper)
+		proc.ror()
+		res := proc.ram.Read(0x0014)
+		if res != table.res {
+			t.Errorf("Val: $%02X / ROR $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("Val: $%02X / ROR $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
+		}
+	}
+	log.Printf("ROR OK")
+}
+
+func TestROL(t *testing.T) {
+	proc.inst = mnemonic[0x76] // ZeropageX
+	tables := []struct {
+		val     byte
+		x       byte
+		oper    byte
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0x06, 0x04, 0x10, 0b00110000, 0x0C, 0b00110000},
+		{0x06, 0x04, 0x10, 0b00110001, 0x0D, 0b00110000},
+		{0x80, 0x04, 0x10, 0b00110001, 0x01, 0b00110001},
+		{0xF0, 0x04, 0x10, 0b00110001, 0xE1, 0b10110001},
+		{0xF0, 0x04, 0x10, 0b00110000, 0xE0, 0b10110001},
+	}
+
+	for _, table := range tables {
+		proc.ram.Write(0x0014, table.val)
+		proc.S = table.flag
+		proc.X = table.x
+		proc.oper = uint16(table.oper)
+		proc.rol()
+		res := proc.ram.Read(0x0014)
+		if res != table.res {
+			t.Errorf("Val: $%02X / ROL $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("Val: $%02X / ROL $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
+		}
+	}
+	log.Printf("ROL OK")
+}
+
+func TestLSR(t *testing.T) {
+	proc.inst = mnemonic[0x56] // ZeropageX
+	tables := []struct {
+		val     byte
+		x       byte
+		oper    byte
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0x80, 0x04, 0x10, 0b00110000, 0x40, 0b00110000},
+		{0x0F, 0x04, 0x10, 0b00110000, 0x07, 0b00110001},
+		{0x0F, 0x04, 0x10, 0b00110001, 0x07, 0b00110001},
+		{0x80, 0x04, 0x10, 0b00110001, 0x40, 0b00110000},
+		{0xFF, 0x04, 0x10, 0b00110001, 0x7F, 0b00110001},
+	}
+
+	for _, table := range tables {
+		proc.ram.Write(0x0014, table.val)
+		proc.S = table.flag
+		proc.X = table.x
+		proc.oper = uint16(table.oper)
+		proc.lsr()
+		res := proc.ram.Read(0x0014)
+		if res != table.res {
+			t.Errorf("Val: $%02X / LSR $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("Val: $%02X / LSR $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
+		}
+	}
+	log.Printf("LSR OK")
+}
+
+func TestASL(t *testing.T) {
+	proc.inst = mnemonic[0x16] // ZeropageX
+	tables := []struct {
+		val     byte
+		x       byte
+		oper    byte
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0x80, 0x04, 0x10, 0b00110000, 0x00, 0b00110011},
+		{0x7F, 0x04, 0x10, 0b00110000, 0xFE, 0b10110000},
+		{0x7F, 0x04, 0x10, 0b00110001, 0xFE, 0b10110000},
+		{0x80, 0x04, 0x10, 0b00110001, 0x00, 0b00110011},
+		{0xFF, 0x04, 0x10, 0b00110001, 0xFE, 0b10110001},
+	}
+
+	for _, table := range tables {
+		proc.ram.Write(0x0014, table.val)
+		proc.S = table.flag
+		proc.X = table.x
+		proc.oper = uint16(table.oper)
+		proc.asl()
+		res := proc.ram.Read(0x0014)
+		if res != table.res {
+			t.Errorf("Val: $%02X / ASL $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("Val: $%02X / ASL $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
+		}
+	}
+	log.Printf("ASL OK")
+}
+
+func TestEOR(t *testing.T) {
+	// LDA #$80
+	// STA $14
+	// LDX #$04
+	// CLC
+	// LDA #$11
+	// EOR $10,X
+	proc.inst = mnemonic[0x55] // ZeropageX
+	tables := []struct {
+		val     byte
+		a       byte
+		x       byte
+		oper    byte
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0x80, 0x11, 0x04, 0x10, 0b00110000, 0x91, 0b10110000},
+		{0x80, 0x80, 0x04, 0x10, 0b00110000, 0x00, 0b00110010},
+		{0x80, 0x0F, 0x04, 0x10, 0b00110001, 0x8F, 0b10110001},
+		{0x80, 0xFF, 0x04, 0x10, 0b00110001, 0x7F, 0b00110001},
+		{0x80, 0x00, 0x04, 0x10, 0b00110001, 0x80, 0b10110001},
+	}
+
+	for _, table := range tables {
+		proc.ram.Write(0x0014, table.val)
+		proc.S = table.flag
+		proc.X = table.x
+		proc.A = table.a
+		proc.oper = uint16(table.oper)
+		proc.eor()
+		if proc.A != table.res {
+			t.Errorf("LDA #$%02X / EOR $%02X,X - Incorrect result - get: %02X - want: %02X", table.a, proc.oper, proc.A, table.res)
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("LDA #$%02X / EOR $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.a, proc.oper, proc.S, table.resFlag)
+		}
+	}
+	log.Printf("EOR OK")
+}
+
+func TestBIT(t *testing.T) {
+	// LDA #$80
+	// STA $14
+	// CLC
+	// LDA #$11
+	// BIT $14
+	proc.inst = mnemonic[0x24] // Zeropage
+	tables := []struct {
+		val     byte
+		a       byte
+		flag    byte
+		resFlag byte
+	}{
+		{0x80, 0x11, 0b00110000, 0b10110010},
+		{0x80, 0x80, 0b00110000, 0b10110000},
+		{0x80, 0x0F, 0b00110001, 0b10110011},
+		{0x80, 0xFF, 0b00110001, 0b10110001},
+		{0x80, 0x00, 0b00110011, 0b10110011},
+	}
+
+	for _, table := range tables {
+		proc.ram.Write(0x0014, table.val)
+		proc.S = table.flag
+		proc.A = table.a
+		proc.oper = 0x14
+		proc.bit()
+		if proc.S != table.resFlag {
+			t.Errorf("LDA #$%02X / LDA #$%02X -> BIT $%02X - Incorrect result Flags - get: %08b - want: %08b", table.val, table.a, proc.oper, proc.S, table.resFlag)
+		}
+	}
+	log.Printf("BIT OK")
 }

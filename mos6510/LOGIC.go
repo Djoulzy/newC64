@@ -230,7 +230,7 @@ func (C *CPU) ror() {
 			val |= 0b10000000
 		}
 		C.setC(carry)
-		C.ram.Write(dest, val>>1)
+		C.ram.Write(dest, val)
 	case absolute:
 		val = C.ram.Read(C.oper)
 		carry := val&0b00000001 > 0
@@ -249,11 +249,11 @@ func (C *CPU) ror() {
 			val |= 0b10000000
 		}
 		C.setC(carry)
-		C.ram.Write(dest, val>>1)
+		C.ram.Write(dest, val)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	C.setN(false)
+	C.updateN(byte(val))
 	C.updateZ(byte(val))
 
 }

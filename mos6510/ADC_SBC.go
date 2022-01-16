@@ -73,49 +73,49 @@ func (C *CPU) sbc() {
 	switch C.inst.addr {
 	case immediate:
 		val = uint16(C.A) + ^C.oper + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, byte(^oper), byte(val))
 		C.A = byte(val)
 	case zeropage:
 		oper = ^C.ram.Read(C.oper)
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case zeropageX:
 		oper = ^C.ram.Read(C.oper + uint16(C.X))
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case absolute:
 		oper = ^C.ram.Read(C.oper)
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case absoluteX:
 		oper = ^C.ram.Read(C.oper + uint16(C.X))
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case absoluteY:
 		oper = ^C.ram.Read(C.oper + uint16(C.Y))
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case indirectX:
 		oper = ^C.ReadIndirectX(C.oper)
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case indirectY:
 		oper = ^C.ReadIndirectY(C.oper)
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x0FF)
+		C.setC(val >= 0x00)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	default:

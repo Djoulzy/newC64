@@ -10,14 +10,14 @@ func (C *CPU) bit() {
 	switch C.inst.addr {
 	case zeropage:
 		oper = C.ram.Read(C.oper)
-		C.setN(oper&^N_mask > 0)
-		C.setV(oper&^V_mask > 0)
 		val = C.A & oper
+		C.setV(oper&0b01000000 == 0b01000000)
+		C.setN(oper&0b10000000 == 0b10000000)
 	case absolute:
 		oper = C.ram.Read(C.oper)
-		C.setN(oper&^N_mask > 0)
-		C.setV(oper&^V_mask > 0)
 		val = C.A & oper
+		C.setV(oper&0b01000000 == 0b01000000)
+		C.setN(oper&0b10000000 == 0b10000000)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
