@@ -14,6 +14,14 @@ func (C *CPU) updateZ(val byte) {
 	}
 }
 
+func (C *CPU) setZ(val bool) {
+	if val {
+		C.S |= ^Z_mask
+	} else {
+		C.S &= Z_mask
+	}
+}
+
 func (C *CPU) issetZ() bool {
 	return C.S & ^Z_mask > 0
 }

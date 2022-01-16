@@ -137,7 +137,7 @@ func TestADC(t *testing.T) {
 		proc.oper = uint16(table.oper)
 		proc.adc()
 		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
+			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result - get: %02X - want: %02X", table.acc, proc.oper, proc.A, table.res)
 		}
 		if proc.S != table.resFlag {
 			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
@@ -158,6 +158,7 @@ func TestADC(t *testing.T) {
 		{0xA0, 0x04, 0x10, 0b00110000, 0xAE, 0b10110000},
 		{0xFE, 0x04, 0x10, 0b00110001, 0x0D, 0b00110001},
 	}
+	proc.ram.Write(0x0014, 0x06)
 	proc.ram.Write(0x0015, 0x02)
 	proc.ram.Write(0x0206, 0x0E)
 	proc.inst = mnemonic[0x61] // IndirectX
@@ -189,6 +190,7 @@ func TestADC(t *testing.T) {
 		{0xA0, 0x04, 0x14, 0b00110000, 0xAE, 0b10110000},
 		{0xFE, 0x04, 0x14, 0b00110001, 0x0D, 0b00110001},
 	}
+	proc.ram.Write(0x0014, 0x06)
 	proc.ram.Write(0x0015, 0x02)
 	proc.ram.Write(0x020A, 0x0E)
 	proc.inst = mnemonic[0x71] // IndirectY
@@ -293,10 +295,10 @@ func TestSBC(t *testing.T) {
 		proc.oper = uint16(table.oper)
 		proc.sbc()
 		if proc.A != table.res {
-			t.Errorf("A: %02X / SBC ($%02X,X) - Incorrect result - get: %04X - want: %04X", proc.A, proc.oper, proc.A, table.res)
+			t.Errorf("A: %02X / SBC ($%02X,X) - Incorrect RESULT - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
 		}
 		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / SBC ($%02X,X) - Incorrect result Flags - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.resFlag)
+			t.Errorf("A: %02X / SBC ($%02X,X) - Incorrect FLAGS - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
 		}
 	}
 
@@ -327,8 +329,8 @@ func TestSBC(t *testing.T) {
 		{0x06, 0x0E, 0x01, 0x04, 0x14, 0b00110001, 0xF3, 0b10110000},
 		{0x06, 0x0E, 0xA0, 0x04, 0x14, 0b00110000, 0x91, 0b10110001},
 		{0x06, 0x0E, 0xFE, 0x04, 0x14, 0b00110001, 0xF0, 0b10110001},
-		// {0x06, 0x0E, 0x03, 0x08, 0b00110000, 0xFA, 0b10110000},
-		// {0x06, 0x0E, 0x03, 0x08, 0b00110001, 0xFB, 0b10110000},
+		{0x06, 0x08, 0x03, 0x04, 0x14, 0b00110001, 0xFB, 0b10110000},
+		{0x06, 0x08, 0x03, 0x04, 0x14, 0b00110000, 0xFA, 0b10110000},
 	}
 	proc.ram.Write(0x0015, 0x02)
 	proc.inst = mnemonic[0xF1] // IndirectY
