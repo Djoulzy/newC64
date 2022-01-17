@@ -176,6 +176,18 @@ func TestADC(t *testing.T) {
 		}
 	}
 
+	// LDA #$06
+	// STA $0014
+	// LDA #$02
+	// STA $0015
+	
+	// LDA #$0E
+	// STA $020A
+	
+	// LDY #$04
+	// LDA #$20
+	// CLC
+	// ADC ($14),Y
 	mem.Clear(false)
 	tables = []struct {
 		acc     byte

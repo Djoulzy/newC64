@@ -17,23 +17,15 @@ func (C *CPU) adc() {
 		C.updateV(C.A, byte(oper), byte(val))
 		C.A = byte(val)
 	case zeropage:
-		oper = C.ram.Read(C.oper)
-		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x00FF)
-		C.updateV(C.A, oper, byte(val))
-		C.A = byte(val)
-	case zeropageX:
-		oper = C.ram.Read(C.oper + uint16(C.X))
-		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
-		C.setC(val > 0x00FF)
-		C.updateV(C.A, oper, byte(val))
-		C.A = byte(val)
+		fallthrough
 	case absolute:
 		oper = C.ram.Read(C.oper)
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
 		C.setC(val > 0x00FF)
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
+	case zeropageX:
+		fallthrough
 	case absoluteX:
 		oper = C.ram.Read(C.oper + uint16(C.X))
 		val = uint16(C.A) + uint16(oper) + uint16(C.getC())
@@ -78,19 +70,7 @@ func (C *CPU) sbc() {
 		C.updateV(C.A, ^byte(C.oper), byte(val))
 		C.A = byte(val)
 	case zeropage:
-		val = int(C.A) - int(C.ram.Read(C.oper))
-		if C.getC() == 0 {
-			val -= 1
-		}
-		C.updateV(C.A, ^C.ram.Read(C.oper), byte(val))
-		C.A = byte(val)
-	case zeropageX:
-		val = int(C.A) - int(C.ram.Read(C.oper+uint16(C.X)))
-		if C.getC() == 0 {
-			val -= 1
-		}
-		C.updateV(C.A, ^C.ram.Read(C.oper+uint16(C.X)), byte(val))
-		C.A = byte(val)
+		fallthrough
 	case absolute:
 		val = int(C.A) - int(C.ram.Read(C.oper))
 		if C.getC() == 0 {
@@ -98,6 +78,8 @@ func (C *CPU) sbc() {
 		}
 		C.updateV(C.A, ^C.ram.Read(C.oper), byte(val))
 		C.A = byte(val)
+	case zeropageX:
+		fallthrough
 	case absoluteX:
 		val = int(C.A) - int(C.ram.Read(C.oper+uint16(C.X)))
 		if C.getC() == 0 {

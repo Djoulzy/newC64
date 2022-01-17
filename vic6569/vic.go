@@ -71,7 +71,7 @@ func (V *VIC) Disassemble() string {
 
 func (V *VIC) saveRasterPos(val int) {
 	V.Reg[REG_RASTER] = byte(val)
-	mask := byte(val>>8) & RST8
+	mask := byte(val>>1) & RST8
 	res := V.Reg[REG_CTRL1] & 0b01111111
 	V.Reg[REG_CTRL1] = res | mask
 }

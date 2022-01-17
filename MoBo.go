@@ -57,7 +57,7 @@ func setup() {
 	// ROMs & RAM Setup
 	mem.Init(ramSize, "")
 	io.Init(ioSize, "")
-	kernal.Init(kernalSize, "assets/roms/kernal.bin")
+	kernal.Init(kernalSize, "assets/roms/dolphin.bin")
 	basic.Init(basicSize, "assets/roms/basic.bin")
 	chargen.Init(chargenSize, "assets/roms/char.bin")
 
