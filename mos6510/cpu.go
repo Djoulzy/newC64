@@ -12,8 +12,6 @@ func (C *CPU) timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	if elapsed > time.Microsecond {
 		log.Printf("%s took %s", name, elapsed)
-		C.Disassemble()
-		fmt.Printf("\n")
 	}
 }
 
@@ -220,6 +218,7 @@ func (C *CPU) ComputeInstruction() {
 }
 
 func (C *CPU) NextCycle() {
+	defer C.timeTrack(time.Now(), "ComputeInstruction")
 	var ok bool
 
 	C.cycleCount++
@@ -319,6 +318,7 @@ func (C *CPU) NextCycle() {
 		}
 		switch C.inst.addr {
 		case absolute:
+			C.val_absolute = C.ram.Read(C.oper)
 			C.State = Compute
 			if C.inst.cycles == 3 {
 				C.ComputeInstruction()
@@ -365,6 +365,7 @@ func (C *CPU) NextCycle() {
 	case ReadAbsXY: // Cycle 4
 		switch C.inst.addr {
 		case absoluteX:
+			C.val_absolute = C.ram.Read(C.oper)
 			fallthrough
 		case absoluteY:
 			C.State = Compute
