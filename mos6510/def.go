@@ -57,7 +57,15 @@ const (
 	ReadInstruction
 	ReadOperLO
 	ReadOperHI
+	ReadZP
+	ReadZP_XY
+	ReadAbsolute
+	ReadAbsXY
+	ReadIndirect
+	ReadIndXY_LO
+	ReadIndXY_HI
 	Compute
+	WriteResult
 )
 
 // CPU :
@@ -71,13 +79,20 @@ type CPU struct {
 	IRQ int
 	NMI int
 
-	conf        *confload.ConfigData
-	ram         *pla906114.PLA
-	stack       []byte
-	InstStart   uint16
-	instDump    string
-	inst        instruction
-	oper        uint16
+	conf      *confload.ConfigData
+	ram       *pla906114.PLA
+	stack     []byte
+	InstStart uint16
+	instDump  string
+	inst      instruction
+
+	oper         uint16
+	val_zp_lo    byte
+	val_zp_hi    byte
+	val_absolute byte
+	val_absXY    byte
+	comp_result  byte
+
 	cycleCount  int
 	State       cpuState
 	ClockCycles *uint16

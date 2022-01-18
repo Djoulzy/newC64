@@ -201,29 +201,37 @@ func (C *CPU) GoTo(addr uint16) {
 }
 
 func (C *CPU) ComputeInstruction() {
-	if C.cycleCount == C.inst.cycles {
-		// defer C.timeTrack(time.Now(), "ComputeInstruction")
-		C.State = ReadInstruction
-		C.inst.action()
-		if C.NMI > 0 {
-			// log.Printf("NMI")
-			C.nmi()
-		}
-		if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
-			// log.Printf("IRQ")
-			C.irq()
-		}
+	// if C.cycleCount == C.inst.cycles {
+	// defer C.timeTrack(time.Now(), "ComputeInstruction")
+	C.State = ReadInstruction
+	C.inst.action()
+	if C.cycleCount != C.inst.cycles {
+		log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
 	}
+	if C.NMI > 0 {
+		// log.Printf("NMI")
+		C.nmi()
+	}
+	if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
+		// log.Printf("IRQ")
+		C.irq()
+	}
+	// }
 }
 
 func (C *CPU) NextCycle() {
 	var ok bool
 
 	C.cycleCount++
+	// fmt.Printf("%d - %d\n", C.cycleCount, C.State)
 	switch C.State {
 	case Idle:
 		C.cycleCount = 0
 		C.State++
+
+	////////////////////////////////////////////////
+	// Cycle 1
+	////////////////////////////////////////////////
 	case ReadInstruction:
 		C.cycleCount = 1
 		C.InstStart = C.PC
@@ -234,35 +242,166 @@ func (C *CPU) NextCycle() {
 			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
 			// C.State = Idle
 		}
-		if C.inst.bytes > 1 {
-			C.State = ReadOperLO
-		} else {
+		if C.inst.addr == implied {
 			C.State = Compute
 			C.PC += 1
-			C.ComputeInstruction()
+		} else {
+			C.State = ReadOperLO
 		}
+
+	////////////////////////////////////////////////
+	// Cycle 2
+	////////////////////////////////////////////////
 	case ReadOperLO:
 		C.oper = uint16(C.ram.Read(C.PC + 1))
 		if C.conf.Disassamble {
 			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
 		}
-		if C.inst.bytes > 2 {
-			C.State = ReadOperHI
-		} else {
+		switch C.inst.addr {
+		case relative:
+			fallthrough
+		case immediate:
 			C.State = Compute
 			C.PC += 2
-			C.ComputeInstruction()
+			if C.inst.cycles == 2 {
+				C.ComputeInstruction()
+			}
+		case absolute:
+			fallthrough
+		case indirect:
+			fallthrough
+		case absoluteX:
+			fallthrough
+		case absoluteY:
+			C.State = ReadOperHI
+		case zeropage:
+			fallthrough
+		case zeropageX:
+			fallthrough
+		case zeropageY:
+			fallthrough
+		case indirectX:
+			fallthrough
+		case indirectY:
+			C.State = ReadZP
+		default:
+			log.Fatal("Erreur de cycle")
 		}
-	case ReadOperHI:
+
+	////////////////////////////////////////////////
+	// Cycle 3
+	////////////////////////////////////////////////
+	case ReadZP:
+		C.PC += 2
+		switch C.inst.addr {
+		case zeropage:
+			C.State = Compute
+			if C.inst.cycles == 3 {
+				C.ComputeInstruction()
+			}
+		case zeropageX:
+			fallthrough
+		case zeropageY:
+			C.State = ReadZP_XY
+		case indirectX:
+			fallthrough
+		case indirectY:
+			C.State = ReadIndXY_LO
+		default:
+			log.Fatal("Erreur de cycle")
+		}
+
+	case ReadOperHI: // Cycle 3
+		C.oper += uint16(C.ram.Read(C.PC+2)) << 8
+		C.PC += 3
 		if C.conf.Disassamble {
 			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
 		}
-		C.oper += uint16(C.ram.Read(C.PC+2)) << 8
+		switch C.inst.addr {
+		case absolute:
+			C.State = Compute
+			if C.inst.cycles == 3 {
+				C.ComputeInstruction()
+			}
+		case absoluteX:
+			fallthrough
+		case absoluteY:
+			C.State = ReadAbsXY
+		case indirect:
+			C.State = ReadIndirect
+		default:
+			log.Fatal("Erreur de cycle")
+		}
+
+	////////////////////////////////////////////////
+	// Cycle 4
+	////////////////////////////////////////////////
+	case ReadZP_XY: // Cycle 4
+		switch C.inst.addr {
+		case zeropageX:
+			fallthrough
+		case zeropageY:
+			C.State = Compute
+			if C.inst.cycles == 4 {
+				C.ComputeInstruction()
+			}
+		default:
+			log.Fatal("Erreur de cycle")
+		}
+
+	case ReadIndXY_LO: // Cycle 4
+		switch C.inst.addr {
+		case indirectX:
+			C.State = ReadIndXY_HI
+		case indirectY:
+			C.State = ReadIndXY_HI
+		default:
+			log.Fatal("Erreur de cycle")
+		}
+
+	case ReadIndirect: // Cycle 4
 		C.State = Compute
-		C.PC += 3
-		C.ComputeInstruction()
+
+	case ReadAbsXY: // Cycle 4
+		switch C.inst.addr {
+		case absoluteX:
+			fallthrough
+		case absoluteY:
+			C.State = Compute
+			if C.inst.cycles == 4 {
+				C.ComputeInstruction()
+			}
+		default:
+			log.Fatal("Erreur de cycle")
+		}
+
+	////////////////////////////////////////////////
+	// Cycle 5
+	////////////////////////////////////////////////
+
+	case ReadIndXY_HI:
+		switch C.inst.addr {
+		case indirectX:
+			C.State = Compute
+		case indirectY:
+			C.State = Compute
+			if C.inst.cycles == 5 {
+				C.ComputeInstruction()
+			}
+		default:
+			log.Fatal("Erreur de cycle")
+		}
+
+	////////////////////////////////////////////////
+	// Exec
+	////////////////////////////////////////////////
 	case Compute:
-		C.ComputeInstruction()
+		if C.cycleCount > C.inst.cycles {
+			log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
+		}
+		if C.inst.cycles == C.cycleCount {
+			C.ComputeInstruction()
+		}
 	default:
 		log.Fatal("Unknown CPU state\n")
 	}
