@@ -80,9 +80,9 @@ func setup() {
 
 	pla.Connect(&vic, &cia1, &cia2)
 
-	vic.IRQ_Pin = &cpu.IRQ
-	cia1.Signal_Pin = &cpu.IRQ
-	cia2.Signal_Pin = &cpu.NMI
+	vic.IRQ_Pin = &cpu.IRQ_pin
+	cia1.Signal_Pin = &cpu.IRQ_pin
+	cia2.Signal_Pin = &cpu.NMI_pin
 }
 
 func input() {
@@ -185,6 +185,16 @@ ENDPROCESS:
 			if run {
 				cpuTurn = vic.Run()
 				if cpuTurn {
+					if cpu.State == mos6510.ReadInstruction {
+						if cpu.NMI_pin > 0 {
+							// log.Printf("NMI")
+							cpu.NMI()
+						}
+						if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
+							// log.Printf("IRQ")
+							cpu.IRQ()
+						}
+					}
 					cpu.NextCycle()
 				}
 				cia1.Run()

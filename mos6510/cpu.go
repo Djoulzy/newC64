@@ -10,9 +10,9 @@ import (
 
 func (C *CPU) timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
-	if elapsed > time.Microsecond {
-		log.Printf("%s took %s", name, elapsed)
-	}
+	// if elapsed > time.Microsecond {
+		log.Printf("Phase %d - %s - %s took %s", C.State, C.inst.name, name, elapsed)
+	// }
 }
 
 func (C *CPU) Reset() {
@@ -22,8 +22,8 @@ func (C *CPU) Reset() {
 	C.S = 0b00100000
 	C.SP = 0xFF
 
-	C.IRQ = 0
-	C.NMI = 0
+	C.IRQ_pin = 0
+	C.NMI_pin = 0
 
 	// PLA Settings (Bank switching)
 	// C.ram.Write(0x0000, 0x2F)
@@ -173,7 +173,7 @@ func (C *CPU) pullWordStack() uint16 {
 /////////// Interrupts ///////////
 //////////////////////////////////
 
-func (C *CPU) irq() {
+func (C *CPU) IRQ() {
 	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
 	// C.IRQ = 0
 	C.pushWordStack(C.PC)
@@ -182,7 +182,7 @@ func (C *CPU) irq() {
 	C.PC = C.readWord(0xFFFE)
 }
 
-func (C *CPU) nmi() {
+func (C *CPU) NMI() {
 	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
 	// C.NMI = 0
 	C.pushWordStack(C.PC)
@@ -206,13 +206,8 @@ func (C *CPU) ComputeInstruction() {
 	if C.cycleCount != C.inst.cycles {
 		log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
 	}
-	if C.NMI > 0 {
-		// log.Printf("NMI")
-		C.nmi()
-	}
-	if (C.IRQ > 0) && (C.S & ^I_mask) == 0 {
-		// log.Printf("IRQ")
-		C.irq()
+	if C.cycleCount == C.inst.cycles {
+		C.State = ReadInstruction
 	}
 	// }
 }
@@ -318,7 +313,6 @@ func (C *CPU) NextCycle() {
 		}
 		switch C.inst.addr {
 		case absolute:
-			C.val_absolute = C.ram.Read(C.oper)
 			C.State = Compute
 			if C.inst.cycles == 3 {
 				C.ComputeInstruction()
@@ -365,7 +359,6 @@ func (C *CPU) NextCycle() {
 	case ReadAbsXY: // Cycle 4
 		switch C.inst.addr {
 		case absoluteX:
-			C.val_absolute = C.ram.Read(C.oper)
 			fallthrough
 		case absoluteY:
 			C.State = Compute
@@ -397,9 +390,9 @@ func (C *CPU) NextCycle() {
 	// Exec
 	////////////////////////////////////////////////
 	case Compute:
-		if C.cycleCount > C.inst.cycles {
-			log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
-		}
+		// if C.cycleCount > C.inst.cycles {
+		// 	log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
+		// }
 		if C.inst.cycles == C.cycleCount {
 			C.ComputeInstruction()
 		}

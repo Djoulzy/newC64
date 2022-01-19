@@ -86,11 +86,9 @@ func (P *PLA) Read(addr uint16) byte {
 		}
 		if transAddr < 0x0800 {
 			// log.Fatal("SID Not implemented")
-			P.Mem[IO].LastAccess[transAddr] = memory.READ
 			return P.Mem[IO].Val[transAddr]
 		}
 		if transAddr < 0x0C00 {
-			P.Mem[IO].LastAccess[transAddr] = memory.READ
 			return P.Mem[IO].Val[transAddr]
 		}
 		if transAddr < 0x0D00 {
@@ -100,13 +98,11 @@ func (P *PLA) Read(addr uint16) byte {
 			return P.cia2.Read(transAddr - 0x0D00)
 		} else {
 			// log.Fatal("I/O Not implemented")
-			P.Mem[IO].LastAccess[transAddr] = memory.READ
 			return P.Mem[IO].Val[transAddr]
 		}
 	}
 
 	// fmt.Printf("pla906114 - Read - %04X - Zone: %d\n", addr, dest)
-	P.Mem[dest].LastAccess[transAddr] = memory.READ
 	return P.Mem[dest].Val[transAddr]
 }
 
@@ -128,12 +124,10 @@ func (P *PLA) Write(addr uint16, value byte) {
 		if transAddr < 0x0800 {
 			// log.Fatal("SID Not implemented")
 			P.Mem[IO].Val[transAddr] = value
-			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
 		if transAddr < 0x0C00 {
 			P.Mem[IO].Val[transAddr] = value
-			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
 		if transAddr < 0x0D00 {
@@ -146,7 +140,6 @@ func (P *PLA) Write(addr uint16, value byte) {
 		} else {
 			// log.Fatal("I/O Not implemented")
 			P.Mem[IO].Val[transAddr] = value
-			P.Mem[IO].LastAccess[transAddr] = memory.WRITE
 			return
 		}
 	}

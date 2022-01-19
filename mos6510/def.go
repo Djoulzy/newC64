@@ -66,18 +66,19 @@ const (
 	ReadIndXY_HI
 	Compute
 	WriteResult
+	Soucis
 )
 
 // CPU :
 type CPU struct {
-	PC  uint16
-	SP  byte
-	A   byte
-	X   byte
-	Y   byte
-	S   byte
-	IRQ int
-	NMI int
+	PC      uint16
+	SP      byte
+	A       byte
+	X       byte
+	Y       byte
+	S       byte
+	IRQ_pin int
+	NMI_pin int
 
 	conf      *confload.ConfigData
 	ram       *pla906114.PLA
