@@ -3,15 +3,19 @@ package mos6510
 import (
 	"fmt"
 	"log"
+	"newC64/clog"
 	"newC64/confload"
 	"newC64/pla906114"
 	"time"
 )
 
+var perfStats map[byte][]time.Duration
+
 func (C *CPU) timeTrack(start time.Time, name string) {
-	elapsed := time.Since(start)
+	// elapsed := time.Since(start)
+	elapsed := time.Now().Sub(start)
 	// if elapsed > time.Microsecond {
-		log.Printf("Phase %d - %s - %s took %s", C.State, C.inst.name, name, elapsed)
+	perfStats[C.instCode] = append(perfStats[C.instCode], elapsed)
 	// }
 }
 
@@ -33,6 +37,11 @@ func (C *CPU) Reset() {
 	// Cold Start:
 	C.PC = C.readWord(COLDSTART_Vector)
 	fmt.Printf("mos6510 - PC: %04X\n", C.PC)
+
+	perfStats = make(map[byte][]time.Duration)
+	for index := range mnemonic {
+		perfStats[index] = make([]time.Duration, 0)
+	}
 }
 
 func (C *CPU) Init(mem *pla906114.PLA, clock *uint16, conf *confload.ConfigData) {
@@ -199,8 +208,8 @@ func (C *CPU) GoTo(addr uint16) {
 }
 
 func (C *CPU) ComputeInstruction() {
-	// if C.cycleCount == C.inst.cycles {
-	// defer C.timeTrack(time.Now(), "ComputeInstruction")
+	defer C.timeTrack(time.Now(), "ComputeInstruction")
+
 	C.State = ReadInstruction
 	C.inst.action()
 	if C.cycleCount != C.inst.cycles {
@@ -213,7 +222,6 @@ func (C *CPU) ComputeInstruction() {
 }
 
 func (C *CPU) NextCycle() {
-	defer C.timeTrack(time.Now(), "ComputeInstruction")
 	var ok bool
 
 	C.cycleCount++
@@ -229,11 +237,12 @@ func (C *CPU) NextCycle() {
 	case ReadInstruction:
 		C.cycleCount = 1
 		C.InstStart = C.PC
+		C.instCode = C.ram.Read(C.PC)
 		if C.conf.Disassamble {
-			C.instDump = fmt.Sprintf("%02X", C.ram.Read(C.PC))
+			C.instDump = fmt.Sprintf("%02X", C.instCode)
 		}
-		if C.inst, ok = mnemonic[C.ram.Read(C.PC)]; !ok {
-			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.ram.Read(C.PC), C.PC))
+		if C.inst, ok = mnemonic[C.instCode]; !ok {
+			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.instCode, C.PC))
 			// C.State = Idle
 		}
 		if C.inst.addr == implied {
@@ -398,5 +407,44 @@ func (C *CPU) NextCycle() {
 		}
 	default:
 		log.Fatal("Unknown CPU state\n")
+	}
+}
+
+func ColVal(val time.Duration) string {
+	if val > time.Microsecond {
+		return clog.CSprintf("white", "red", "%10s", val)
+	} else {
+		return fmt.Sprintf("%10s", val)
+	}
+}
+
+func (C *CPU) DumpStats() {
+	var min time.Duration
+	var max time.Duration
+
+	for index, val := range perfStats {
+		total := 0
+		cpt := 0
+		hicount := 0
+		min = time.Minute
+		max = 0
+		for _, duree := range val {
+			cpt++
+			total += int(duree)
+			if duree > time.Microsecond {
+				hicount++
+			}
+			if duree > max {
+				max = duree
+			}
+			if duree < min {
+				min = duree
+			}
+		}
+		if cpt > 0 {
+			moy := time.Duration(total / cpt)
+			hiPercent := float32(hicount) / float32(cpt) * 100
+			fmt.Printf("$%02X: (%s) Moy: %s - Max: %s - Min: %s - NbHi: %5d = %6.2f%% - Nb Samples: %d \n", index, mnemonic[index].name, ColVal(moy), ColVal(max), ColVal(min), hicount, hiPercent, cpt)
+		}
 	}
 }

@@ -85,6 +85,7 @@ type CPU struct {
 	stack     []byte
 	InstStart uint16
 	instDump  string
+	instCode  byte
 	inst      instruction
 
 	oper         uint16

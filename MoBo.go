@@ -214,4 +214,6 @@ ENDPROCESS:
 			}
 		}
 	}
+
+	cpu.DumpStats()
 }
