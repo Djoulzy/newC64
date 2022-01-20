@@ -90,5 +90,5 @@ func (G *GIODriver) IOEvents() uint {
 }
 
 func (G *GIODriver) CloseAll() {
-
+	// Do nothing
 }
