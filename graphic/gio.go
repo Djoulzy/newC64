@@ -22,7 +22,6 @@ type GIODriver struct {
 	winWidth  int
 	window    *app.Window
 	gtx       layout.Context
-	ops       op.Ops
 	screen    []color.NRGBA
 	isReady   bool
 }
@@ -59,15 +58,16 @@ func (G *GIODriver) Start() {
 }
 
 func (G *GIODriver) mainWindowLoop() error {
+	var ops op.Ops
 	for {
 		event := <-G.window.Events()
 		switch evt := event.(type) {
 		case system.DestroyEvent:
 			return evt.Err
 		case system.FrameEvent:
-			// G.gtx = layout.NewContext(&G.ops, evt)
+			G.gtx = layout.NewContext(&ops, evt)
 			G.apply()
-			evt.Frame(&G.ops)
+			evt.Frame(G.gtx.Ops)
 			G.isReady = true
 		}
 	}
@@ -82,13 +82,15 @@ func (G *GIODriver) DrawPixel(x, y int, color RGB) {
 }
 
 func (G *GIODriver) apply() {
-	paint.FillShape(&G.ops, G.screen[100], clip.Rect(image.Rect(10, 10, 10+1, 10+1)).Op())
+	for y:=0; y < G.winHeight; y++ {
+		for x := 0; x < G.winWidth; x++ {
+			paint.FillShape(G.gtx.Ops, G.screen[y*G.winHeight+x], clip.Rect(image.Rect(x, y, x+1, y+1)).Op())
+		}
+	}
 }
 
 func (G *GIODriver) UpdateFrame() {
-	if G.isReady {
-		G.window.Invalidate()
-	}
+	G.window.Invalidate()
 }
 
 func (G *GIODriver) IOEvents() uint {
