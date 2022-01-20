@@ -11,6 +11,7 @@ import (
 	"newC64/pla906114"
 	"newC64/vic6569"
 	"os"
+	"time"
 )
 
 var conf = &confload.ConfigData{}
@@ -86,6 +87,7 @@ func Disassamble() {
 
 func RunEmulation() {
 	var cpuTurn bool
+	time.Sleep(time.Second * 2)
 	for {
 		cpuTurn = vic.Run()
 		if cpuTurn {
