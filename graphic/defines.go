@@ -13,3 +13,5 @@ type Driver interface {
 	IOEvents() uint
 	CloseAll()
 }
+
+var buffer uint

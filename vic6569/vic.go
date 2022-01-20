@@ -39,8 +39,8 @@ const (
 	// visibleLastCol  = 412
 )
 
-func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video graphic.Driver, conf *confload.ConfigData) {
-	V.graph = video
+func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video interface{}, conf *confload.ConfigData) {
+	V.graph = video.(graphic.Driver)
 	V.graph.Init(winWidth, winHeight)
 	V.conf = conf
 

@@ -6,8 +6,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-var buffer uint
-
 type SDLDriver struct {
 	winHeight int
 	winWidth  int
