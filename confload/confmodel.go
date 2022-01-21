@@ -4,6 +4,7 @@ package confload
 type Globals struct {
 	StartLogging bool
 	FileLog      string
+	RunPerfStats bool
 	Disassamble  bool
 	LogLevel     int
 	Display      bool

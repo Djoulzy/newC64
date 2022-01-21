@@ -12,11 +12,8 @@ import (
 var perfStats map[byte][]time.Duration
 
 func (C *CPU) timeTrack(start time.Time, name string) {
-	// elapsed := time.Since(start)
 	elapsed := time.Now().Sub(start)
-	// if elapsed > time.Microsecond {
 	perfStats[C.instCode] = append(perfStats[C.instCode], elapsed)
-	// }
 }
 
 func (C *CPU) Reset() {
@@ -208,7 +205,9 @@ func (C *CPU) GoTo(addr uint16) {
 }
 
 func (C *CPU) ComputeInstruction() {
-	defer C.timeTrack(time.Now(), "ComputeInstruction")
+	if C.conf.RunPerfStats {
+		defer C.timeTrack(time.Now(), "ComputeInstruction")
+	}
 
 	C.State = ReadInstruction
 	C.inst.action()

@@ -6,9 +6,13 @@ func (C *CIA) Write(addr uint16, val byte) {
 
 	switch reg {
 	case PRA:
+		C.Reg[PRA] = 0b10000001
 	case PRB:
+		C.Reg[PRB] = 0b11111111
 	case DDRA:
+		fallthrough
 	case DDRB:
+		C.Reg[reg] = val
 	case TALO:
 		C.timerA_latchLO = val
 	case TAHI:
