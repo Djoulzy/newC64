@@ -52,8 +52,8 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.systemCycle = timer
 
 	if name == "CIA1" {
-		C.Reg[PRA] = 0x81
-		C.Reg[PRB] = 0xFF
+		C.Reg[PRA] = 0x00 // 0x81
+		C.Reg[PRB] = 0x00 // 0xFF
 		C.Reg[DDRA] = 0x00
 		C.Reg[DDRB] = 0x00
 		C.Reg[TALO] = 0xFF
