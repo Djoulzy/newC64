@@ -197,8 +197,8 @@ ENDPROCESS:
 					}
 					cpu.NextCycle()
 				}
-				cia1.Run()
-				cia2.Run()
+				cia1.Run(outputDriver.IOEvents())
+				cia2.Run(0)
 			}
 
 			if step && cpu.State == mos6510.ReadInstruction {

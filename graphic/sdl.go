@@ -1,6 +1,7 @@
 package graphic
 
 import (
+	"log"
 	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -72,6 +73,7 @@ func (S *SDLDriver) UpdateFrame() {
 			os.Exit(1)
 		case *sdl.KeyboardEvent:
 			buffer = uint(t.Keysym.Sym)
+			log.Printf("%d", buffer)
 			// switch KeyCode {
 			// case sdl.K_l:
 			// 	fmt.Printf("A")

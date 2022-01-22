@@ -96,7 +96,8 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.interrupt_mask = 0
 }
 
-func (C *CIA) Run() {
+func (C *CIA) Run(charbuff uint) {
+	buffer = keyMap[charbuff]
 	if C.Reg[CRA]&CTRL_START_STOP > 0 {
 		C.TimerA()
 	}
