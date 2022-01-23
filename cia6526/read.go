@@ -7,8 +7,6 @@ import (
 
 var count = 0
 
-var buffer Keyboard
-
 func (C *CIA) dispReadReg(label string, mode uint16, pr uint16, key byte, res byte) {
 	if C.name == "CIA1" {
 		log.Printf("%-12s -*-    Mode: %08b -  RegVal: %08b -    Key: %08b - Res: %08b", label, C.Reg[mode], C.Reg[pr], key, res)
@@ -27,12 +25,11 @@ func (C *CIA) Read(addr uint16) byte {
 	switch reg {
 	case PRA:
 		if C.name == "CIA1" {
-			log.Printf("buffer: %v", buffer)
 			keyLevel := byte(0xFF)
-			if C.Reg[PRB]&buffer.row > 0 {
+			if C.Reg[PRB]&C.buffer.row > 0 {
 				keyLevel = 0x00
 			}
-			val := buffer.col & keyLevel
+			val := C.buffer.col & keyLevel
 			test := val & ^C.Reg[DDRA]
 			res := test ^ C.Reg[PRA]
 			// C.dispReadReg("READ PRA", DDRA, PRA, buffer.col, res)
@@ -43,12 +40,11 @@ func (C *CIA) Read(addr uint16) byte {
 		}
 	case PRB:
 		if C.name == "CIA1" {
-			log.Printf("buffer: %v", buffer)
 			keyLevel := byte(0xFF)
-			if C.Reg[PRA]&buffer.col > 0 {
+			if C.Reg[PRA]&C.buffer.col > 0 {
 				keyLevel = 0x00
 			}
-			val := buffer.row & keyLevel
+			val := C.buffer.row & keyLevel
 			test := val & ^C.Reg[DDRB]
 			res := test ^ C.Reg[PRB]
 			// C.dispReadReg("READ PRB", DDRB, PRB, buffer.row, res)

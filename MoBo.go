@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"newC64/cia6526"
 	"newC64/clog"
 	"newC64/confload"
@@ -97,7 +98,8 @@ func input() {
 }
 
 func Disassamble() {
-	fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
+	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
+	log.Printf("%s", cpu.Disassemble())
 }
 
 func main() {

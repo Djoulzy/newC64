@@ -310,11 +310,11 @@ func (V *VIC) Run() bool {
 				V.graph.UpdateFrame()
 			}
 		}
-		if V.conf.Globals.Disassamble == true {
-			if V.conf.Globals.Display {
-				V.graph.UpdateFrame()
-			}
-		}
+		// if V.conf.Globals.Disassamble == true {
+		// 	if V.conf.Globals.Display {
+		// 		V.graph.UpdateFrame()
+		// 	}
+		// }
 	}
 	return V.BA
 }
