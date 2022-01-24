@@ -69,7 +69,7 @@ func (C *CPU) Disassemble() string {
 	var buf, token string
 
 	buf = fmt.Sprintf("%s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m - ", C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
-	buf = fmt.Sprintf("%s%04X: %-8s %03s ", buf, C.InstStart, C.instDump, C.inst.name)
+	buf = fmt.Sprintf("%s%04X: %-8s (%d) %03s ", buf, C.InstStart, C.instDump, C.inst.cycles, C.inst.name)
 	switch C.inst.addr {
 	case implied:
 		token = fmt.Sprintf("")

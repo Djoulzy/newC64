@@ -43,10 +43,18 @@ func (C *CIA) Write(addr uint16, val byte) {
 		C.timerA_latchLO = val
 	case TAHI:
 		C.timerA_latchHI = val
+		if C.Reg[CRA]&CTRL_START_STOP == 0 {
+			C.Reg[TALO] = C.timerA_latchLO
+			C.Reg[TAHI] = C.timerA_latchHI
+		}
 	case TBLO:
 		C.timerB_latchLO = val
 	case TBHI:
 		C.timerB_latchHI = val
+		if C.Reg[CRB]&CTRL_START_STOP == 0 {
+			C.Reg[TBLO] = C.timerB_latchLO
+			C.Reg[TBHI] = C.timerB_latchHI
+		}
 	case TOD10THS:
 	case TODSEC:
 	case TODMIN:

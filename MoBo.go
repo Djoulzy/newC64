@@ -57,6 +57,7 @@ var (
 func setup() {
 	// ROMs & RAM Setup
 	mem.Init(ramSize, "")
+	mem.Clear(true)
 	io.Init(ioSize, "")
 	kernal.Init(kernalSize, "assets/roms/kernal.bin")
 	basic.Init(basicSize, "assets/roms/basic.bin")
@@ -99,7 +100,7 @@ func input() {
 
 func Disassamble() {
 	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
-	log.Printf("%s", cpu.Disassemble())
+	fmt.Printf("%d: %s\n", vic.SystemClock, cpu.Disassemble())
 }
 
 func main() {
@@ -170,7 +171,7 @@ ENDPROCESS:
 				step = true
 				run = !run
 				Disassamble()
-				fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
+				// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
 			case 'q':
 				break ENDPROCESS
 			default:
@@ -183,26 +184,6 @@ ENDPROCESS:
 				}
 			}
 		default:
-
-			if run {
-				cpuTurn = vic.Run()
-				if cpuTurn {
-					if cpu.State == mos6510.ReadInstruction {
-						if cpu.NMI_pin > 0 {
-							// log.Printf("NMI")
-							cpu.NMI()
-						}
-						if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
-							// log.Printf("IRQ")
-							cpu.IRQ()
-						}
-					}
-					cpu.NextCycle()
-				}
-				cia1.Run(outputDriver.IOEvents())
-				cia2.Run(0)
-			}
-
 			if step && cpu.State == mos6510.ReadInstruction {
 				run = false
 			}
@@ -213,6 +194,25 @@ ENDPROCESS:
 			}
 			if conf.Globals.Disassamble && run && cpu.State == mos6510.ReadInstruction {
 				Disassamble()
+			}
+
+			if run {
+				cpuTurn = vic.Run()
+				if cpuTurn {
+					cia1.Run(outputDriver.IOEvents())
+					cia2.Run(0)
+					if cpu.State == mos6510.ReadInstruction {
+						if cpu.NMI_pin > 0 {
+							log.Printf("NMI")
+							cpu.NMI()
+						}
+						if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
+							// log.Printf("IRQ")
+							cpu.IRQ()
+						}
+					}
+					cpu.NextCycle()
+				}
 			}
 		}
 	}
