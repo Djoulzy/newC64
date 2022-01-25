@@ -68,8 +68,8 @@ func (C *CPU) registers() string {
 func (C *CPU) Disassemble() string {
 	var buf, token string
 
-	buf = fmt.Sprintf("%s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m - ", C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
-	buf = fmt.Sprintf("%s%04X: %-8s (%d) %03s ", buf, C.InstStart, C.instDump, C.Inst.Cycles, C.Inst.name)
+	buf = fmt.Sprintf("%s   A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m   ", C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
+	buf = fmt.Sprintf("%s%c[1;31m%04X%c[0m: %-8s %c[1;30m(%d)%c[0m %c[1;37m%03s ", buf, 27, C.InstStart, 27, C.instDump, 27, C.Inst.Cycles, 27, 27, C.Inst.name)
 	switch C.Inst.addr {
 	case implied:
 		token = fmt.Sprintf("")
@@ -96,7 +96,7 @@ func (C *CPU) Disassemble() string {
 	case indirectY:
 		token = fmt.Sprintf("($%02X),Y", C.oper)
 	}
-	return fmt.Sprintf("%s%-10s\t", buf, token)
+	return fmt.Sprintf("%s%-10s%c[0m\t", buf, token, 27)
 }
 
 //////////////////////////////////
@@ -217,7 +217,6 @@ func (C *CPU) ComputeInstruction() {
 	if C.cycleCount == C.Inst.Cycles {
 		C.State = ReadInstruction
 	}
-	C.ExecSync.Done()
 	// }
 }
 
@@ -235,13 +234,11 @@ func (C *CPU) NextCycle() {
 	// Cycle 1
 	////////////////////////////////////////////////
 	case ReadInstruction:
-		C.ExecSync.Add(1)
 		C.cycleCount = 1
 		C.InstStart = C.PC
 		C.instCode = C.ram.Read(C.PC)
-		if C.conf.Disassamble {
-			C.instDump = fmt.Sprintf("%02X", C.instCode)
-		}
+		C.instDump = fmt.Sprintf("%02X", C.instCode)
+
 		if C.Inst, ok = mnemonic[C.instCode]; !ok {
 			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.instCode, C.PC))
 			// C.State = Idle
@@ -258,9 +255,8 @@ func (C *CPU) NextCycle() {
 	////////////////////////////////////////////////
 	case ReadOperLO:
 		C.oper = uint16(C.ram.Read(C.PC + 1))
-		if C.conf.Disassamble {
-			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
-		}
+		C.instDump += fmt.Sprintf(" %02X", C.oper)
+
 		switch C.Inst.addr {
 		case relative:
 			fallthrough
@@ -316,11 +312,11 @@ func (C *CPU) NextCycle() {
 		}
 
 	case ReadOperHI: // Cycle 3
-		C.oper += uint16(C.ram.Read(C.PC+2)) << 8
+		tmp := C.ram.Read(C.PC + 2)
+		C.oper += uint16(tmp) << 8
+		C.instDump += fmt.Sprintf(" %02X", tmp)
+
 		C.PC += 3
-		if C.conf.Disassamble {
-			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
-		}
 		switch C.Inst.addr {
 		case absolute:
 			C.State = Compute

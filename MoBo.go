@@ -13,6 +13,7 @@ import (
 	"newC64/vic6569"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/mattn/go-tty"
@@ -49,6 +50,9 @@ var (
 	outputDriver graphic.Driver
 	cpuTurn      bool
 	run          bool
+	ExecSync     sync.WaitGroup
+	mu           sync.Mutex
+	muBis        sync.Mutex
 )
 
 // func init() {
@@ -105,13 +109,22 @@ func input(step *chan bool) {
 			Disassamble()
 			pla.Dump(0)
 		case 'r':
+			ExecSync.Add(-1)
+			conf.Disassamble = false
 			run = true
 		case ' ':
-			run = true
-			cpu.ExecSync.Wait()
-			run = false
-			Disassamble()
-			*step <- true
+			if run {
+				conf.Disassamble = true
+				ExecSync.Add(1)
+				run = false
+			} else {
+				muBis.Lock()
+				ExecSync.Done()
+				mu.Lock()
+				ExecSync.Add(1)
+				mu.Unlock()
+				muBis.Unlock()
+			}
 			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
 		case 'q':
 			cpu.DumpStats()
@@ -149,6 +162,14 @@ func RunEmulation() {
 				// log.Printf("IRQ")
 				cpu.IRQ()
 			}
+			if !run {
+				Disassamble()
+				mu.Lock()
+				ExecSync.Wait()
+				mu.Unlock()
+				muBis.Lock()
+				muBis.Unlock()
+			}
 		}
 	}
 }
@@ -185,14 +206,7 @@ func main() {
 	go input(&step)
 
 	for {
-		select {
-		case <-step:
-			RunEmulation()
-		default:
-			if run {
-				RunEmulation()
-			}
-		}
+		RunEmulation()
 	}
 
 	// cpu.DumpStats()

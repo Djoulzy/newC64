@@ -3,7 +3,6 @@ package mos6510
 import (
 	"newC64/confload"
 	"newC64/pla906114"
-	"sync"
 )
 
 //
@@ -88,7 +87,6 @@ type CPU struct {
 	instDump  string
 	instCode  byte
 	Inst      instruction
-	ExecSync  sync.WaitGroup
 
 	oper         uint16
 	val_zp_lo    byte
