@@ -13,13 +13,10 @@ import (
 	"newC64/vic6569"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/mattn/go-tty"
 )
-
-var conf = &confload.ConfigData{}
-var run bool
-var step bool
 
 const (
 	ramSize     = 65536
@@ -27,9 +24,15 @@ const (
 	basicSize   = 8192
 	ioSize      = 4096
 	chargenSize = 4096
+
+	Stopped = 0
+	Paused  = 1
+	Running = 2
 )
 
 var (
+	conf = &confload.ConfigData{}
+
 	cpu  mos6510.CPU
 	pla  pla906114.PLA
 	cia1 cia6526.CIA
@@ -46,6 +49,11 @@ var (
 	outputDriver graphic.Driver
 	exitProcess  chan bool
 	cmd          chan rune
+	step         chan bool
+	cpuTurn      bool
+	run          bool
+	stepSync     sync.RWMutex
+	execSync     sync.RWMutex
 )
 
 // func init() {
@@ -88,13 +96,50 @@ func setup() {
 }
 
 func input() {
+	dumpAddr := ""
 	exitProcess = make(chan bool)
 	cmd = make(chan rune)
 	var keyb *tty.TTY
 	keyb, _ = tty.Open()
 	for {
 		r, _ := keyb.ReadRune()
-		cmd <- r
+		switch r {
+		case 's':
+			Disassamble()
+			pla.DumpStack(cpu.SP)
+		case 'z':
+			Disassamble()
+			pla.Dump(0)
+		case 'r':
+			run = true
+		case ' ':
+			if run {
+				stepSync.Lock()
+				execSync.Lock()
+
+				run = false
+				Disassamble()
+			} else {
+				execSync.Unlock()
+				stepSync.Unlock()
+
+				stepSync.Lock()
+				execSync.Lock()
+				Disassamble()
+			}
+			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
+		case 'q':
+			cpu.DumpStats()
+			os.Exit(0)
+		default:
+			dumpAddr += string(r)
+			fmt.Printf("%c", r)
+			if len(dumpAddr) == 4 {
+				hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
+				pla.Dump(uint16(hx))
+				dumpAddr = ""
+			}
+		}
 	}
 }
 
@@ -104,7 +149,6 @@ func Disassamble() {
 }
 
 func main() {
-	var cpuTurn bool
 
 	args := os.Args
 	confload.Load("config.ini", conf)
@@ -130,92 +174,36 @@ func main() {
 	}
 
 	run = true
-	step = false
 	cpuTurn = true
-	dumpAddr := ""
+	step = make(chan bool)
 	go input()
 
-ENDPROCESS:
 	for {
-
-		select {
-		case ch := <-cmd:
-			switch ch {
-			case 's':
-				Disassamble()
-				pla.DumpStack(cpu.SP)
-			case 'z':
-				Disassamble()
-				pla.Dump(0)
-			// case 'f':
-			// 	fill := byte(0x00)
-			// 	i := uint16(0)
-			// 	for i = 0x0400; i < 0x07FF; i++ {
-			// 		pla.Write(i, fill)
-			// 		fill++
-			// 	}
-			// 	for i = 0xD800; i < 0xDBFF; i++ {
-			// 		pla.Write(i, fill)
-			// 		fill++
-			// 		if fill > 0x0F {
-			// 			fill = 0x00
-			// 		}
-			// 		if fill == 6 {
-			// 			fill++
-			// 		}
-			// 	}
-			case 'r':
-				run = true
-				step = false
-			case ' ':
-				step = true
-				run = !run
-				Disassamble()
-				// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
-			case 'q':
-				break ENDPROCESS
-			default:
-				dumpAddr += string(ch)
-				fmt.Printf("%c", ch)
-				if len(dumpAddr) == 4 {
-					hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
-					pla.Dump(uint16(hx))
-					dumpAddr = ""
+		stepSync.Lock()
+		if cpu.State == mos6510.ReadInstruction {
+			execSync.Lock()
+		}
+		cpuTurn = vic.Run()
+		if cpuTurn {
+			cia1.Run(outputDriver.IOEvents())
+			cia2.Run(0)
+			cpu.NextCycle()
+			if cpu.State == mos6510.ReadInstruction {
+				if cpu.NMI_pin > 0 {
+					log.Printf("NMI")
+					cpu.NMI()
 				}
-			}
-		default:
-			if step && cpu.State == mos6510.ReadInstruction {
-				run = false
-			}
-			if conf.Breakpoint == cpu.InstStart && cpu.State == mos6510.ReadInstruction {
-				conf.Globals.Disassamble = true
-				run = false
-				step = true
-			}
-			if conf.Globals.Disassamble && run && cpu.State == mos6510.ReadInstruction {
-				Disassamble()
-			}
-
-			if run {
-				cpuTurn = vic.Run()
-				if cpuTurn {
-					cia1.Run(outputDriver.IOEvents())
-					cia2.Run(0)
-					if cpu.State == mos6510.ReadInstruction {
-						if cpu.NMI_pin > 0 {
-							log.Printf("NMI")
-							cpu.NMI()
-						}
-						if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
-							// log.Printf("IRQ")
-							cpu.IRQ()
-						}
-					}
-					cpu.NextCycle()
+				if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
+					// log.Printf("IRQ")
+					cpu.IRQ()
 				}
 			}
 		}
+		if cpu.State == mos6510.ReadInstruction {
+			execSync.Unlock()
+		}
+		stepSync.Unlock()
 	}
 
-	cpu.DumpStats()
+	// cpu.DumpStats()
 }

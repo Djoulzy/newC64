@@ -1,7 +1,5 @@
 package cia6526
 
-import "log"
-
 const (
 	CTRL_START_STOP   byte = 0b00000001
 	CTRL_LOOP         byte = 0b00000100
@@ -22,7 +20,7 @@ func (C *CIA) time_is_over(lo *byte, hi *byte) bool {
 }
 
 func (C *CIA) TimerA() {
-	log.Printf("Tick Timer A of %s", C.name)
+	// log.Printf("Tick Timer A of %s", C.name)
 	if C.time_is_over(&C.Reg[TALO], &C.Reg[TAHI]) {
 		// log.Println("underflow timer A")
 		if C.interrupt_mask&INT_UNDERFL_TA > 0 {
@@ -41,7 +39,7 @@ func (C *CIA) TimerA() {
 }
 
 func (C *CIA) TimerB() {
-	log.Printf("Tick Timer B of %s", C.name)
+	// log.Printf("Tick Timer B of %s", C.name)
 	if C.time_is_over(&C.Reg[TBLO], &C.Reg[TBHI]) {
 		// log.Println("underflow timer B")
 		if C.interrupt_mask&INT_UNDERFL_TB > 0 {
