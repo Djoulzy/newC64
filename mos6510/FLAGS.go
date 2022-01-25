@@ -7,7 +7,7 @@ import (
 func (C *CPU) bit() {
 	var val, oper byte
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case zeropage:
 		oper = C.ram.Read(C.oper)
 		val = C.A & oper
@@ -26,7 +26,7 @@ func (C *CPU) bit() {
 }
 
 func (C *CPU) clc() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setC(false)
 	default:
@@ -36,7 +36,7 @@ func (C *CPU) clc() {
 }
 
 func (C *CPU) cld() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setD(false)
 	default:
@@ -46,7 +46,7 @@ func (C *CPU) cld() {
 }
 
 func (C *CPU) cli() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setI(false)
 	default:
@@ -56,7 +56,7 @@ func (C *CPU) cli() {
 }
 
 func (C *CPU) clv() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setV(false)
 	default:
@@ -66,7 +66,7 @@ func (C *CPU) clv() {
 }
 
 func (C *CPU) sec() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setC(true)
 	default:
@@ -76,7 +76,7 @@ func (C *CPU) sec() {
 }
 
 func (C *CPU) sed() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setD(true)
 	default:
@@ -86,7 +86,7 @@ func (C *CPU) sed() {
 }
 
 func (C *CPU) sei() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setI(true)
 	default:

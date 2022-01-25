@@ -69,8 +69,8 @@ func (C *CPU) Disassemble() string {
 	var buf, token string
 
 	buf = fmt.Sprintf("%s - A:%c[1;33m%02X%c[0m X:%c[1;33m%02X%c[0m Y:%c[1;33m%02X%c[0m SP:%c[1;33m%02X%c[0m - ", C.registers(), 27, C.A, 27, 27, C.X, 27, 27, C.Y, 27, 27, C.SP, 27)
-	buf = fmt.Sprintf("%s%04X: %-8s (%d) %03s ", buf, C.InstStart, C.instDump, C.inst.cycles, C.inst.name)
-	switch C.inst.addr {
+	buf = fmt.Sprintf("%s%04X: %-8s (%d) %03s ", buf, C.InstStart, C.instDump, C.Inst.Cycles, C.Inst.name)
+	switch C.Inst.addr {
 	case implied:
 		token = fmt.Sprintf("")
 	case immediate:
@@ -210,13 +210,14 @@ func (C *CPU) ComputeInstruction() {
 	}
 
 	C.State = ReadInstruction
-	C.inst.action()
-	if C.cycleCount != C.inst.cycles {
-		log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
+	C.Inst.action()
+	if C.cycleCount != C.Inst.Cycles {
+		log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.Inst.Cycles, C.cycleCount)
 	}
-	if C.cycleCount == C.inst.cycles {
+	if C.cycleCount == C.Inst.Cycles {
 		C.State = ReadInstruction
 	}
+	C.ExecSync.Done()
 	// }
 }
 
@@ -234,17 +235,18 @@ func (C *CPU) NextCycle() {
 	// Cycle 1
 	////////////////////////////////////////////////
 	case ReadInstruction:
+		C.ExecSync.Add(1)
 		C.cycleCount = 1
 		C.InstStart = C.PC
 		C.instCode = C.ram.Read(C.PC)
 		if C.conf.Disassamble {
 			C.instDump = fmt.Sprintf("%02X", C.instCode)
 		}
-		if C.inst, ok = mnemonic[C.instCode]; !ok {
+		if C.Inst, ok = mnemonic[C.instCode]; !ok {
 			log.Printf(fmt.Sprintf("Unknown instruction: %02X at %04X\n", C.instCode, C.PC))
 			// C.State = Idle
 		}
-		if C.inst.addr == implied {
+		if C.Inst.addr == implied {
 			C.State = Compute
 			C.PC += 1
 		} else {
@@ -259,13 +261,13 @@ func (C *CPU) NextCycle() {
 		if C.conf.Disassamble {
 			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+1))
 		}
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case relative:
 			fallthrough
 		case immediate:
 			C.State = Compute
 			C.PC += 2
-			if C.inst.cycles == 2 {
+			if C.Inst.Cycles == 2 {
 				C.ComputeInstruction()
 			}
 		case absolute:
@@ -295,10 +297,10 @@ func (C *CPU) NextCycle() {
 	////////////////////////////////////////////////
 	case ReadZP:
 		C.PC += 2
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case zeropage:
 			C.State = Compute
-			if C.inst.cycles == 3 {
+			if C.Inst.Cycles == 3 {
 				C.ComputeInstruction()
 			}
 		case zeropageX:
@@ -319,10 +321,10 @@ func (C *CPU) NextCycle() {
 		if C.conf.Disassamble {
 			C.instDump += fmt.Sprintf(" %02X", C.ram.Read(C.PC+2))
 		}
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case absolute:
 			C.State = Compute
-			if C.inst.cycles == 3 {
+			if C.Inst.Cycles == 3 {
 				C.ComputeInstruction()
 			}
 		case absoluteX:
@@ -339,12 +341,12 @@ func (C *CPU) NextCycle() {
 	// Cycle 4
 	////////////////////////////////////////////////
 	case ReadZP_XY: // Cycle 4
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case zeropageX:
 			fallthrough
 		case zeropageY:
 			C.State = Compute
-			if C.inst.cycles == 4 {
+			if C.Inst.Cycles == 4 {
 				C.ComputeInstruction()
 			}
 		default:
@@ -352,7 +354,7 @@ func (C *CPU) NextCycle() {
 		}
 
 	case ReadIndXY_LO: // Cycle 4
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case indirectX:
 			C.State = ReadIndXY_HI
 		case indirectY:
@@ -365,12 +367,12 @@ func (C *CPU) NextCycle() {
 		C.State = Compute
 
 	case ReadAbsXY: // Cycle 4
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case absoluteX:
 			fallthrough
 		case absoluteY:
 			C.State = Compute
-			if C.inst.cycles == 4 {
+			if C.Inst.Cycles == 4 {
 				C.ComputeInstruction()
 			}
 		default:
@@ -382,12 +384,12 @@ func (C *CPU) NextCycle() {
 	////////////////////////////////////////////////
 
 	case ReadIndXY_HI:
-		switch C.inst.addr {
+		switch C.Inst.addr {
 		case indirectX:
 			C.State = Compute
 		case indirectY:
 			C.State = Compute
-			if C.inst.cycles == 5 {
+			if C.Inst.Cycles == 5 {
 				C.ComputeInstruction()
 			}
 		default:
@@ -398,10 +400,10 @@ func (C *CPU) NextCycle() {
 	// Exec
 	////////////////////////////////////////////////
 	case Compute:
-		// if C.cycleCount > C.inst.cycles {
-		// 	log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.inst.cycles, C.cycleCount)
+		// if C.cycleCount > C.Inst.Cycles {
+		// 	log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.Inst.Cycles, C.cycleCount)
 		// }
-		if C.inst.cycles == C.cycleCount {
+		if C.Inst.Cycles == C.cycleCount {
 			C.ComputeInstruction()
 		}
 	default:

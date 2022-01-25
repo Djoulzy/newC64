@@ -6,13 +6,13 @@ import (
 )
 
 func (C *CPU) dcp() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	fmt.Printf("Not implemented: %v\n", C.Inst)
 }
 
 func (C *CPU) dec() {
 	var val byte
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case zeropage:
 		val = C.ram.Read(C.oper) - 1
 		C.ram.Write(C.oper, val)
@@ -34,7 +34,7 @@ func (C *CPU) dec() {
 }
 
 func (C *CPU) dex() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.X -= 1
 	default:
@@ -46,7 +46,7 @@ func (C *CPU) dex() {
 }
 
 func (C *CPU) dey() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.Y -= 1
 	default:
@@ -60,7 +60,7 @@ func (C *CPU) dey() {
 func (C *CPU) inc() {
 	var val byte
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case zeropage:
 		val = C.ram.Read(C.oper) + 1
 		C.ram.Write(C.oper, val)
@@ -82,7 +82,7 @@ func (C *CPU) inc() {
 }
 
 func (C *CPU) inx() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.X += 1
 	default:
@@ -94,7 +94,7 @@ func (C *CPU) inx() {
 }
 
 func (C *CPU) iny() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.Y += 1
 	default:
@@ -106,6 +106,6 @@ func (C *CPU) iny() {
 }
 
 func (C *CPU) isc() {
-	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.inst)
+	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.Inst)
 	// log.Fatal("fichier INC_DEC")
 }

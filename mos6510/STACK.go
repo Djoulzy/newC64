@@ -5,7 +5,7 @@ import (
 )
 
 func (C *CPU) pha() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.pushByteStack(C.A)
 	default:
@@ -15,7 +15,7 @@ func (C *CPU) pha() {
 }
 
 func (C *CPU) php() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setB(true)
 		C.setU(true)
@@ -27,7 +27,7 @@ func (C *CPU) php() {
 }
 
 func (C *CPU) pla() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.A = C.pullByteStack()
 	default:
@@ -39,7 +39,7 @@ func (C *CPU) pla() {
 }
 
 func (C *CPU) plp() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.S = C.pullByteStack()
 		C.setB(false)

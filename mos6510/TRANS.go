@@ -5,7 +5,7 @@ import (
 )
 
 func (C *CPU) tax() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.X = C.A
 	default:
@@ -17,7 +17,7 @@ func (C *CPU) tax() {
 }
 
 func (C *CPU) tay() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.Y = C.A
 	default:
@@ -29,7 +29,7 @@ func (C *CPU) tay() {
 }
 
 func (C *CPU) tsx() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.X = C.SP
 	default:
@@ -41,7 +41,7 @@ func (C *CPU) tsx() {
 }
 
 func (C *CPU) txa() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.A = C.X
 	default:
@@ -53,7 +53,7 @@ func (C *CPU) txa() {
 }
 
 func (C *CPU) txs() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.SP = C.X
 	default:
@@ -63,7 +63,7 @@ func (C *CPU) txs() {
 }
 
 func (C *CPU) tya() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.A = C.Y
 	default:

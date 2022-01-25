@@ -3,6 +3,7 @@ package mos6510
 import (
 	"newC64/confload"
 	"newC64/pla906114"
+	"sync"
 )
 
 //
@@ -46,7 +47,7 @@ type instruction struct {
 	name   string
 	addr   addressing
 	bytes  int
-	cycles int
+	Cycles int
 	action func()
 }
 
@@ -86,7 +87,8 @@ type CPU struct {
 	InstStart uint16
 	instDump  string
 	instCode  byte
-	inst      instruction
+	Inst      instruction
+	ExecSync  sync.WaitGroup
 
 	oper         uint16
 	val_zp_lo    byte

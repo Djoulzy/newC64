@@ -10,7 +10,7 @@ func (C *CPU) adc() {
 
 	// log.Printf("%04X - %s", C.InstStart, C.registers())
 	// log.Fatal("ADC")
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		val = uint16(C.A) + C.oper + uint16(C.getC())
 		C.setC(val > 0x00FF)
@@ -61,7 +61,7 @@ func (C *CPU) adc() {
 func (C *CPU) sbc() {
 	var val int
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		val = int(C.A) - int(C.oper)
 		if C.getC() == 0 {

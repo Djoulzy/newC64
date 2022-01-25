@@ -62,7 +62,7 @@ func TestStack(t *testing.T) {
 
 func TestLDA(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0xA9]
+	proc.Inst = mnemonic[0xA9]
 	tables := []struct {
 		oper byte
 		res  byte
@@ -90,15 +90,15 @@ func TestLDA(t *testing.T) {
 
 func TestBNE(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0xD0]
+	proc.Inst = mnemonic[0xD0]
 	tables := []struct {
 		s    byte
 		pc   uint16
 		oper byte
 		res  uint16
 	}{
-		{0b00000000, 0xBC16 + uint16(proc.inst.bytes), 0xF9, 0xBC11},
-		{0b00000010, 0xBC16 + uint16(proc.inst.bytes), 0xF9, 0xBC18},
+		{0b00000000, 0xBC16 + uint16(proc.Inst.bytes), 0xF9, 0xBC11},
+		{0b00000010, 0xBC16 + uint16(proc.Inst.bytes), 0xF9, 0xBC18},
 	}
 
 	for _, table := range tables {
@@ -115,7 +115,7 @@ func TestBNE(t *testing.T) {
 
 func TestADC(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0x75] // ZeropageX
+	proc.Inst = mnemonic[0x75] // ZeropageX
 	tables := []struct {
 		acc     byte
 		x       byte
@@ -161,7 +161,7 @@ func TestADC(t *testing.T) {
 	proc.ram.Write(0x0014, 0x06)
 	proc.ram.Write(0x0015, 0x02)
 	proc.ram.Write(0x0206, 0x0E)
-	proc.inst = mnemonic[0x61] // IndirectX
+	proc.Inst = mnemonic[0x61] // IndirectX
 	for _, table := range tables {
 		proc.S = table.flag
 		proc.A = table.acc
@@ -180,10 +180,10 @@ func TestADC(t *testing.T) {
 	// STA $0014
 	// LDA #$02
 	// STA $0015
-	
+
 	// LDA #$0E
 	// STA $020A
-	
+
 	// LDY #$04
 	// LDA #$20
 	// CLC
@@ -205,7 +205,7 @@ func TestADC(t *testing.T) {
 	proc.ram.Write(0x0014, 0x06)
 	proc.ram.Write(0x0015, 0x02)
 	proc.ram.Write(0x020A, 0x0E)
-	proc.inst = mnemonic[0x71] // IndirectY
+	proc.Inst = mnemonic[0x71] // IndirectY
 	for _, table := range tables {
 		proc.S = table.flag
 		proc.A = table.acc
@@ -224,7 +224,7 @@ func TestADC(t *testing.T) {
 
 func TestSBC(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0xE9] // ZeropageX
+	proc.Inst = mnemonic[0xE9] // ZeropageX
 	tableIm := []struct {
 		acc     byte
 		oper    byte
@@ -249,7 +249,7 @@ func TestSBC(t *testing.T) {
 	}
 
 	mem.Clear(false)
-	proc.inst = mnemonic[0xF5] // ZeropageX
+	proc.Inst = mnemonic[0xF5] // ZeropageX
 	tables := []struct {
 		mem     byte
 		memVal  byte
@@ -296,7 +296,7 @@ func TestSBC(t *testing.T) {
 		{0x06, 0x0E, 0xFE, 0x04, 0x10, 0b00110001, 0xF0, 0b10110001},
 	}
 
-	proc.inst = mnemonic[0xE1] // IndirectX
+	proc.Inst = mnemonic[0xE1] // IndirectX
 	for _, table := range tables {
 		proc.ram.Write(0x0014, table.mem)
 		proc.ram.Write(0x0015, 0x02)
@@ -345,7 +345,7 @@ func TestSBC(t *testing.T) {
 		{0x06, 0x08, 0x03, 0x04, 0x14, 0b00110000, 0xFA, 0b10110000},
 	}
 	proc.ram.Write(0x0015, 0x02)
-	proc.inst = mnemonic[0xF1] // IndirectY
+	proc.Inst = mnemonic[0xF1] // IndirectY
 	for _, table := range tables {
 		proc.ram.Write(0x0014, table.mem)
 		proc.ram.Write(0x0015, 0x02)
@@ -381,7 +381,7 @@ func TestCMP(t *testing.T) {
 		{0xFF, 0xFF, 0b00110011},
 	}
 
-	proc.inst = mnemonic[0xC9]
+	proc.Inst = mnemonic[0xC9]
 	for _, table := range tables {
 		proc.S = 0b00110000
 		proc.A = table.acc
@@ -406,7 +406,7 @@ func TestCMP(t *testing.T) {
 		{0xFF, 0xC1, 0b00110001},
 	}
 
-	proc.inst = mnemonic[0xD1]
+	proc.Inst = mnemonic[0xD1]
 	proc.ram.Write(0x0408, 0xEE)
 	proc.ram.Write(0xC1, 0x00)
 	proc.ram.Write(0xC2, 0x04)
@@ -425,7 +425,7 @@ func TestCMP(t *testing.T) {
 
 func TestROR(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0x76] // ZeropageX
+	proc.Inst = mnemonic[0x76] // ZeropageX
 	tables := []struct {
 		val     byte
 		x       byte
@@ -457,7 +457,7 @@ func TestROR(t *testing.T) {
 
 func TestROL(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0x76] // ZeropageX
+	proc.Inst = mnemonic[0x76] // ZeropageX
 	tables := []struct {
 		val     byte
 		x       byte
@@ -492,7 +492,7 @@ func TestROL(t *testing.T) {
 
 func TestLSR(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0x56] // ZeropageX
+	proc.Inst = mnemonic[0x56] // ZeropageX
 	tables := []struct {
 		val     byte
 		x       byte
@@ -527,7 +527,7 @@ func TestLSR(t *testing.T) {
 
 func TestASL(t *testing.T) {
 	mem.Clear(false)
-	proc.inst = mnemonic[0x16] // ZeropageX
+	proc.Inst = mnemonic[0x16] // ZeropageX
 	tables := []struct {
 		val     byte
 		x       byte
@@ -568,7 +568,7 @@ func TestEOR(t *testing.T) {
 	// LDA #$11
 	// EOR $10,X
 	mem.Clear(false)
-	proc.inst = mnemonic[0x55] // ZeropageX
+	proc.Inst = mnemonic[0x55] // ZeropageX
 	tables := []struct {
 		val     byte
 		a       byte
@@ -609,7 +609,7 @@ func TestBIT(t *testing.T) {
 	// LDA #$11
 	// BIT $14
 	mem.Clear(false)
-	proc.inst = mnemonic[0x24] // Zeropage
+	proc.Inst = mnemonic[0x24] // Zeropage
 	tables := []struct {
 		val     byte
 		a       byte

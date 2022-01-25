@@ -6,7 +6,7 @@ import (
 )
 
 func (C *CPU) bcc() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetC() {
@@ -18,7 +18,7 @@ func (C *CPU) bcc() {
 }
 
 func (C *CPU) bcs() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetC() {
@@ -30,7 +30,7 @@ func (C *CPU) bcs() {
 }
 
 func (C *CPU) beq() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetZ() {
@@ -42,7 +42,7 @@ func (C *CPU) beq() {
 }
 
 func (C *CPU) bmi() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetN() {
@@ -54,7 +54,7 @@ func (C *CPU) bmi() {
 }
 
 func (C *CPU) bne() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetZ() {
@@ -66,7 +66,7 @@ func (C *CPU) bne() {
 }
 
 func (C *CPU) bpl() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetN() {
@@ -78,7 +78,7 @@ func (C *CPU) bpl() {
 }
 
 func (C *CPU) brk() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.pushWordStack(C.PC + 1)
 		C.setB(true)
@@ -91,7 +91,7 @@ func (C *CPU) brk() {
 
 func (C *CPU) bvc() {
 	dest := C.getRelativeAddr(C.oper)
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetV() {
@@ -107,7 +107,7 @@ func (C *CPU) bvc() {
 
 func (C *CPU) bvs() {
 	dest := C.getRelativeAddr(C.oper)
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetV() {
@@ -122,7 +122,7 @@ func (C *CPU) bvs() {
 }
 
 func (C *CPU) jmp() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case absolute:
 		C.PC = C.oper
 	case indirect:
@@ -134,7 +134,7 @@ func (C *CPU) jmp() {
 }
 
 func (C *CPU) jsr() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case absolute:
 		C.pushWordStack(C.InstStart + 2)
 		C.PC = C.oper
@@ -145,7 +145,7 @@ func (C *CPU) jsr() {
 }
 
 func (C *CPU) rti() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.S = C.pullByteStack()
 		C.setB(false)
@@ -158,7 +158,7 @@ func (C *CPU) rti() {
 }
 
 func (C *CPU) rts() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.PC = C.pullWordStack() + 1
 	default:
@@ -168,7 +168,7 @@ func (C *CPU) rts() {
 }
 
 func (C *CPU) nop() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		fallthrough
 	case immediate:

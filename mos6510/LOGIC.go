@@ -6,7 +6,7 @@ import (
 )
 
 func (C *CPU) and() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		C.A &= byte(C.oper)
 	case zeropage:
@@ -34,7 +34,7 @@ func (C *CPU) and() {
 func (C *CPU) asl() {
 	var val uint16
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		val = uint16(C.A) << 1
 		C.A = byte(val)
@@ -42,14 +42,14 @@ func (C *CPU) asl() {
 		val = uint16(C.ram.Read(C.oper)) << 1
 		C.ram.Write(C.oper, byte(val))
 	case zeropageX:
-		dest := C.oper+uint16(C.X)
+		dest := C.oper + uint16(C.X)
 		val = uint16(C.ram.Read(dest)) << 1
 		C.ram.Write(dest, byte(val))
 	case absolute:
 		val = uint16(C.ram.Read(C.oper)) << 1
 		C.ram.Write(C.oper, byte(val))
 	case absoluteX:
-		dest := C.oper+uint16(C.X)
+		dest := C.oper + uint16(C.X)
 		val = uint16(C.ram.Read(dest)) << 1
 		C.ram.Write(dest, byte(val))
 	default:
@@ -62,7 +62,7 @@ func (C *CPU) asl() {
 }
 
 func (C *CPU) eor() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		C.A ^= byte(C.oper)
 	case zeropage:
@@ -90,7 +90,7 @@ func (C *CPU) eor() {
 func (C *CPU) lsr() {
 	var val byte
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		C.setC(C.A&0x01 == 0x01)
 		val = C.A >> 1
@@ -126,7 +126,7 @@ func (C *CPU) lsr() {
 }
 
 func (C *CPU) ora() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		C.A |= byte(C.oper)
 	case zeropage:
@@ -152,13 +152,13 @@ func (C *CPU) ora() {
 }
 
 func (C *CPU) rla() {
-	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.inst)
+	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.Inst)
 }
 
 func (C *CPU) rol() {
 	var val uint16
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		val = uint16(C.A) << 1
 		if C.issetC() {
@@ -172,7 +172,7 @@ func (C *CPU) rol() {
 		}
 		C.ram.Write(C.oper, byte(val))
 	case zeropageX:
-		dest := C.oper+uint16(C.X)
+		dest := C.oper + uint16(C.X)
 		val = uint16(C.ram.Read(dest)) << 1
 		if C.issetC() {
 			val++
@@ -185,7 +185,7 @@ func (C *CPU) rol() {
 		}
 		C.ram.Write(C.oper, byte(val))
 	case absoluteX:
-		dest := C.oper+uint16(C.X)
+		dest := C.oper + uint16(C.X)
 		val = uint16(C.ram.Read(dest)) << 1
 		if C.issetC() {
 			val++
@@ -203,7 +203,7 @@ func (C *CPU) rol() {
 func (C *CPU) ror() {
 	var val byte
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case implied:
 		carry := C.A&0b00000001 > 0
 		C.A >>= 1
@@ -259,13 +259,13 @@ func (C *CPU) ror() {
 }
 
 func (C *CPU) sax() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	fmt.Printf("Not implemented: %v\n", C.Inst)
 }
 
 func (C *CPU) slo() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	fmt.Printf("Not implemented: %v\n", C.Inst)
 }
 
 func (C *CPU) sre() {
-	fmt.Printf("Not implemented: %v\n", C.inst)
+	fmt.Printf("Not implemented: %v\n", C.Inst)
 }

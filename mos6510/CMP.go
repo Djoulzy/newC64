@@ -7,7 +7,7 @@ import (
 func (C *CPU) cmp() {
 	var val int
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		val = int(C.A) - int(C.oper)
 	case zeropage:
@@ -36,7 +36,7 @@ func (C *CPU) cmp() {
 func (C *CPU) cpx() {
 	var val int
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		val = int(C.X) - int(C.oper)
 	case zeropage:
@@ -55,7 +55,7 @@ func (C *CPU) cpx() {
 func (C *CPU) cpy() {
 	var val int
 
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		val = int(C.Y) - int(C.oper)
 	case zeropage:

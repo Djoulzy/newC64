@@ -13,7 +13,7 @@ import (
 	"newC64/vic6569"
 	"os"
 	"strconv"
-	"sync"
+	"time"
 
 	"github.com/mattn/go-tty"
 )
@@ -47,13 +47,8 @@ var (
 	cycles  int32
 
 	outputDriver graphic.Driver
-	exitProcess  chan bool
-	cmd          chan rune
-	step         chan bool
 	cpuTurn      bool
 	run          bool
-	stepSync     sync.RWMutex
-	execSync     sync.RWMutex
 )
 
 // func init() {
@@ -95,12 +90,11 @@ func setup() {
 	cia2.Signal_Pin = &cpu.NMI_pin
 }
 
-func input() {
+func input(step *chan bool) {
 	dumpAddr := ""
-	exitProcess = make(chan bool)
-	cmd = make(chan rune)
 	var keyb *tty.TTY
 	keyb, _ = tty.Open()
+	time.Sleep(time.Second)
 	for {
 		r, _ := keyb.ReadRune()
 		switch r {
@@ -113,20 +107,11 @@ func input() {
 		case 'r':
 			run = true
 		case ' ':
-			if run {
-				stepSync.Lock()
-				execSync.Lock()
-
-				run = false
-				Disassamble()
-			} else {
-				execSync.Unlock()
-				stepSync.Unlock()
-
-				stepSync.Lock()
-				execSync.Lock()
-				Disassamble()
-			}
+			run = true
+			cpu.ExecSync.Wait()
+			run = false
+			Disassamble()
+			*step <- true
 			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
 		case 'q':
 			cpu.DumpStats()
@@ -140,6 +125,7 @@ func input() {
 				dumpAddr = ""
 			}
 		}
+
 	}
 }
 
@@ -148,7 +134,27 @@ func Disassamble() {
 	fmt.Printf("%d: %s\n", vic.SystemClock, cpu.Disassemble())
 }
 
+func RunEmulation() {
+	cpuTurn = vic.Run()
+	cia1.Run(outputDriver.IOEvents())
+	cia2.Run(0)
+	if cpuTurn {
+		cpu.NextCycle()
+		if cpu.State == mos6510.ReadInstruction {
+			if cpu.NMI_pin > 0 {
+				log.Printf("NMI")
+				cpu.NMI()
+			}
+			if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
+				// log.Printf("IRQ")
+				cpu.IRQ()
+			}
+		}
+	}
+}
+
 func main() {
+	var step chan bool
 
 	args := os.Args
 	confload.Load("config.ini", conf)
@@ -176,33 +182,17 @@ func main() {
 	run = true
 	cpuTurn = true
 	step = make(chan bool)
-	go input()
+	go input(&step)
 
 	for {
-		stepSync.Lock()
-		if cpu.State == mos6510.ReadInstruction {
-			execSync.Lock()
-		}
-		cpuTurn = vic.Run()
-		if cpuTurn {
-			cia1.Run(outputDriver.IOEvents())
-			cia2.Run(0)
-			cpu.NextCycle()
-			if cpu.State == mos6510.ReadInstruction {
-				if cpu.NMI_pin > 0 {
-					log.Printf("NMI")
-					cpu.NMI()
-				}
-				if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
-					// log.Printf("IRQ")
-					cpu.IRQ()
-				}
+		select {
+		case <-step:
+			RunEmulation()
+		default:
+			if run {
+				RunEmulation()
 			}
 		}
-		if cpu.State == mos6510.ReadInstruction {
-			execSync.Unlock()
-		}
-		stepSync.Unlock()
 	}
 
 	// cpu.DumpStats()

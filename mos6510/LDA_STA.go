@@ -5,7 +5,7 @@ import (
 )
 
 func (C *CPU) lda() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		C.A = byte(C.oper)
 	case zeropage:
@@ -31,7 +31,7 @@ func (C *CPU) lda() {
 }
 
 func (C *CPU) sta() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case zeropage:
 		C.ram.Write(C.oper, C.A)
 	case zeropageX:
@@ -53,7 +53,7 @@ func (C *CPU) sta() {
 }
 
 func (C *CPU) ldx() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		C.X = byte(C.oper)
 	case zeropage:
@@ -73,7 +73,7 @@ func (C *CPU) ldx() {
 }
 
 func (C *CPU) stx() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case zeropage:
 		C.ram.Write(C.oper, C.X)
 	case zeropageY:
@@ -87,7 +87,7 @@ func (C *CPU) stx() {
 }
 
 func (C *CPU) ldy() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case immediate:
 		C.Y = byte(C.oper)
 	case zeropage:
@@ -107,7 +107,7 @@ func (C *CPU) ldy() {
 }
 
 func (C *CPU) sty() {
-	switch C.inst.addr {
+	switch C.Inst.addr {
 	case zeropage:
 		C.ram.Write(C.oper, C.Y)
 	case zeropageX:
