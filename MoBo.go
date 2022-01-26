@@ -144,7 +144,7 @@ func input(step *chan bool) {
 
 func Disassamble() {
 	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
-	fmt.Printf("%d: %s\n", vic.SystemClock, cpu.Disassemble())
+	fmt.Printf("%s\n", cpu.Disassemble())
 }
 
 func RunEmulation() {
@@ -161,6 +161,11 @@ func RunEmulation() {
 			if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
 				// log.Printf("IRQ")
 				cpu.IRQ()
+			}
+			if conf.Breakpoint == cpu.InstStart {
+				conf.Disassamble = true
+				ExecSync.Add(1)
+				run = false
 			}
 			if !run {
 				Disassamble()

@@ -74,6 +74,7 @@ func (C *CIA) Write(addr uint16, val byte) {
 		if val&CTRL_LOAD_LATCH > 0 {
 			C.Reg[TAHI] = C.timerA_latchHI
 			C.Reg[TALO] = C.timerA_latchLO
+			C.cycleDelay = 2
 		}
 		C.Reg[CRA] = val & 0b11100111
 	case CRB:
@@ -81,6 +82,7 @@ func (C *CIA) Write(addr uint16, val byte) {
 		if val&CTRL_LOAD_LATCH > 0 {
 			C.Reg[TBHI] = C.timerB_latchHI
 			C.Reg[TBLO] = C.timerB_latchLO
+			C.cycleDelay = 2
 		}
 		C.Reg[CRB] = val & 0b11100111
 	}

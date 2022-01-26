@@ -18,6 +18,8 @@ type CIA struct {
 	timerB_latchHI byte
 
 	interrupt_mask byte
+
+	cycleDelay int
 }
 
 const (
@@ -95,9 +97,14 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.timerB_latchHI = 0xFF
 
 	C.interrupt_mask = 0
+	C.cycleDelay = 0
 }
 
 func (C *CIA) Run(charbuff uint) {
+	if C.cycleDelay > 0 {
+		C.cycleDelay--
+		return
+	}
 	C.buffer = keyMap[charbuff]
 	if C.Reg[CRA]&CTRL_START_STOP > 0 {
 		C.TimerA()
