@@ -208,16 +208,13 @@ func (C *CPU) ComputeInstruction() {
 	if C.conf.RunPerfStats {
 		defer C.timeTrack(time.Now(), "ComputeInstruction")
 	}
-
-	C.State = ReadInstruction
-	C.Inst.action()
 	if C.cycleCount != C.Inst.Cycles {
 		log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.Inst.Cycles, C.cycleCount)
 	}
 	if C.cycleCount == C.Inst.Cycles {
 		C.State = ReadInstruction
 	}
-	// }
+	C.Inst.action()
 }
 
 func (C *CPU) NextCycle() {
@@ -396,9 +393,6 @@ func (C *CPU) NextCycle() {
 	// Exec
 	////////////////////////////////////////////////
 	case Compute:
-		// if C.cycleCount > C.Inst.Cycles {
-		// 	log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.Inst.Cycles, C.cycleCount)
-		// }
 		if C.Inst.Cycles == C.cycleCount {
 			C.ComputeInstruction()
 		}

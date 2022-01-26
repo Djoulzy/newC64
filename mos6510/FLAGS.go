@@ -76,6 +76,7 @@ func (C *CPU) sec() {
 }
 
 func (C *CPU) sed() {
+	log.Fatal("Decimal mode")
 	switch C.Inst.addr {
 	case implied:
 		C.setD(true)

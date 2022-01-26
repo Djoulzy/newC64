@@ -40,6 +40,8 @@ const (
 	indirect
 	indirectX
 	indirectY
+	Branching
+	CrossPage
 )
 
 type instruction struct {
@@ -65,8 +67,6 @@ const (
 	ReadIndXY_LO
 	ReadIndXY_HI
 	Compute
-	WriteResult
-	Soucis
 )
 
 // CPU :

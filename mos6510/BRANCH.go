@@ -1,7 +1,6 @@
 package mos6510
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -10,8 +9,20 @@ func (C *CPU) bcc() {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetC() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -22,8 +33,20 @@ func (C *CPU) bcs() {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetC() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -34,8 +57,20 @@ func (C *CPU) beq() {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetZ() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -46,8 +81,20 @@ func (C *CPU) bmi() {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetN() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -58,8 +105,20 @@ func (C *CPU) bne() {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetZ() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -70,8 +129,20 @@ func (C *CPU) bpl() {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetN() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -90,34 +161,50 @@ func (C *CPU) brk() {
 }
 
 func (C *CPU) bvc() {
-	dest := C.getRelativeAddr(C.oper)
 	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetV() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
-	}
-	if C.conf.Disassamble {
-		fmt.Printf("(%04X)\n", dest)
 	}
 }
 
 func (C *CPU) bvs() {
-	dest := C.getRelativeAddr(C.oper)
 	switch C.Inst.addr {
 	case relative:
 		C.oper = C.getRelativeAddr(C.oper)
 		if C.issetV() {
-			C.PC = C.oper
+			C.Inst.addr = Branching
+			C.State = Compute
+			C.Inst.Cycles++
 		}
+	case Branching:
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
-	}
-	if C.conf.Disassamble {
-		fmt.Printf("(%04X)\n", dest)
 	}
 }
 
