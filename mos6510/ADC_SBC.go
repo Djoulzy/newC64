@@ -7,6 +7,7 @@ import (
 func (C *CPU) adc() {
 	var val uint16
 	var oper byte
+	var crossed bool
 
 	// log.Printf("%04X - %s", C.InstStart, C.registers())
 	// log.Fatal("ADC")
@@ -42,6 +43,7 @@ func (C *CPU) adc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case absoluteY:
 		C.cross_oper = C.oper + uint16(C.Y)
@@ -55,6 +57,7 @@ func (C *CPU) adc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case indirectX:
 		oper = C.ReadIndirectX(C.oper)
@@ -63,8 +66,8 @@ func (C *CPU) adc() {
 		C.updateV(C.A, oper, byte(val))
 		C.A = byte(val)
 	case indirectY:
-		C.cross_oper = C.GetIndirectYAddr(C.oper)
-		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+		C.cross_oper = C.GetIndirectYAddr(C.oper, &crossed)
+		if crossed {
 			oper = C.ram.Read(C.cross_oper)
 			val = uint16(C.A) + uint16(oper) + uint16(C.getC())
 			C.setC(val > 0x00FF)
@@ -74,6 +77,7 @@ func (C *CPU) adc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		oper = C.ram.Read(C.cross_oper)
@@ -86,12 +90,12 @@ func (C *CPU) adc() {
 	}
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-
 }
 
 func (C *CPU) sbc() {
 	var val int
 	var oper byte
+	var crossed bool
 
 	switch C.Inst.addr {
 	case immediate:
@@ -131,6 +135,7 @@ func (C *CPU) sbc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case absoluteY:
 		C.cross_oper = C.oper + uint16(C.Y)
@@ -146,6 +151,7 @@ func (C *CPU) sbc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case indirectX:
 		val = int(C.A) - int(C.ReadIndirectX(C.oper))
@@ -155,8 +161,8 @@ func (C *CPU) sbc() {
 		C.updateV(C.A, ^C.ReadIndirectX(C.oper), byte(val))
 		C.A = byte(val)
 	case indirectY:
-		C.cross_oper = C.GetIndirectYAddr(C.oper)
-		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+		C.cross_oper = C.GetIndirectYAddr(C.oper, &crossed)
+		if crossed {
 			oper = C.ram.Read(C.cross_oper)
 			val = int(C.A) - int(oper)
 			if C.getC() == 0 {
@@ -168,6 +174,7 @@ func (C *CPU) sbc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		oper = C.ram.Read(C.cross_oper)

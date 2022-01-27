@@ -117,9 +117,11 @@ func (C *CPU) ReadIndirectY(addr uint16) byte {
 	return C.ram.Read(dest + uint16(C.Y))
 }
 
-func (C *CPU) GetIndirectYAddr(addr uint16) uint16 {
-	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
-	return dest + uint16(C.Y)
+func (C *CPU) GetIndirectYAddr(addr uint16, pagecrossed *bool) uint16 {
+	base := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
+	dest := base + uint16(C.Y)
+	*pagecrossed = (base&0xFF00 == dest&0xFF00)
+	return dest
 }
 
 func (C *CPU) WriteIndirectX(addr uint16, val byte) {

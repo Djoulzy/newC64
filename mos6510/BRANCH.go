@@ -103,25 +103,35 @@ func (C *CPU) bmi() {
 func (C *CPU) bne() {
 	switch C.Inst.addr {
 	case relative:
-		C.oper = C.getRelativeAddr(C.oper)
+		C.cross_oper = C.getRelativeAddr(C.oper)
 		if !C.issetZ() {
 			C.Inst.addr = Branching
 			C.State = Compute
 			C.Inst.Cycles++
 		}
 	case Branching:
-		if C.PC&0xFF00 == C.oper&0xFF00 {
-			C.PC = C.oper
+		if C.PC&0xFF00 == C.cross_oper&0xFF00 {
+			C.PC = C.cross_oper
 		} else {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
 		}
 	case CrossPage:
-		C.PC = C.oper
+		C.PC = C.cross_oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
+
+	// switch C.Inst.addr {
+	// case relative:
+	// 	C.cross_oper = C.getRelativeAddr(C.oper)
+	// 	if !C.issetZ() {
+	// 		C.PC = C.cross_oper
+	// 	}
+	// default:
+	// 	log.Fatal("Bad addressing mode")
+	// }
 }
 
 func (C *CPU) bpl() {

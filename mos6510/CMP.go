@@ -6,6 +6,7 @@ import (
 
 func (C *CPU) cmp() {
 	var val int
+	var crossed bool
 
 	switch C.Inst.addr {
 	case immediate:
@@ -24,6 +25,7 @@ func (C *CPU) cmp() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case absoluteY:
 		C.cross_oper = C.oper + uint16(C.Y)
@@ -33,17 +35,19 @@ func (C *CPU) cmp() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case indirectX:
 		val = int(C.A) - int(C.ReadIndirectX(C.oper))
 	case indirectY:
-		C.cross_oper = C.GetIndirectYAddr(C.oper)
-		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+		C.cross_oper = C.GetIndirectYAddr(C.oper, &crossed)
+		if crossed {
 			val = int(C.A) - int(C.ram.Read(C.cross_oper))
 		} else {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		val = int(C.A) - int(C.ram.Read(C.cross_oper))

@@ -5,6 +5,8 @@ import (
 )
 
 func (C *CPU) lda() {
+	var crossed bool
+
 	switch C.Inst.addr {
 	case immediate:
 		C.A = byte(C.oper)
@@ -22,6 +24,7 @@ func (C *CPU) lda() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case absoluteY:
 		C.cross_oper = C.oper + uint16(C.Y)
@@ -31,17 +34,19 @@ func (C *CPU) lda() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case indirectX:
 		C.A = C.ReadIndirectX(C.oper)
 	case indirectY:
-		C.cross_oper = C.GetIndirectYAddr(C.oper)
-		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+		C.cross_oper = C.GetIndirectYAddr(C.oper, &crossed)
+		if crossed {
 			C.A = C.ram.Read(C.cross_oper)
 		} else {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		C.A = C.ram.Read(C.cross_oper)
@@ -50,7 +55,6 @@ func (C *CPU) lda() {
 	}
 	C.updateN(C.A)
 	C.updateZ(C.A)
-
 }
 
 func (C *CPU) sta() {
