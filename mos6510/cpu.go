@@ -83,6 +83,10 @@ func (C *CPU) Disassemble() string {
 		token = fmt.Sprintf("$%02X,X", C.oper)
 	case zeropageY:
 		token = fmt.Sprintf("$%02X,Y", C.oper)
+	case Branching:
+		fallthrough
+	case CrossPage:
+		fallthrough
 	case absolute:
 		token = fmt.Sprintf("$%04X", C.oper)
 	case absoluteX:
@@ -111,6 +115,11 @@ func (C *CPU) ReadIndirectX(addr uint16) byte {
 func (C *CPU) ReadIndirectY(addr uint16) byte {
 	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
 	return C.ram.Read(dest + uint16(C.Y))
+}
+
+func (C *CPU) GetIndirectYAddr(addr uint16) uint16 {
+	dest := (uint16(C.ram.Read(addr+1)) << 8) + uint16(C.ram.Read(addr))
+	return dest + uint16(C.Y)
 }
 
 func (C *CPU) WriteIndirectX(addr uint16, val byte) {

@@ -89,6 +89,7 @@ type CPU struct {
 	Inst      instruction
 
 	oper         uint16
+	cross_oper   uint16
 	val_zp_lo    byte
 	val_zp_hi    byte
 	val_absolute byte
