@@ -111,21 +111,42 @@ func (C *CPU) sbc() {
 		C.updateV(C.A, ^C.ram.Read(C.oper), byte(val))
 		C.A = byte(val)
 	case zeropageX:
-		fallthrough
-	case absoluteX:
 		val = int(C.A) - int(C.ram.Read(C.oper+uint16(C.X)))
 		if C.getC() == 0 {
 			val -= 1
 		}
 		C.updateV(C.A, ^C.ram.Read(C.oper+uint16(C.X)), byte(val))
 		C.A = byte(val)
-	case absoluteY:
-		val = int(C.A) - int(C.ram.Read(C.oper+uint16(C.Y)))
-		if C.getC() == 0 {
-			val -= 1
+	case absoluteX:
+		C.cross_oper = C.oper + uint16(C.X)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			oper = C.ram.Read(C.cross_oper)
+			val = int(C.A) - int(oper)
+			if C.getC() == 0 {
+				val -= 1
+			}
+			C.updateV(C.A, ^oper, byte(val))
+			C.A = byte(val)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
 		}
-		C.updateV(C.A, ^C.ram.Read(C.oper+uint16(C.Y)), byte(val))
-		C.A = byte(val)
+	case absoluteY:
+		C.cross_oper = C.oper + uint16(C.Y)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			oper = C.ram.Read(C.cross_oper)
+			val = int(C.A) - int(oper)
+			if C.getC() == 0 {
+				val -= 1
+			}
+			C.updateV(C.A, ^oper, byte(val))
+			C.A = byte(val)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case indirectX:
 		val = int(C.A) - int(C.ReadIndirectX(C.oper))
 		if C.getC() == 0 {
@@ -135,8 +156,8 @@ func (C *CPU) sbc() {
 		C.A = byte(val)
 	case indirectY:
 		C.cross_oper = C.GetIndirectYAddr(C.oper)
-		oper = C.ram.Read(C.cross_oper)
 		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			oper = C.ram.Read(C.cross_oper)
 			val = int(C.A) - int(oper)
 			if C.getC() == 0 {
 				val -= 1

@@ -16,13 +16,36 @@ func (C *CPU) and() {
 	case absolute:
 		C.A &= C.ram.Read(C.oper)
 	case absoluteX:
-		C.A &= C.ram.Read(C.oper + uint16(C.X))
+		C.cross_oper = C.oper + uint16(C.X)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			C.A &= C.ram.Read(C.cross_oper)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case absoluteY:
-		C.A &= C.ram.Read(C.oper + uint16(C.Y))
+		C.cross_oper = C.oper + uint16(C.Y)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			C.A &= C.ram.Read(C.cross_oper)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case indirectX:
 		C.A &= C.ReadIndirectX(C.oper)
 	case indirectY:
-		C.A &= C.ReadIndirectY(C.oper)
+		C.cross_oper = C.GetIndirectYAddr(C.oper)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			C.A &= C.ram.Read(C.cross_oper)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.A &= C.ram.Read(C.cross_oper)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -72,13 +95,36 @@ func (C *CPU) eor() {
 	case absolute:
 		C.A ^= C.ram.Read(C.oper)
 	case absoluteX:
-		C.A ^= C.ram.Read(C.oper + uint16(C.X))
+		C.cross_oper = C.oper + uint16(C.X)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			C.A ^= C.ram.Read(C.cross_oper)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case absoluteY:
-		C.A ^= C.ram.Read(C.oper + uint16(C.Y))
+		C.cross_oper = C.oper + uint16(C.Y)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			C.A ^= C.ram.Read(C.cross_oper)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case indirectX:
 		C.A ^= C.ReadIndirectX(C.oper)
 	case indirectY:
-		C.A ^= C.ReadIndirectY(C.oper)
+		C.cross_oper = C.GetIndirectYAddr(C.oper)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			C.A ^= C.ram.Read(C.cross_oper)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		C.A ^= C.ram.Read(C.cross_oper)
 	default:
 		log.Fatal("Bad addressing mode")
 	}

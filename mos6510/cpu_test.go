@@ -89,6 +89,7 @@ func TestLDA(t *testing.T) {
 }
 
 func TestBNE(t *testing.T) {
+	var allGood bool = false
 	mem.Clear(false)
 	proc.Inst = mnemonic[0xD0]
 	tables := []struct {
@@ -108,9 +109,14 @@ func TestBNE(t *testing.T) {
 		proc.bne()
 		if proc.PC != table.res {
 			t.Errorf("BNE #$%02X - Incorrect status - get: %04X - want: %04X", proc.oper, proc.PC, table.res)
+			allGood = false
 		}
 	}
-	log.Printf("BNE OK")
+	if allGood {
+		log.Printf("BNE OK")
+	} else {
+		log.Printf("BNE %c[1;31mECHEC%c[0m", 27, 27)
+	}
 }
 
 func TestADC(t *testing.T) {

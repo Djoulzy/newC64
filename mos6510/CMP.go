@@ -17,13 +17,36 @@ func (C *CPU) cmp() {
 	case absolute:
 		val = int(C.A) - int(C.ram.Read(C.oper))
 	case absoluteX:
-		val = int(C.A) - int(C.ram.Read(C.oper+uint16(C.X)))
+		C.cross_oper = C.oper + uint16(C.X)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			val = int(C.A) - int(C.ram.Read(C.cross_oper))
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case absoluteY:
-		val = int(C.A) - int(C.ram.Read(C.oper+uint16(C.Y)))
+		C.cross_oper = C.oper + uint16(C.Y)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			val = int(C.A) - int(C.ram.Read(C.cross_oper))
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
 	case indirectX:
 		val = int(C.A) - int(C.ReadIndirectX(C.oper))
 	case indirectY:
-		val = int(C.A) - int(C.ReadIndirectY(C.oper))
+		C.cross_oper = C.GetIndirectYAddr(C.oper)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			val = int(C.A) - int(C.ram.Read(C.cross_oper))
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+		}
+	case CrossPage:
+		val = int(C.A) - int(C.ram.Read(C.cross_oper))
 	default:
 		log.Fatal("Bad addressing mode")
 	}
