@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"newC64/cia6526"
 	"newC64/clog"
 	"newC64/confload"
@@ -155,7 +154,7 @@ func RunEmulation() {
 		cpu.NextCycle()
 		if cpu.State == mos6510.ReadInstruction {
 			if cpu.NMI_pin > 0 {
-				log.Printf("NMI")
+				// log.Printf("NMI")
 				cpu.NMI()
 			}
 			if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {

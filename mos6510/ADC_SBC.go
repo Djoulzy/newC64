@@ -189,4 +189,5 @@ func (C *CPU) sbc() {
 	}
 	C.setC(val >= 0x00)
 	C.setN(val&0b10000000 == 0b10000000)
+	C.updateZ(byte(val))
 }

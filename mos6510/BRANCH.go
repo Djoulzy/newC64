@@ -12,6 +12,7 @@ func (C *CPU) bcc() {
 			C.Inst.addr = Branching
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case Branching:
 		if C.PC&0xFF00 == C.oper&0xFF00 {
@@ -20,6 +21,7 @@ func (C *CPU) bcc() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		C.PC = C.oper
@@ -36,6 +38,7 @@ func (C *CPU) bcs() {
 			C.Inst.addr = Branching
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case Branching:
 		if C.PC&0xFF00 == C.oper&0xFF00 {
@@ -44,6 +47,7 @@ func (C *CPU) bcs() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		C.PC = C.oper
@@ -60,6 +64,7 @@ func (C *CPU) beq() {
 			C.Inst.addr = Branching
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case Branching:
 		if C.PC&0xFF00 == C.oper&0xFF00 {
@@ -68,6 +73,7 @@ func (C *CPU) beq() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		C.PC = C.oper
@@ -84,6 +90,7 @@ func (C *CPU) bmi() {
 			C.Inst.addr = Branching
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case Branching:
 		if C.PC&0xFF00 == C.oper&0xFF00 {
@@ -92,6 +99,7 @@ func (C *CPU) bmi() {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
 		C.PC = C.oper
@@ -103,35 +111,27 @@ func (C *CPU) bmi() {
 func (C *CPU) bne() {
 	switch C.Inst.addr {
 	case relative:
-		C.cross_oper = C.getRelativeAddr(C.oper)
+		C.oper = C.getRelativeAddr(C.oper)
 		if !C.issetZ() {
 			C.Inst.addr = Branching
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case Branching:
-		if C.PC&0xFF00 == C.cross_oper&0xFF00 {
-			C.PC = C.cross_oper
+		if C.PC&0xFF00 == C.oper&0xFF00 {
+			C.PC = C.oper
 		} else {
 			C.Inst.addr = CrossPage
 			C.State = Compute
 			C.Inst.Cycles++
+			return
 		}
 	case CrossPage:
-		C.PC = C.cross_oper
+		C.PC = C.oper
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-
-	// switch C.Inst.addr {
-	// case relative:
-	// 	C.cross_oper = C.getRelativeAddr(C.oper)
-	// 	if !C.issetZ() {
-	// 		C.PC = C.cross_oper
-	// 	}
-	// default:
-	// 	log.Fatal("Bad addressing mode")
-	// }
 }
 
 func (C *CPU) bpl() {

@@ -192,7 +192,7 @@ func (C *CPU) pullWordStack() uint16 {
 
 func (C *CPU) IRQ() {
 	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
-	// C.IRQ = 0
+	C.IRQ_pin = 0
 	C.pushWordStack(C.PC)
 	C.pushByteStack(C.S)
 	C.setI(true)
