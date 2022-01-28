@@ -92,18 +92,4 @@ func (S *SDLDriver) UpdateFrame() {
 
 func (S *SDLDriver) IOEvents() uint {
 	return buffer
-	// event := sdl.PollEvent()
-	// switch t := event.(type) {
-	// case *sdl.QuitEvent:
-	// 	os.Exit(1)
-	// case *sdl.KeyboardEvent:
-	// 	KeyCode := t.Keysym.Sym
-	// 	fmt.Printf("%v\n", KeyCode)
-	// 	fmt.Printf("%v\n", sdl.K_a)
-	// 	switch KeyCode {
-	// 	case sdl.K_a:
-	// 		fmt.Printf("A")
-	// 	}
-	// default:
-	// }
 }

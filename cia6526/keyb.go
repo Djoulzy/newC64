@@ -71,10 +71,18 @@ var (
 	Keyb_RSHIFT     Keyboard = Keyboard{col: PA6, row: PB4}
 	Keyb_CRSR_DOWN  Keyboard = Keyboard{col: PA0, row: PB7}
 	Keyb_CRSR_RIGHT Keyboard = Keyboard{col: PA0, row: PB2}
+	Keyb_DEL        Keyboard = Keyboard{col: PA0, row: PB0}
+	Keyb_COLON      Keyboard = Keyboard{col: PA5, row: PB5}
+	Keyb_SEMICOLN   Keyboard = Keyboard{col: PA6, row: PB2}
+	Keyb_AROBASE    Keyboard = Keyboard{col: PA5, row: PB6}
+	Keyb_EQUAL      Keyboard = Keyboard{col: PA6, row: PB5}
+	Keyb_CTRL       Keyboard = Keyboard{col: PA7, row: PB2}
+	Keyb_CBM        Keyboard = Keyboard{col: PA7, row: PB5}
 )
 
 var keyMap = map[uint]Keyboard{
 	0:          Keyb_NULL,
+	8:          Keyb_DEL,
 	13:         Keyb_RETURN,
 	32:         Keyb_SPACE,
 	48:         Keyb_0,
@@ -87,6 +95,10 @@ var keyMap = map[uint]Keyboard{
 	55:         Keyb_7,
 	56:         Keyb_8,
 	57:         Keyb_9,
+	58:         Keyb_COLON,    // :
+	59:         Keyb_SEMICOLN, // ;
+	60:         Keyb_AROBASE,
+	61:         Keyb_EQUAL,
 	97:         Keyb_A,
 	98:         Keyb_B,
 	99:         Keyb_C,
@@ -113,7 +125,9 @@ var keyMap = map[uint]Keyboard{
 	120:        Keyb_X,
 	121:        Keyb_Y,
 	122:        Keyb_Z,
+	1073742048: Keyb_CTRL,
 	1073742049: Keyb_LSHIFT,
+	1073742051: Keyb_CBM,
 	1073742053: Keyb_RSHIFT,
 	1073741905: Keyb_CRSR_DOWN,
 	1073741903: Keyb_CRSR_RIGHT,

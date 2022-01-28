@@ -101,12 +101,13 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 }
 
 func (C *CIA) Run(charbuff uint) {
-	if C.cycleDelay > 0 {
-		C.cycleDelay--
-		return
-	}
 	C.buffer = keyMap[charbuff]
+
 	if C.Reg[CRA]&CTRL_START_STOP > 0 {
+		if C.cycleDelay > 0 {
+			C.cycleDelay--
+			return
+		}
 		C.TimerA()
 	}
 	if C.Reg[CRB]&CTRL_START_STOP > 0 {
