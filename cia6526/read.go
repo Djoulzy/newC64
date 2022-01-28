@@ -25,14 +25,19 @@ func (C *CIA) Read(addr uint16) byte {
 	switch reg {
 	case PRA:
 		if C.name == "CIA1" {
-			keyLevel := byte(0xFF)
-			if C.Reg[PRB]&C.buffer.row > 0 {
-				keyLevel = 0x00
+			if C.buffer == Keyb_NULL {
+				return Keyb_NULL.col
 			}
-			val := C.buffer.col & keyLevel
+
+			keyLevel := byte(0x00)
+			if C.Reg[PRB] | C.buffer.row == C.buffer.row {
+				keyLevel = 0xFF
+			}
+			val := ^C.buffer.col & keyLevel
 			test := val & ^C.Reg[DDRA]
 			res := test ^ C.Reg[PRA]
-			// C.dispReadReg("READ PRA", DDRA, PRA, buffer.col, res)
+
+			C.dispReadReg("READ PRA", DDRA, PRA, C.buffer.col, res)
 			// C.stopOncount()
 			return res
 		} else {
@@ -40,15 +45,21 @@ func (C *CIA) Read(addr uint16) byte {
 		}
 	case PRB:
 		if C.name == "CIA1" {
-			keyLevel := byte(0xFF)
-			if C.Reg[PRA]&C.buffer.col > 0 {
-				keyLevel = 0x00
+			if C.buffer == Keyb_NULL {
+				return Keyb_NULL.row
 			}
-			val := C.buffer.row & keyLevel
+
+			keyLevel := byte(0x00)
+			if C.Reg[PRA] | C.buffer.col == C.buffer.col {
+				keyLevel = 0xFF
+			}
+			val := ^C.buffer.row & keyLevel
 			test := val & ^C.Reg[DDRB]
 			res := test ^ C.Reg[PRB]
-			// C.dispReadReg("READ PRB", DDRB, PRB, buffer.row, res)
+
+			C.dispReadReg("READ PRB", DDRB, PRB, C.buffer.row, res)
 			// C.stopOncount()
+
 			return res
 		} else {
 			return C.Reg[PRB]

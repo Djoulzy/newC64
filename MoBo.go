@@ -148,8 +148,6 @@ func Disassamble() {
 
 func RunEmulation() {
 	cpuTurn = vic.Run()
-	cia1.Run(outputDriver.IOEvents())
-	cia2.Run(0)
 	if cpuTurn {
 		cpu.NextCycle()
 		if cpu.State == mos6510.ReadInstruction {
@@ -176,6 +174,8 @@ func RunEmulation() {
 			}
 		}
 	}
+	cia1.Run(outputDriver.IOEvents())
+	cia2.Run(0)
 }
 
 func main() {

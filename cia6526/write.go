@@ -22,22 +22,30 @@ func (C *CIA) Write(addr uint16, val byte) {
 	case PRA:
 		test := val & C.Reg[DDRA]
 		newPr := (C.Reg[PRA] & ^C.Reg[DDRA]) | test
-		// C.dispWriteReg("WRITE PRA", DDRA, PRA, val, newPr)
+		if C.buffer != Keyb_NULL {
+			C.dispWriteReg("WRITE PRA", DDRA, PRA, val, newPr)
+		}
 		C.Reg[PRA] = newPr
 	case PRB:
 		test := val & C.Reg[DDRB]
 		newPr := (C.Reg[PRB] & ^C.Reg[DDRB]) | test
-		// C.dispWriteReg("WRITE PRB", DDRB, PRB, val, newPr)
+		if C.buffer != Keyb_NULL {
+			C.dispWriteReg("WRITE PRB", DDRB, PRB, val, newPr)
+		}
 		C.Reg[PRB] = newPr
 	case DDRA:
 		C.Reg[DDRA] = val
 		newPr := C.Reg[PRA] | ^val
-		// C.dispWriteDir("WRITE DDRA", DDRA, PRA, val, newPr)
+		if C.buffer != Keyb_NULL {
+			C.dispWriteDir("WRITE DDRA", DDRA, PRA, val, newPr)
+		}
 		C.Reg[PRA] = newPr
 	case DDRB:
 		C.Reg[DDRB] = val
 		newPr := C.Reg[PRB] | ^val
-		// C.dispWriteDir("WRITE DDRB", DDRB, PRB, val, newPr)
+		if C.buffer != Keyb_NULL {
+			C.dispWriteDir("WRITE DDRB", DDRB, PRB, val, newPr)
+		}
 		C.Reg[PRB] = newPr
 	case TALO:
 		C.timerA_latchLO = val

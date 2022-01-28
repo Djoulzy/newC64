@@ -79,11 +79,6 @@ func (S *SDLDriver) UpdateFrame() {
 			case sdl.KEYUP:
 				buffer = 0
 			}
-
-			// switch KeyCode {
-			// case sdl.K_l:
-			// 	fmt.Printf("A")
-			// }
 		default:
 			// buffer = 0
 		}

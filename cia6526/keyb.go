@@ -5,30 +5,43 @@ type Keyboard struct {
 	row byte
 }
 
+// const (
+// 	GND byte = 0b00000000
+// 	PA0 byte = 0b00000001
+// 	PA1 byte = 0b00000010
+// 	PA2 byte = 0b00000100
+// 	PA3 byte = 0b00001000
+// 	PA4 byte = 0b00010000
+// 	PA5 byte = 0b00100000
+// 	PA6 byte = 0b01000000
+// 	PA7 byte = 0b10000000
+// )
+
 const (
-	PA0 byte = 0b00000001
-	PA1 byte = 0b00000010
-	PA2 byte = 0b00000100
-	PA3 byte = 0b00001000
-	PA4 byte = 0b00010000
-	PA5 byte = 0b00100000
-	PA6 byte = 0b01000000
-	PA7 byte = 0b10000000
+	GND byte = 0b11111111
+	PA0 byte = 0b11111110
+	PA1 byte = 0b11111101
+	PA2 byte = 0b11111011
+	PA3 byte = 0b11110111
+	PA4 byte = 0b11101111
+	PA5 byte = 0b11011111
+	PA6 byte = 0b10111111
+	PA7 byte = 0b01111111
 )
 
 const (
-	PB0 byte = 0b00000001
-	PB1 byte = 0b00000010
-	PB2 byte = 0b00000100
-	PB3 byte = 0b00001000
-	PB4 byte = 0b00010000
-	PB5 byte = 0b00100000
-	PB6 byte = 0b01000000
-	PB7 byte = 0b10000000
+	PB0 = PA0
+	PB1 = PA1
+	PB2 = PA2
+	PB3 = PA3
+	PB4 = PA4
+	PB5 = PA5
+	PB6 = PA6
+	PB7 = PA7
 )
 
 var (
-	Keyb_NULL       Keyboard = Keyboard{col: 0b00000000, row: 0b00000000}
+	Keyb_NULL       Keyboard = Keyboard{col: GND, row: GND}
 	Keyb_0          Keyboard = Keyboard{col: PA4, row: PB3}
 	Keyb_1          Keyboard = Keyboard{col: PA7, row: PB0}
 	Keyb_2          Keyboard = Keyboard{col: PA7, row: PB3}

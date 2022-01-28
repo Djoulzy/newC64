@@ -9,7 +9,6 @@ import (
 	"newC64/memory"
 	"newC64/trace"
 	"newC64/vic6569"
-	"os"
 	"time"
 )
 
@@ -41,11 +40,11 @@ func (P *PLA) Clear(memtype MemType) {
 
 func (P *PLA) getChip(addr uint16) MemType {
 	if addr < BasicStart { // Premiere Zone de RAM: 0000 -> A000
-		if addr == 0xF5 && P.count == 1 {
-			os.Exit(1)
-		} else {
-			P.count++
-		}
+		// if addr == 0xF5 && P.count == 1 {
+		// 	os.Exit(1)
+		// } else {
+		// 	P.count++
+		// }
 		return RAM
 	}
 	if addr < BasicEnd {
@@ -115,7 +114,6 @@ func (P *PLA) Read(addr uint16) byte {
 func (P *PLA) Write(addr uint16, value byte) {
 	var transAddr uint16
 	// if addr == 0x0065 {
-
 	// 	P.count++
 	// 	if P.count > 1 {
 	// 		P.conf.Disassamble = true
