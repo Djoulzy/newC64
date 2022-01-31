@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/mattn/go-tty"
 )
@@ -49,9 +48,7 @@ var (
 	outputDriver graphic.Driver
 	cpuTurn      bool
 	run          bool
-	ExecSync     sync.WaitGroup
-	mu           sync.Mutex
-	muBis        sync.Mutex
+	execInst     sync.Mutex
 )
 
 // func init() {
@@ -98,7 +95,7 @@ func input(step *chan bool) {
 	dumpAddr := ""
 	var keyb *tty.TTY
 	keyb, _ = tty.Open()
-	time.Sleep(time.Second)
+
 	for {
 		r, _ := keyb.ReadRune()
 		switch r {
@@ -109,9 +106,9 @@ func input(step *chan bool) {
 			Disassamble()
 			pla.Dump(0)
 		case 'r':
-			ExecSync.Add(-1)
 			conf.Disassamble = false
 			run = true
+			execInst.Unlock()
 		case 'l':
 			LoadPRG(mem.Val, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
@@ -119,15 +116,9 @@ func input(step *chan bool) {
 		case ' ':
 			if run {
 				conf.Disassamble = true
-				ExecSync.Add(1)
 				run = false
 			} else {
-				muBis.Lock()
-				ExecSync.Done()
-				mu.Lock()
-				ExecSync.Add(1)
-				mu.Unlock()
-				muBis.Unlock()
+				execInst.Unlock()
 			}
 			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
 		case 'q':
@@ -152,6 +143,10 @@ func Disassamble() {
 }
 
 func RunEmulation() {
+	if cpu.State == mos6510.ReadInstruction && !run {
+		execInst.Lock()
+	}
+
 	cpuTurn = vic.Run()
 	if cpuTurn {
 		cpu.NextCycle()
@@ -166,22 +161,16 @@ func RunEmulation() {
 			}
 			if conf.Breakpoint == cpu.InstStart {
 				conf.Disassamble = true
-				ExecSync.Add(1)
 				run = false
-			}
-			if !run {
-				Disassamble()
-				mu.Lock()
-				ExecSync.Wait()
-				mu.Unlock()
-				muBis.Lock()
-				muBis.Unlock()
 			}
 		}
 	}
 	cia1.Run()
-	// cia2.Run()
-	// time.Sleep(time.Microsecond)
+	cia2.Run()
+
+	if cpu.State == mos6510.ReadInstruction && !run {
+		Disassamble()
+	}
 }
 
 func main() {

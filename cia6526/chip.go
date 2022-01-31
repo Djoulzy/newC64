@@ -1,6 +1,7 @@
 package cia6526
 
 import (
+	"newC64/graphic"
 	"newC64/memory"
 )
 
@@ -9,7 +10,7 @@ type CIA struct {
 	Reg         [16]byte
 	Signal_Pin  *int
 	systemCycle *uint16
-	InputLine   uint
+	InputLine   graphic.KEYPressed
 	buffer      Keyboard
 
 	timerA_latchLO byte

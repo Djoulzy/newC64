@@ -10,7 +10,7 @@ type Driver interface {
 	Init(int, int)
 	DrawPixel(int, int, RGB)
 	UpdateFrame()
-	IOEvents() uint
-	SetKeyboardLine(*uint)
+	IOEvents() *KEYPressed
+	SetKeyboardLine(*KEYPressed)
 	CloseAll()
 }

@@ -1,11 +1,15 @@
 package graphic
 
 import (
-	"log"
 	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
+
+type KEYPressed struct {
+	KeyCode uint
+	Mode    uint
+}
 
 type SDLDriver struct {
 	winHeight int
@@ -14,7 +18,7 @@ type SDLDriver struct {
 	renderer  *sdl.Renderer
 	texture   *sdl.Texture
 	screen    []byte
-	keybLine  *uint
+	keybLine  *KEYPressed
 }
 
 func (S *SDLDriver) DrawPixel(x, y int, color RGB) {
@@ -62,7 +66,7 @@ func (S *SDLDriver) Init(winWidth, winHeight int) {
 	S.screen = make([]byte, S.winWidth*S.winHeight*3)
 }
 
-func (S *SDLDriver) SetKeyboardLine(line *uint) {
+func (S *SDLDriver) SetKeyboardLine(line *KEYPressed) {
 	S.keybLine = line
 }
 
@@ -79,11 +83,25 @@ func (S *SDLDriver) UpdateFrame() {
 		case *sdl.KeyboardEvent:
 			switch t.Type {
 			case sdl.KEYDOWN:
-				*S.keybLine = uint(t.Keysym.Sym)
-				log.Printf("KEY DOWN : %d", uint(t.Keysym.Sym))
+				S.keybLine.KeyCode = uint(t.Keysym.Sym)
+				S.keybLine.Mode = 0
+				switch t.Keysym.Mod {
+				case 1:
+					if S.keybLine.KeyCode != sdl.K_LSHIFT {
+						S.keybLine.Mode = sdl.K_LSHIFT
+					}
+				case 2:
+					if S.keybLine.KeyCode != sdl.K_RSHIFT {
+						S.keybLine.Mode = sdl.K_RSHIFT
+					}
+				case 3:
+					S.keybLine.Mode = 0
+				}
+				// log.Printf("KEY DOWN : %d %d", S.keybLine.KeyCode, S.keybLine.Mode)
 			case sdl.KEYUP:
 				// *S.keybLine = 1073742049
-				*S.keybLine = 0
+				S.keybLine.KeyCode = 0
+				S.keybLine.Mode = 0
 			}
 		default:
 			// buffer = 0
@@ -91,6 +109,6 @@ func (S *SDLDriver) UpdateFrame() {
 	}
 }
 
-func (S *SDLDriver) IOEvents() uint {
-	return *S.keybLine
+func (S *SDLDriver) IOEvents() *KEYPressed {
+	return S.keybLine
 }
