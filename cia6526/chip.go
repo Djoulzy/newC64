@@ -9,6 +9,7 @@ type CIA struct {
 	Reg         [16]byte
 	Signal_Pin  *int
 	systemCycle *uint16
+	InputLine   uint
 	buffer      Keyboard
 
 	timerA_latchLO byte
@@ -100,10 +101,10 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.cycleDelay = 0
 }
 
-func (C *CIA) Run(charbuff uint) {
-	if C.name == "CIA1" {
-		C.buffer = keyMap[charbuff]
-	}
+func (C *CIA) Run() {
+	// if C.name == "CIA1" {
+	// 	C.buffer = keyMap[charbuff]
+	// }
 	if C.Reg[CRA]&CTRL_START_STOP > 0 {
 		if C.cycleDelay > 0 {
 			C.cycleDelay--

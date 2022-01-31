@@ -91,6 +91,8 @@ var (
 	Keyb_EQUAL      Keyboard = Keyboard{col: PA6, row: PB5}
 	Keyb_CTRL       Keyboard = Keyboard{col: PA7, row: PB2}
 	Keyb_CBM        Keyboard = Keyboard{col: PA7, row: PB5}
+
+	keyb_DBLQUOTE Keyboard = Keyboard{col: 0b01111101, row: 0b01110111}
 )
 
 var keyMap = map[uint]Keyboard{
@@ -101,7 +103,7 @@ var keyMap = map[uint]Keyboard{
 	48:         Keyb_0,
 	49:         Keyb_1,
 	50:         Keyb_2,
-	51:         Keyb_3,
+	51:         keyb_DBLQUOTE,
 	52:         Keyb_4,
 	53:         Keyb_5,
 	54:         Keyb_6,

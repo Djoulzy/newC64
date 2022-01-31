@@ -14,6 +14,7 @@ type SDLDriver struct {
 	renderer  *sdl.Renderer
 	texture   *sdl.Texture
 	screen    []byte
+	keybLine  *uint
 }
 
 func (S *SDLDriver) DrawPixel(x, y int, color RGB) {
@@ -61,6 +62,10 @@ func (S *SDLDriver) Init(winWidth, winHeight int) {
 	S.screen = make([]byte, S.winWidth*S.winHeight*3)
 }
 
+func (S *SDLDriver) SetKeyboardLine(line *uint) {
+	S.keybLine = line
+}
+
 func (S *SDLDriver) UpdateFrame() {
 
 	S.texture.Update(nil, S.screen, S.winWidth*3)
@@ -74,10 +79,11 @@ func (S *SDLDriver) UpdateFrame() {
 		case *sdl.KeyboardEvent:
 			switch t.Type {
 			case sdl.KEYDOWN:
-				buffer = uint(t.Keysym.Sym)
+				*S.keybLine = uint(t.Keysym.Sym)
 				log.Printf("KEY DOWN : %d", uint(t.Keysym.Sym))
 			case sdl.KEYUP:
-				buffer = 0
+				// *S.keybLine = 1073742049
+				*S.keybLine = 0
 			}
 		default:
 			// buffer = 0
@@ -86,5 +92,5 @@ func (S *SDLDriver) UpdateFrame() {
 }
 
 func (S *SDLDriver) IOEvents() uint {
-	return buffer
+	return *S.keybLine
 }

@@ -11,7 +11,6 @@ type Driver interface {
 	DrawPixel(int, int, RGB)
 	UpdateFrame()
 	IOEvents() uint
+	SetKeyboardLine(*uint)
 	CloseAll()
 }
-
-var buffer uint

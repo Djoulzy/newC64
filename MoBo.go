@@ -84,6 +84,7 @@ func setup() {
 	cpu.Init(&pla, &vic.SystemClock, conf)
 
 	cia1.Init("CIA1", io.GetView(0x0C00, 0x0200), &vic.SystemClock)
+	outputDriver.SetKeyboardLine(&cia1.InputLine)
 	cia2.Init("CIA2", io.GetView(0x0D00, 0x0200), &vic.SystemClock)
 
 	pla.Connect(&vic, &cia1, &cia2)
@@ -111,6 +112,10 @@ func input(step *chan bool) {
 			ExecSync.Add(-1)
 			conf.Disassamble = false
 			run = true
+		case 'l':
+			LoadPRG(mem.Val, conf.LoadPRG)
+			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
+			// cpu.GoTo(addr)
 		case ' ':
 			if run {
 				conf.Disassamble = true
@@ -174,14 +179,13 @@ func RunEmulation() {
 			}
 		}
 	}
-	cia1.Run(outputDriver.IOEvents())
-	cia2.Run(0)
+	cia1.Run()
+	// cia2.Run()
+	// time.Sleep(time.Microsecond)
 }
 
 func main() {
 	var step chan bool
-
-	args := os.Args
 	confload.Load("config.ini", conf)
 
 	clog.LogLevel = conf.LogLevel
@@ -198,11 +202,6 @@ func main() {
 	// defer pprof.StopCPUProfile()
 
 	setup()
-
-	if len(args) > 1 {
-		// addr, _ := LoadPRG(mem, args[1])
-		// cpu.GoTo(addr)
-	}
 
 	run = true
 	cpuTurn = true

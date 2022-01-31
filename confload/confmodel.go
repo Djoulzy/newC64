@@ -8,6 +8,7 @@ type Globals struct {
 	Disassamble  bool
 	LogLevel     int
 	Display      bool
+	LoadPRG      string
 }
 
 type Debug struct {

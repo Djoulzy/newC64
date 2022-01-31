@@ -147,6 +147,10 @@ func (P *PLA) Write(addr uint16, value byte) {
 			return
 		}
 	}
+	// if addr == 0x028D {
+	// 	log.Printf("shift: %d\r", value)
+	// 	value = 1
+	// }
 	P.Mem[RAM].Val[addr] = value
 }
 

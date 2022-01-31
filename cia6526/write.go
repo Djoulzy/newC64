@@ -3,13 +3,13 @@ package cia6526
 import "log"
 
 func (C *CIA) dispWriteReg(label string, mode uint16, pr uint16, val byte, res byte) {
-	if C.name == "CIA1" {
+	if C.name == "CIA1" && logger {
 		log.Printf("%-12s -*-    Mode: %08b -  RegVal: %08b - NewVal: %08b - Res: %08b", label, C.Reg[mode], C.Reg[pr], val, res)
 	}
 }
 
 func (C *CIA) dispWriteDir(label string, mode uint16, pr uint16, val byte, res byte) {
-	if C.name == "CIA1" {
+	if C.name == "CIA1" && logger {
 		log.Printf("%-12s -*- NewMode: %08b -> RegVal: %08b - NewVal: %08b", label, C.Reg[mode], C.Reg[pr], res)
 	}
 }

@@ -178,7 +178,6 @@ func (C *CPU) lsr() {
 	}
 	C.setN(false)
 	C.updateZ(byte(val))
-
 }
 
 func (C *CPU) ora() {
