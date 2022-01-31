@@ -130,7 +130,7 @@ func (V *VIC) Run() bool {
 		if V.testBit(REG_IRQ_ENABLED, IRQ_RST) {
 			if V.RasterIRQ == uint16(V.BeamY) {
 				//fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
-				fmt.Println("Rastrer Interrupt")
+				// fmt.Println("Rastrer Interrupt")
 				V.Reg[REG_IRQ] = V.Reg[REG_IRQ] | 0b10000001
 				*V.IRQ_Pin = 1
 			}

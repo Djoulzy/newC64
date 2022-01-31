@@ -91,6 +91,14 @@ var (
 	Keyb_EQUAL      Keyboard = Keyboard{col: PA6, row: PB5}
 	Keyb_CTRL       Keyboard = Keyboard{col: PA7, row: PB2}
 	Keyb_CBM        Keyboard = Keyboard{col: PA7, row: PB5}
+	Keyb_COMMA      Keyboard = Keyboard{col: PA5, row: PB7}
+	Keyb_SLASH      Keyboard = Keyboard{col: PA6, row: PB7}
+	Keyb_TIME       Keyboard = Keyboard{col: PA6, row: PB1}
+	Keyb_POINT      Keyboard = Keyboard{col: PA5, row: PB4}
+	Keyb_MINUS      Keyboard = Keyboard{col: PA5, row: PB3}
+	Keyb_PLUS       Keyboard = Keyboard{col: PA5, row: PB0}
+	Keyb_ARROW_UP   Keyboard = Keyboard{col: PA6, row: PB6}
+	Keyb_ARROW_LEFT Keyboard = Keyboard{col: PA7, row: PB1}
 
 	Keyb_DBLQUOTE Keyboard = Keyboard{col: 0b01111101, row: 0b01110111}
 )
@@ -100,6 +108,8 @@ var keyMap = map[uint]Keyboard{
 	8:          Keyb_DEL,
 	13:         Keyb_RETURN,
 	32:         Keyb_SPACE,
+	44:         Keyb_COMMA,
+	45:         Keyb_MINUS,
 	48:         Keyb_0,
 	49:         Keyb_1,
 	50:         Keyb_2,
@@ -114,6 +124,7 @@ var keyMap = map[uint]Keyboard{
 	59:         Keyb_SEMICOLN, // ;
 	60:         Keyb_AROBASE,
 	61:         Keyb_EQUAL,
+	94:         Keyb_ARROW_UP,
 	97:         Keyb_A,
 	98:         Keyb_B,
 	99:         Keyb_C,

@@ -1,6 +1,7 @@
 package graphic
 
 import (
+	"log"
 	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -97,7 +98,7 @@ func (S *SDLDriver) UpdateFrame() {
 				case 3:
 					S.keybLine.Mode = 0
 				}
-				// log.Printf("KEY DOWN : %d %d", S.keybLine.KeyCode, S.keybLine.Mode)
+				log.Printf("KEY DOWN : %d %d", S.keybLine.KeyCode, S.keybLine.Mode)
 			case sdl.KEYUP:
 				// *S.keybLine = 1073742049
 				S.keybLine.KeyCode = 0
