@@ -89,6 +89,7 @@ func setup() {
 	vic.IRQ_Pin = &cpu.IRQ_pin
 	cia1.Signal_Pin = &cpu.IRQ_pin
 	cia2.Signal_Pin = &cpu.NMI_pin
+	cia2.VICBankSelect = &vic.BankSel
 }
 
 func input() {

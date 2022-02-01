@@ -7,6 +7,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const (
+	Xadjust = -75
+	Yadjust = -20
+)
+
 type KEYPressed struct {
 	KeyCode uint
 	Mode    uint
@@ -18,7 +23,6 @@ type SDLDriver struct {
 	window    *sdl.Window
 	renderer  *sdl.Renderer
 	texture   *sdl.Texture
-	points    []sdl.Point
 	screen    []byte
 	keybLine  *KEYPressed
 }
@@ -51,34 +55,17 @@ func (S *SDLDriver) Init(winWidth, winHeight int) {
 		panic(err)
 	}
 
-	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
 
-	// S.window, err = sdl.CreateWindow("VIC-II", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, int32(S.winWidth*2), int32(S.winHeight*2), sdl.WINDOW_SHOWN|sdl.WINDOW_RESIZABLE)
-	// if err != nil {
-	// 	panic(err)
-	// }
 	S.window, S.renderer, err = sdl.CreateWindowAndRenderer(int32(S.winWidth*2), int32(S.winHeight*2), sdl.WINDOW_SHOWN|sdl.WINDOW_RESIZABLE)
-	S.window.SetTitle("VIC-II")
-	// S.window.SetResizable(true)
-	// S.window.SetSize(int32(S.winWidth*2), int32(S.winHeight*2))
+	S.window.SetTitle("Go Commodore 64")
 
-	// S.renderer, err = sdl.CreateRenderer(S.window, -1, sdl.RENDERER_ACCELERATED)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// S.texture, err = S.renderer.CreateTexture(sdl.PIXELFORMAT_RGB24, sdl.TEXTUREACCESS_STATIC, int32(S.winWidth), int32(S.winHeight))
 	S.texture, err = S.renderer.CreateTexture(sdl.PIXELFORMAT_RGB24, sdl.TEXTUREACCESS_STREAMING, int32(S.winWidth), int32(S.winHeight))
 	if err != nil {
 		panic(err)
 	}
 
-	// infos, _ := S.renderer.GetInfo()
-	// log.Printf("%v", infos)
-	// sdl.GetRenderDriverInfo()
-
 	S.screen = make([]byte, S.winWidth*S.winHeight*3)
-	S.points = make([]sdl.Point, S.winWidth*S.winHeight)
 }
 
 func (S *SDLDriver) SetKeyboardLine(line *KEYPressed) {
@@ -106,7 +93,9 @@ func (S *SDLDriver) UpdateFrame() {
 						S.keybLine.Mode = sdl.K_RSHIFT
 					}
 				case 3:
-					S.keybLine.Mode = 0
+					fallthrough
+				default:
+					S.keybLine.Mode = S.keybLine.KeyCode
 				}
 				log.Printf("KEY DOWN : %d %d", S.keybLine.KeyCode, S.keybLine.Mode)
 			case sdl.KEYUP:

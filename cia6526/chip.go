@@ -13,6 +13,8 @@ type CIA struct {
 	InputLine   graphic.KEYPressed
 	buffer      Keyboard
 
+	internalPRA    byte
+	internalPRB    byte
 	timerA_latchLO byte
 	timerA_latchHI byte
 
@@ -21,7 +23,8 @@ type CIA struct {
 
 	interrupt_mask byte
 
-	cycleDelay int
+	cycleDelay    int
+	VICBankSelect *int
 }
 
 const (
@@ -56,41 +59,41 @@ func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
 	C.name = name
 	C.systemCycle = timer
 
-	if name == "CIA1" {
-		C.Reg[PRA] = 0x00 // 0x81
-		C.Reg[PRB] = 0x00 // 0xFF
-		C.Reg[DDRA] = 0x00
-		C.Reg[DDRB] = 0x00
-		C.Reg[TALO] = 0xFF
-		C.Reg[TAHI] = 0xFF
-		C.Reg[TBLO] = 0xFF
-		C.Reg[TBHI] = 0xFF
-		C.Reg[TOD10THS] = 0x00
-		C.Reg[TODSEC] = 0x00
-		C.Reg[TODMIN] = 0x00
-		C.Reg[TODHR] = 0x01
-		C.Reg[SRD] = 0x00
-		C.Reg[ICR] = 0x00
-		// C.Reg[CRA] = 0x00
-		// C.Reg[CRB] = 0x00
-	} else {
-		C.Reg[PRA] = 0x97
-		C.Reg[PRB] = 0xFF
-		C.Reg[DDRA] = 0x3F
-		C.Reg[DDRB] = 0x00
-		C.Reg[TALO] = 0xFF
-		C.Reg[TAHI] = 0xFF
-		C.Reg[TBLO] = 0xFF
-		C.Reg[TBHI] = 0xFF
-		C.Reg[TOD10THS] = 0x00
-		C.Reg[TODSEC] = 0x00
-		C.Reg[TODMIN] = 0x00
-		C.Reg[TODHR] = 0x01
-		C.Reg[SRD] = 0x00
-		C.Reg[ICR] = 0x00
-		// C.Reg[CRA] = 0x00
-		// C.Reg[CRB] = 0x00
-	}
+	// if name == "CIA1" {
+	// 	C.Reg[PRA] = 0x00 // 0x81
+	// 	C.Reg[PRB] = 0x00 // 0xFF
+	// 	C.Reg[DDRA] = 0x00
+	// 	C.Reg[DDRB] = 0x00
+	// 	C.Reg[TALO] = 0xFF
+	// 	C.Reg[TAHI] = 0xFF
+	// 	C.Reg[TBLO] = 0xFF
+	// 	C.Reg[TBHI] = 0xFF
+	// 	C.Reg[TOD10THS] = 0x00
+	// 	C.Reg[TODSEC] = 0x00
+	// 	C.Reg[TODMIN] = 0x00
+	// 	C.Reg[TODHR] = 0x01
+	// 	C.Reg[SRD] = 0x00
+	// 	C.Reg[ICR] = 0x00
+	// 	// C.Reg[CRA] = 0x00
+	// 	// C.Reg[CRB] = 0x00
+	// } else {
+	// 	C.Reg[PRA] = 0x97
+	// 	C.Reg[PRB] = 0xFF
+	// 	C.Reg[DDRA] = 0x3F
+	// 	C.Reg[DDRB] = 0x00
+	// 	C.Reg[TALO] = 0xFF
+	// 	C.Reg[TAHI] = 0xFF
+	// 	C.Reg[TBLO] = 0xFF
+	// 	C.Reg[TBHI] = 0xFF
+	// 	C.Reg[TOD10THS] = 0x00
+	// 	C.Reg[TODSEC] = 0x00
+	// 	C.Reg[TODMIN] = 0x00
+	// 	C.Reg[TODHR] = 0x01
+	// 	C.Reg[SRD] = 0x00
+	// 	C.Reg[ICR] = 0x00
+	// 	// C.Reg[CRA] = 0x00
+	// 	// C.Reg[CRB] = 0x00
+	// }
 
 	C.timerA_latchLO = 0xFF
 	C.timerA_latchHI = 0xFF

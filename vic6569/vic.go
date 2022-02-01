@@ -44,15 +44,23 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.graph.Init(winWidth, winHeight)
 	V.conf = conf
 
-	V.ram = ram
 	// V.io = io.GetView(0, 0x0400)
-	V.chargen = chargen
 	V.color = io.GetView(colorStart, 1024)
 	V.screen = ram.GetView(screenStart, 1024)
 
 	for i := range V.Reg {
 		V.Reg[i] = 0x00
 	}
+
+	V.bankMem[3] = ram.GetView(0x0000, 16384)
+	V.bankMem[2] = ram.GetView(0x4000, 16384)
+	V.bankMem[1] = ram.GetView(0x8000, 16384)
+	V.bankMem[0] = ram.GetView(0xC000, 16384)
+
+	V.bankChar[3] = chargen
+	V.bankChar[2] = ram.GetView(0x5000, 4096)
+	V.bankChar[1] = chargen
+	V.bankChar[0] = ram.GetView(0xD000, 4096)
 
 	V.BA = true
 	V.VCBASE = 0
@@ -86,8 +94,9 @@ func (V *VIC) readVideoMatrix() {
 
 func (V *VIC) drawChar(X int, Y int) {
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
+		V.BankSel = 3
 		charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
-		charData := V.chargen.Val[charAddr]
+		charData := V.bankChar[V.BankSel].Val[charAddr]
 		// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
 		// if V.CharBuffer[V.VMLI] == 0 {
 		// 	fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])

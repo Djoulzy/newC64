@@ -23,14 +23,18 @@ func (C *CIA) Write(addr uint16, val byte) {
 	switch reg {
 	case PRA:
 		test := val & C.Reg[DDRA]
-		newPr := (C.Reg[PRA] & ^C.Reg[DDRA]) | test
+		newPr := (C.Reg[PRA] & ^C.Reg[DDRA]) | (test & C.Reg[DDRA])
 		if C.buffer != Keyb_NULL {
 			C.dispWriteReg("WRITE PRA", DDRA, PRA, val, newPr)
 		}
 		C.Reg[PRA] = newPr
+		if C.name == "CIA2" {
+			log.Printf("Val %08b", C.Reg[PRA])
+			*C.VICBankSelect = int(C.Reg[PRA] & 0b00000011)
+		}
 	case PRB:
 		test := val & C.Reg[DDRB]
-		newPr := (C.Reg[PRB] & ^C.Reg[DDRB]) | test
+		newPr := (C.Reg[PRB] & ^C.Reg[DDRB]) | (test & C.Reg[DDRB])
 		if C.buffer != Keyb_NULL {
 			C.dispWriteReg("WRITE PRB", DDRB, PRB, val, newPr)
 		}
@@ -38,16 +42,16 @@ func (C *CIA) Write(addr uint16, val byte) {
 	case DDRA:
 		C.Reg[DDRA] = val
 		newPr := C.Reg[PRA] | ^val
-		if C.buffer != Keyb_NULL {
-			C.dispWriteDir("WRITE DDRA", DDRA, PRA, val, newPr)
-		}
+		// if C.buffer != Keyb_NULL {
+		// 	C.dispWriteDir("WRITE DDRA", DDRA, PRA, val, newPr)
+		// }
 		C.Reg[PRA] = newPr
 	case DDRB:
 		C.Reg[DDRB] = val
 		newPr := C.Reg[PRB] | ^val
-		if C.buffer != Keyb_NULL {
-			C.dispWriteDir("WRITE DDRB", DDRB, PRB, val, newPr)
-		}
+		// if C.buffer != Keyb_NULL {
+		// 	C.dispWriteDir("WRITE DDRB", DDRB, PRB, val, newPr)
+		// }
 		C.Reg[PRB] = newPr
 	case TALO:
 		C.timerA_latchLO = val
