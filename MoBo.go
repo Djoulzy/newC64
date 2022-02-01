@@ -91,7 +91,7 @@ func setup() {
 	cia2.Signal_Pin = &cpu.NMI_pin
 }
 
-func input(step *chan bool) {
+func input() {
 	dumpAddr := ""
 	var keyb *tty.TTY
 	keyb, _ = tty.Open()
@@ -174,7 +174,9 @@ func RunEmulation() {
 }
 
 func main() {
-	var step chan bool
+	// var exit chan bool
+	// exit = make(chan bool)
+
 	confload.Load("config.ini", conf)
 
 	clog.LogLevel = conf.LogLevel
@@ -191,15 +193,18 @@ func main() {
 	// defer pprof.StopCPUProfile()
 
 	setup()
+	go input()
 
 	run = true
 	cpuTurn = true
-	step = make(chan bool)
-	go input(&step)
-
+	// go func() {
 	for {
 		RunEmulation()
 	}
+	// }()
+
+	// outputDriver.Run()
 
 	// cpu.DumpStats()
+	// <-exit
 }

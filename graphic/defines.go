@@ -8,8 +8,10 @@ type RGB struct {
 
 type Driver interface {
 	Init(int, int)
+	DirectDrawPixel(int, int, RGB)
 	DrawPixel(int, int, RGB)
 	UpdateFrame()
+	Run()
 	IOEvents() *KEYPressed
 	SetKeyboardLine(*KEYPressed)
 	CloseAll()

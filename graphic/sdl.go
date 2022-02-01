@@ -18,8 +18,14 @@ type SDLDriver struct {
 	window    *sdl.Window
 	renderer  *sdl.Renderer
 	texture   *sdl.Texture
+	points    []sdl.Point
 	screen    []byte
 	keybLine  *KEYPressed
+}
+
+func (S *SDLDriver) DirectDrawPixel(x, y int, color RGB) {
+	S.renderer.SetDrawColor(byte(color.R), byte(color.G), byte(color.B), 255)
+	S.renderer.DrawPoint(int32(x), int32(y))
 }
 
 func (S *SDLDriver) DrawPixel(x, y int, color RGB) {
@@ -47,24 +53,32 @@ func (S *SDLDriver) Init(winWidth, winHeight int) {
 
 	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
 
-	S.window, err = sdl.CreateWindow("VIC-II", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, int32(S.winWidth), int32(S.winHeight), sdl.WINDOW_SHOWN)
-	if err != nil {
-		panic(err)
-	}
-	S.window.SetResizable(true)
-	S.window.SetSize(int32(S.winWidth*2), int32(S.winHeight*2))
+	// S.window, err = sdl.CreateWindow("VIC-II", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, int32(S.winWidth*2), int32(S.winHeight*2), sdl.WINDOW_SHOWN|sdl.WINDOW_RESIZABLE)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	S.window, S.renderer, err = sdl.CreateWindowAndRenderer(int32(S.winWidth*2), int32(S.winHeight*2), sdl.WINDOW_SHOWN|sdl.WINDOW_RESIZABLE)
+	S.window.SetTitle("VIC-II")
+	// S.window.SetResizable(true)
+	// S.window.SetSize(int32(S.winWidth*2), int32(S.winHeight*2))
 
-	S.renderer, err = sdl.CreateRenderer(S.window, -1, sdl.RENDERER_ACCELERATED)
+	// S.renderer, err = sdl.CreateRenderer(S.window, -1, sdl.RENDERER_ACCELERATED)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// S.texture, err = S.renderer.CreateTexture(sdl.PIXELFORMAT_RGB24, sdl.TEXTUREACCESS_STATIC, int32(S.winWidth), int32(S.winHeight))
+	S.texture, err = S.renderer.CreateTexture(sdl.PIXELFORMAT_RGB24, sdl.TEXTUREACCESS_STREAMING, int32(S.winWidth), int32(S.winHeight))
 	if err != nil {
 		panic(err)
 	}
 
-	S.texture, err = S.renderer.CreateTexture(sdl.PIXELFORMAT_RGB24, sdl.TEXTUREACCESS_STATIC, int32(S.winWidth), int32(S.winHeight))
-	if err != nil {
-		panic(err)
-	}
+	// infos, _ := S.renderer.GetInfo()
+	// log.Printf("%v", infos)
+	// sdl.GetRenderDriverInfo()
 
 	S.screen = make([]byte, S.winWidth*S.winHeight*3)
+	S.points = make([]sdl.Point, S.winWidth*S.winHeight)
 }
 
 func (S *SDLDriver) SetKeyboardLine(line *KEYPressed) {
@@ -72,10 +86,6 @@ func (S *SDLDriver) SetKeyboardLine(line *KEYPressed) {
 }
 
 func (S *SDLDriver) UpdateFrame() {
-
-	S.texture.Update(nil, S.screen, S.winWidth*3)
-	S.renderer.Copy(S.texture, nil, nil)
-	S.renderer.Present()
 
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
@@ -108,8 +118,62 @@ func (S *SDLDriver) UpdateFrame() {
 			// buffer = 0
 		}
 	}
+	// S.renderer.SetDrawColor(0, 0, 0, 255)
+	// S.renderer.Clear()
+	S.texture.Update(nil, S.screen, S.winWidth*3)
+	S.renderer.Copy(S.texture, nil, nil)
+	S.renderer.Present()
 }
 
 func (S *SDLDriver) IOEvents() *KEYPressed {
 	return S.keybLine
+}
+
+func (S *SDLDriver) Run() {
+	var isOpen bool = true
+
+	for isOpen {
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch t := event.(type) {
+			case *sdl.QuitEvent:
+				isOpen = false
+				break
+			case *sdl.KeyboardEvent:
+				switch t.Type {
+				case sdl.KEYDOWN:
+					S.keybLine.KeyCode = uint(t.Keysym.Sym)
+					S.keybLine.Mode = 0
+					switch t.Keysym.Mod {
+					case 1:
+						if S.keybLine.KeyCode != sdl.K_LSHIFT {
+							S.keybLine.Mode = sdl.K_LSHIFT
+						}
+					case 2:
+						if S.keybLine.KeyCode != sdl.K_RSHIFT {
+							S.keybLine.Mode = sdl.K_RSHIFT
+						}
+					case 3:
+						S.keybLine.Mode = 0
+					}
+					log.Printf("KEY DOWN : %d %d", S.keybLine.KeyCode, S.keybLine.Mode)
+				case sdl.KEYUP:
+					// *S.keybLine = 1073742049
+					S.keybLine.KeyCode = 0
+					S.keybLine.Mode = 0
+				}
+			default:
+				// buffer = 0
+			}
+		}
+
+		// S.renderer.SetDrawColor(0, 0, 0, 255)
+		// S.renderer.Clear()
+		// S.renderer.SetDrawColor(255, 255, 255, 255)
+		// for i := 0; i < 1000; i++ {
+		// 	S.renderer.DrawPoint(int32(rand.Intn(S.winWidth)), int32(rand.Intn(S.winHeight)))
+		// }
+		S.renderer.Present()
+	}
+
+	S.CloseAll()
 }
