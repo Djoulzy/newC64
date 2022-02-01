@@ -94,7 +94,6 @@ func (V *VIC) readVideoMatrix() {
 
 func (V *VIC) drawChar(X int, Y int) {
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
-		V.BankSel = 3
 		charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
 		charData := V.bankChar[V.BankSel].Val[charAddr]
 		// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)

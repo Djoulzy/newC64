@@ -22,22 +22,20 @@ func (C *CIA) Write(addr uint16, val byte) {
 
 	switch reg {
 	case PRA:
-		test := val & C.Reg[DDRA]
-		newPr := (C.Reg[PRA] & ^C.Reg[DDRA]) | (test & C.Reg[DDRA])
+		newPr := (C.Reg[PRA] & ^C.Reg[DDRA]) | (val & C.Reg[DDRA])
 		if C.buffer != Keyb_NULL {
 			C.dispWriteReg("WRITE PRA", DDRA, PRA, val, newPr)
 		}
 		C.Reg[PRA] = newPr
 		if C.name == "CIA2" {
-			log.Printf("Val %08b", C.Reg[PRA])
+			log.Printf("Mode %08b - Val %08b", C.Reg[DDRA], val)
 			*C.VICBankSelect = int(C.Reg[PRA] & 0b00000011)
 		}
 	case PRB:
-		test := val & C.Reg[DDRB]
-		newPr := (C.Reg[PRB] & ^C.Reg[DDRB]) | (test & C.Reg[DDRB])
-		if C.buffer != Keyb_NULL {
-			C.dispWriteReg("WRITE PRB", DDRB, PRB, val, newPr)
-		}
+		newPr := (C.Reg[PRB] & ^C.Reg[DDRB]) | (val & C.Reg[DDRB])
+		// if C.buffer != Keyb_NULL {
+		// 	C.dispWriteReg("WRITE PRB", DDRB, PRB, val, newPr)
+		// }
 		C.Reg[PRB] = newPr
 	case DDRA:
 		C.Reg[DDRA] = val
