@@ -28,7 +28,7 @@ func (C *CIA) Write(addr uint16, val byte) {
 		}
 		C.Reg[PRA] = newPr
 		if C.name == "CIA2" {
-			log.Printf("Mode %08b - Val %08b", C.Reg[DDRA], val)
+			// log.Printf("Mode %08b - Val %08b", C.Reg[DDRA], val)
 			*C.VICBankSelect = int(C.Reg[PRA] & 0b00000011)
 		}
 	case PRB:

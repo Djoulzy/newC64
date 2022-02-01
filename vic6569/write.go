@@ -1,5 +1,7 @@
 package vic6569
 
+import "log"
+
 func (V *VIC) Write(addr uint16, val byte) {
 
 	reg := addr - ((addr >> 6) << 6)
@@ -54,9 +56,12 @@ func (V *VIC) Write(addr uint16, val byte) {
 	case REG_CTRL2:
 		fallthrough
 	case REG_SPRT_Y_EXP:
-		fallthrough
+		V.Reg[reg] = val
 	case REG_MEM_LOC:
-		fallthrough
+		V.ScreenBase = uint16(val&0b11110000) << 6
+		V.CharBase = uint16(val&0b00001110) << 10
+		log.Printf("base: %04X", V.ScreenBase)
+		V.Reg[reg] = val
 	case REG_IRQ:
 		fallthrough
 	case REG_IRQ_ENABLED:

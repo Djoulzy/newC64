@@ -71,11 +71,12 @@ type VIC struct {
 	RasterIRQ uint16
 	graph     graphic.Driver
 
-	color    *memory.MEM
-	screen   *memory.MEM
-	BankSel  int
-	bankMem  [4]*memory.MEM
-	bankChar [4]*memory.MEM
+	color      *memory.MEM
+	BankSel    int
+	ScreenBase uint16
+	CharBase   uint16
+	bankMem    [4]memory.MEM
+	bankChar   [4]memory.MEM
 }
 
 const (
