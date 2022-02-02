@@ -44,32 +44,21 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.graph.Init(winWidth, winHeight)
 	V.conf = conf
 
-	// V.io = io.GetView(0, 0x0400)
 	V.color = io.GetView(colorStart, 1024)
-	// V.screen = ram.GetView(screenStart, 1024)
 
 	V.bankMem[3].Init(2, 0x4000)
 	V.bankMem[3].Attach("RAM", 0, 0, ram.Val[0x0000:0x4000])
 	V.bankMem[3].Attach("Char ROM", 1, 1, chargen.Val)
-	V.bankMem[3].Show()
 
 	V.bankMem[2].Init(1, 0x4000)
 	V.bankMem[2].Attach("RAM", 0, 0, ram.Val[0x4000:0x8000])
-	V.bankMem[2].Show()
 
 	V.bankMem[1].Init(2, 0x4000)
 	V.bankMem[1].Attach("RAM", 0, 0, ram.Val[0x8000:0xC000])
 	V.bankMem[1].Attach("Char ROM", 1, 1, chargen.Val)
-	V.bankMem[1].Show()
 
 	V.bankMem[0].Init(1, 0x4000)
 	V.bankMem[0].Attach("RAM", 0, 0, ram.Val[0xC000:])
-	V.bankMem[0].Show()
-
-	// V.bankMem[3].Val = append(append(append(V.bankMem[3].Val, ram.Val[0x0000:0x1000]...), chargen.Val...), ram.Val[0x2000:0x4000]...)
-	// V.bankMem[2].Val = ram.Val[0x4000:0x8000]
-	// V.bankMem[1].Val = append(append(ram.Val[0x8000:0x9000], chargen.Val...), ram.Val[0xA000:0xC000]...)
-	// V.bankMem[0].Val = ram.Val[0xC000:]
 
 	V.BA = true
 	V.VCBASE = 0
@@ -78,7 +67,6 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.cycle = 1
 	V.RasterIRQ = 0xFFFF
 	V.SystemClock = 0
-	V.BankSel = 3
 }
 
 func (V *VIC) Disassemble() string {
