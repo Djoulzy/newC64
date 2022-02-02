@@ -48,13 +48,23 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.color = io.GetView(colorStart, 1024)
 	// V.screen = ram.GetView(screenStart, 1024)
 
-	for i := range V.Reg {
-		V.Reg[i] = 0x00
-	}
+	V.bankMem[3].Init(2, 0x4000)
+	V.bankMem[3].Attach("RAM", 0, 0, ram.Val[0x0000:0x4000])
+	V.bankMem[3].Attach("Char ROM", 1, 1, chargen.Val)
+	V.bankMem[3].Show()
 
-	V.bankMem[3].Val = append(V.bankMem[3].Val, ram.Val[0x0000:0x1000]...)
-	V.bankMem[3].Val = append(V.bankMem[3].Val, chargen.Val...)
-	V.bankMem[3].Val = append(V.bankMem[3].Val, ram.Val[0x2000:0x4000]...)
+	V.bankMem[2].Init(1, 0x4000)
+	V.bankMem[2].Attach("RAM", 0, 0, ram.Val[0x4000:0x8000])
+	V.bankMem[2].Show()
+
+	V.bankMem[1].Init(2, 0x4000)
+	V.bankMem[1].Attach("RAM", 0, 0, ram.Val[0x8000:0xC000])
+	V.bankMem[1].Attach("Char ROM", 1, 1, chargen.Val)
+	V.bankMem[1].Show()
+
+	V.bankMem[0].Init(1, 0x4000)
+	V.bankMem[0].Attach("RAM", 0, 0, ram.Val[0xC000:])
+	V.bankMem[0].Show()
 
 	// V.bankMem[3].Val = append(append(append(V.bankMem[3].Val, ram.Val[0x0000:0x1000]...), chargen.Val...), ram.Val[0x2000:0x4000]...)
 	// V.bankMem[2].Val = ram.Val[0x4000:0x8000]
@@ -69,8 +79,6 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.RasterIRQ = 0xFFFF
 	V.SystemClock = 0
 	V.BankSel = 3
-
-	V.bankMem[3].Dump(0x0000)
 }
 
 func (V *VIC) Disassemble() string {
@@ -89,7 +97,7 @@ func (V *VIC) saveRasterPos(val int) {
 func (V *VIC) readVideoMatrix() {
 	if !V.BA {
 		V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
-		V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Val[V.ScreenBase+V.VC]
+		V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Read(V.ScreenBase+V.VC)
 		// fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
 	}
 }
@@ -97,7 +105,7 @@ func (V *VIC) readVideoMatrix() {
 func (V *VIC) drawChar(X int, Y int) {
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
 		charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
-		charData := V.bankMem[V.BankSel].Val[V.CharBase+charAddr]
+		charData := V.bankMem[V.BankSel].Read(V.CharBase+charAddr)
 		// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
 		// if V.CharBuffer[V.VMLI] == 0 {
 		// 	fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])

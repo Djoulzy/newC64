@@ -7,12 +7,6 @@ import (
 	"newC64/vic6569"
 )
 
-type MEM struct {
-	Size     int
-	readOnly bool
-	Cells    []byte
-}
-
 type MemType int
 
 const (

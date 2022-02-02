@@ -75,7 +75,7 @@ type VIC struct {
 	BankSel    int
 	ScreenBase uint16
 	CharBase   uint16
-	bankMem    [4]memory.MEM
+	bankMem    [4]VicMem
 }
 
 const (
