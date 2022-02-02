@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"newC64/pla906114"
 	"strconv"
 	"strings"
 )
@@ -31,7 +32,7 @@ func LoadFile(mem []byte, file string) (uint16, error) {
 	return LoadHex(mem, text)
 }
 
-func LoadPRG(mem []byte, file string) (uint16, error) {
+func LoadPRG(mem *pla906114.PLA, file string) (uint16, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
@@ -39,10 +40,10 @@ func LoadPRG(mem []byte, file string) (uint16, error) {
 	startLoadMem := uint16(content[1]) << 8
 	startLoadMem |= uint16(content[0])
 
-	prgStart := (int(content[7])-0x30)*1000 + (int(content[8])-0x30)*100 + (int(content[9])-0x30)*10 + (int(content[10]) - 0x30)
+	prgStart := (uint16(content[7])-0x30)*1000 + (uint16(content[8])-0x30)*100 + (uint16(content[9])-0x30)*10 + (uint16(content[10]) - 0x30)
 	fmt.Printf("PRG: %04X\n", prgStart)
 	for i, val := range content[2:] {
-		mem[startLoadMem+uint16(i)] = val
+		mem.Write(startLoadMem+uint16(i), val)
 	}
-	return uint16(prgStart), nil
+	return prgStart, nil
 }

@@ -52,19 +52,14 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 		V.Reg[i] = 0x00
 	}
 
-	V.bankMem[3].Val = append(append(ram.Val[0x0000:0x1000], chargen.Val...), ram.Val[0x2000:0x4000]...)
-	V.bankMem[2].Val = ram.Val[0x4000:0x8000]
-	V.bankMem[1].Val = ram.Val[0x8000:0xC000]
-	V.bankMem[0].Val = ram.Val[0xC000:]
+	V.bankMem[3].Val = append(V.bankMem[3].Val, ram.Val[0x0000:0x1000]...)
+	V.bankMem[3].Val = append(V.bankMem[3].Val, chargen.Val...)
+	V.bankMem[3].Val = append(V.bankMem[3].Val, ram.Val[0x2000:0x4000]...)
 
-	// V.bankMem[2] = ram.GetView(0x4000, 16384)
-	// V.bankMem[1] = ram.GetView(0x8000, 16384)
-	// V.bankMem[0] = ram.GetView(0xC000, 16384)
-
-	// V.bankChar[3] = chargen
-	// V.bankChar[2] = ram.GetView(0x5000, 4096)
-	// V.bankChar[1] = chargen
-	// V.bankChar[0] = ram.GetView(0xD000, 4096)
+	// V.bankMem[3].Val = append(append(append(V.bankMem[3].Val, ram.Val[0x0000:0x1000]...), chargen.Val...), ram.Val[0x2000:0x4000]...)
+	// V.bankMem[2].Val = ram.Val[0x4000:0x8000]
+	// V.bankMem[1].Val = append(append(ram.Val[0x8000:0x9000], chargen.Val...), ram.Val[0xA000:0xC000]...)
+	// V.bankMem[0].Val = ram.Val[0xC000:]
 
 	V.BA = true
 	V.VCBASE = 0
@@ -74,6 +69,8 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.RasterIRQ = 0xFFFF
 	V.SystemClock = 0
 	V.BankSel = 3
+
+	V.bankMem[3].Dump(0x0000)
 }
 
 func (V *VIC) Disassemble() string {

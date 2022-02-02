@@ -111,7 +111,7 @@ func input() {
 			run = true
 			execInst.Unlock()
 		case 'l':
-			LoadPRG(mem.Val, conf.LoadPRG)
+			LoadPRG(&pla, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
 		case ' ':
