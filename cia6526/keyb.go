@@ -99,6 +99,7 @@ var (
 	Keyb_PLUS       Keyboard = Keyboard{col: PA5, row: PB0}
 	Keyb_ARROW_UP   Keyboard = Keyboard{col: PA6, row: PB6}
 	Keyb_ARROW_LEFT Keyboard = Keyboard{col: PA7, row: PB1}
+	Keyb_RUNSTOP    Keyboard = Keyboard{col: PA7, row: PB7}
 
 	Keyb_DBLQUOTE Keyboard = Keyboard{col: 0b01111101, row: 0b01110111}
 )
@@ -107,6 +108,7 @@ var keyMap = map[uint]Keyboard{
 	0:          Keyb_NULL,
 	8:          Keyb_DEL,
 	13:         Keyb_RETURN,
+	27:         Keyb_RUNSTOP,
 	32:         Keyb_SPACE,
 	44:         Keyb_COMMA,
 	45:         Keyb_MINUS,
