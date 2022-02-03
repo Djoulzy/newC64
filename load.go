@@ -35,7 +35,7 @@ func LoadFile(mem []byte, file string) (uint16, error) {
 func LoadPRG(mem *pla906114.PLA, file string) (uint16, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 	startLoadMem := uint16(content[1]) << 8
 	startLoadMem |= uint16(content[0])
@@ -46,4 +46,16 @@ func LoadPRG(mem *pla906114.PLA, file string) (uint16, error) {
 		mem.Write(startLoadMem+uint16(i), val)
 	}
 	return prgStart, nil
+}
+
+func LoadData(mem *pla906114.PLA, file string, memStart uint16) error {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	for i, val := range content {
+		mem.Write(memStart+uint16(i), val)
+	}
+	return nil
 }

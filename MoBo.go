@@ -111,6 +111,7 @@ func input() {
 			run = true
 			execInst.Unlock()
 		case 'l':
+			LoadPRG(&pla, "./prg/GARDEN.prg")
 			LoadPRG(&pla, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)

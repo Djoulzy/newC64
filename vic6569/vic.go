@@ -85,25 +85,42 @@ func (V *VIC) saveRasterPos(val int) {
 func (V *VIC) readVideoMatrix() {
 	if !V.BA {
 		V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
-		V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Read(V.ScreenBase+V.VC)
+		V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
 		// fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
 	}
 }
 
 func (V *VIC) drawChar(X int, Y int) {
+	var pixelData byte
+
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
-		charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
-		charData := V.bankMem[V.BankSel].Read(V.CharBase+charAddr)
-		// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
-		// if V.CharBuffer[V.VMLI] == 0 {
-		// 	fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])
-		// }
-		for column := 0; column < 8; column++ {
-			bit := byte(0b10000000 >> column)
-			if charData&bit > 0 {
-				V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
-			} else {
-				V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BGCOLOR_0]&0b00001111])
+		if V.BMM {
+			addr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
+			pixelData = V.bankMem[V.BankSel].Read(addr)
+
+			for column := 0; column < 8; column++ {
+				bit := byte(0b10000000 >> column)
+				if pixelData&bit > 0 {
+					V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
+				} else {
+					V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BGCOLOR_0]&0b00001111])
+				}
+			}
+		} else {
+			charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
+			pixelData = V.bankMem[V.BankSel].Read(V.CharBase + charAddr)
+
+			// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
+			// if V.CharBuffer[V.VMLI] == 0 {
+			// 	fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])
+			// }
+			for column := 0; column < 8; column++ {
+				bit := byte(0b10000000 >> column)
+				if pixelData&bit > 0 {
+					V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
+				} else {
+					V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BGCOLOR_0]&0b00001111])
+				}
 			}
 		}
 		V.VMLI++
