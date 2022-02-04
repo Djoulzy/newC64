@@ -2,6 +2,7 @@ package vic6569
 
 import (
 	"fmt"
+	"log"
 	"newC64/confload"
 	"newC64/graphic"
 	"newC64/memory"
@@ -95,15 +96,19 @@ func (V *VIC) drawChar(X int, Y int) {
 
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
 		if V.BMM {
-			addr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
-			pixelData = V.bankMem[V.BankSel].Read(addr)
+			pixAddr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
+			colors := V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
+			col1 := colors >> 4
+			col0 := colors & 0b00001111
+			pixelData = V.bankMem[V.BankSel].Read(pixAddr)
+			// log.Printf("Read VM %04X", pixAddr)
 
 			for column := 0; column < 8; column++ {
 				bit := byte(0b10000000 >> column)
 				if pixelData&bit > 0 {
-					V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
+					V.graph.DrawPixel(X+column, Y, Colors[col1])
 				} else {
-					V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BGCOLOR_0]&0b00001111])
+					V.graph.DrawPixel(X+column, Y, Colors[col0])
 				}
 			}
 		} else {
@@ -340,4 +345,10 @@ func (V *VIC) Run() bool {
 		// }
 	}
 	return V.BA
+}
+
+func (V *VIC) Dump(addr uint16) {
+	log.Printf("Bank: %d - VideoBase: %04X - CharBase: %04X", V.BankSel, V.ScreenBase, V.CharBase)
+	V.bankMem[V.BankSel].Show()
+	V.bankMem[V.BankSel].Dump(addr)
 }

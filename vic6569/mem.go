@@ -3,6 +3,7 @@ package vic6569
 import (
 	"fmt"
 	"newC64/clog"
+	"newC64/trace"
 )
 
 const PAGE_DIVIDER = 12
@@ -11,6 +12,7 @@ type VicMem struct {
 	Pages      []int
 	Layers     [][]byte
 	LayersName []string
+	Start      []uint16
 }
 
 func (VM *VicMem) Init(nbLayers int, size uint16) *VicMem {
@@ -52,5 +54,33 @@ func (VM *VicMem) Show() {
 			}
 		}
 		fmt.Printf("\n")
+	}
+}
+
+func (VM *VicMem) Dump(startAddr uint16) {
+	var val byte
+	var line string
+	var ascii string
+
+	cpt := startAddr
+	for j := 0; j < 16; j++ {
+		fmt.Printf("%04X : ", cpt)
+		line = ""
+		ascii = ""
+		for i := 0; i < 16; i++ {
+			val = VM.Read(cpt)
+			if val != 0x00 && val != 0xFF {
+				line = line + clog.CSprintf("white", "black", "%02X", val) + " "
+			} else {
+				line = fmt.Sprintf("%s%02X ", line, val)
+			}
+			if _, ok := trace.PETSCII[val]; ok {
+				ascii += fmt.Sprintf("%s", string(trace.PETSCII[val]))
+			} else {
+				ascii += "."
+			}
+			cpt++
+		}
+		fmt.Printf("%s - %s\n", line, ascii)
 	}
 }

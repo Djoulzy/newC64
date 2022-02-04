@@ -106,12 +106,15 @@ func input() {
 		case 'z':
 			Disassamble()
 			pla.Dump(0)
+		case 'v':
+			vic.Dump(0)
 		case 'r':
 			conf.Disassamble = false
 			run = true
 			execInst.Unlock()
 		case 'l':
-			LoadPRG(&pla, "./prg/GARDEN.prg")
+			LoadData(&pla, "./prg/test.koa", 0x6000)
+			vic.Dump(0x2000)
 			LoadPRG(&pla, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
