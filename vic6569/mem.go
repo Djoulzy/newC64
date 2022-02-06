@@ -18,24 +18,25 @@ type VicMem struct {
 func (VM *VicMem) Init(nbLayers int, size uint16) *VicMem {
 	VM.Layers = make([][]byte, nbLayers)
 	VM.LayersName = make([]string, nbLayers)
+	VM.Start = make([]uint16, nbLayers)
 	nbPages := int(size >> PAGE_DIVIDER)
 	VM.Pages = make([]int, nbPages)
 	return VM
 }
 
-func (VM *VicMem) Attach(name string, layerNum int, pageNum int, content []byte) {
+func (VM *VicMem) Attach(name string, layerNum int, pageNum int, start uint16, content []byte) {
 	nbPages := len(content) >> PAGE_DIVIDER
 	VM.LayersName[layerNum] = name
 	VM.Layers[layerNum] = content
+	VM.Start[layerNum] = start
 	for i := 0; i < nbPages; i++ {
 		VM.Pages[pageNum+i] = layerNum
 	}
 }
 
 func (VM *VicMem) Read(addr uint16) byte {
-	page := int(addr >> PAGE_DIVIDER)
-	pageStart := uint16(page << PAGE_DIVIDER)
-	return VM.Layers[VM.Pages[page]][addr-pageStart]
+	layerNum := VM.Pages[int(addr>>PAGE_DIVIDER)]
+	return VM.Layers[layerNum][addr-VM.Start[layerNum]]
 }
 
 func (VM *VicMem) Show() {

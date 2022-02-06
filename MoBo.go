@@ -107,14 +107,13 @@ func input() {
 			Disassamble()
 			pla.Dump(0)
 		case 'v':
-			vic.Dump(0)
+			vic.Dump(0x0000)
 		case 'r':
 			conf.Disassamble = false
 			run = true
 			execInst.Unlock()
 		case 'l':
-			LoadData(&pla, "./prg/test.koa", 0x6000)
-			vic.Dump(0x2000)
+			LoadPRG(&pla, "./prg/test.koa")
 			LoadPRG(&pla, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
@@ -135,6 +134,7 @@ func input() {
 			if len(dumpAddr) == 4 {
 				hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
 				pla.Dump(uint16(hx))
+				vic.Dump(uint16(hx))
 				dumpAddr = ""
 			}
 		}

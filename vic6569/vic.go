@@ -48,18 +48,18 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.color = io.GetView(colorStart, 1024)
 
 	V.bankMem[3].Init(2, 0x4000)
-	V.bankMem[3].Attach("RAM", 0, 0, ram.Val[0x0000:0x4000])
-	V.bankMem[3].Attach("Char ROM", 1, 1, chargen.Val)
+	V.bankMem[3].Attach("RAM", 0, 0, 0, ram.Val[0x0000:0x4000])
+	V.bankMem[3].Attach("Char ROM", 1, 1, 0x1000, chargen.Val)
 
 	V.bankMem[2].Init(1, 0x4000)
-	V.bankMem[2].Attach("RAM", 0, 0, ram.Val[0x4000:0x8000])
+	V.bankMem[2].Attach("RAM", 0, 0, 0, ram.Val[0x4000:0x8000])
 
 	V.bankMem[1].Init(2, 0x4000)
-	V.bankMem[1].Attach("RAM", 0, 0, ram.Val[0x8000:0xC000])
-	V.bankMem[1].Attach("Char ROM", 1, 1, chargen.Val)
+	V.bankMem[1].Attach("RAM", 0, 0, 0, ram.Val[0x8000:0xC000])
+	V.bankMem[1].Attach("Char ROM", 1, 1, 0x1000, chargen.Val)
 
 	V.bankMem[0].Init(1, 0x4000)
-	V.bankMem[0].Attach("RAM", 0, 0, ram.Val[0xC000:])
+	V.bankMem[0].Attach("RAM", 0, 0, 0, ram.Val[0xC000:])
 
 	V.BA = true
 	V.VCBASE = 0
@@ -96,22 +96,52 @@ func (V *VIC) drawChar(X int, Y int) {
 
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
 		if V.BMM {
-			pixAddr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
-			colors := V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
-			col1 := colors >> 4
-			col0 := colors & 0b00001111
-			pixelData = V.bankMem[V.BankSel].Read(pixAddr)
-			// log.Printf("Read VM %04X", pixAddr)
+			if V.MCM { // Multicolor Bitmap Mode
+				pixAddr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
+				colors := V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
+				col00 := V.Reg[REG_BGCOLOR_0] & 0b00001111
+				col01 := colors >> 4
+				col10 := colors & 0b00001111
+				col11 := V.color.Val[V.VC] & 0b00001111
+				pixelData = V.bankMem[V.BankSel].Read(pixAddr)
 
-			for column := 0; column < 8; column++ {
-				bit := byte(0b10000000 >> column)
-				if pixelData&bit > 0 {
-					V.graph.DrawPixel(X+column, Y, Colors[col1])
-				} else {
-					V.graph.DrawPixel(X+column, Y, Colors[col0])
+				for column := 0; column < 4; column++ {
+					bit := byte(0b11000000) >> (column << 1)
+					switch (pixelData & bit) >> byte((3-column)<<1) {
+					case 0:
+						V.graph.DrawPixel(X+(column<<1), Y, Colors[col00])
+						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col00])
+					case 1:
+						V.graph.DrawPixel(X+(column<<1), Y, Colors[col01])
+						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col01])
+					case 2:
+						V.graph.DrawPixel(X+(column<<1), Y, Colors[col10])
+						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col10])
+					case 3:
+						V.graph.DrawPixel(X+(column<<1), Y, Colors[col11])
+						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col11])
+					default:
+						log.Printf("Data: %08b - BAD COLOR: %08b - bit: %08b - col:%d", pixelData, (pixelData&bit)>>byte((3-column)<<1), bit, column)
+					}
+				}
+			} else { // Standard Bitmap Mode
+				pixAddr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
+				colors := V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
+				col1 := colors >> 4
+				col0 := colors & 0b00001111
+				pixelData = V.bankMem[V.BankSel].Read(pixAddr)
+				// log.Printf("Read VM %04X", pixAddr)
+
+				for column := 0; column < 8; column++ {
+					bit := byte(0b10000000 >> column)
+					if pixelData&bit > 0 {
+						V.graph.DrawPixel(X+column, Y, Colors[col1])
+					} else {
+						V.graph.DrawPixel(X+column, Y, Colors[col0])
+					}
 				}
 			}
-		} else {
+		} else { // Standard Text Mode
 			charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
 			pixelData = V.bankMem[V.BankSel].Read(V.CharBase + charAddr)
 
