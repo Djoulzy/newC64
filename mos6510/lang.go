@@ -12,6 +12,8 @@ func (C *CPU) initLanguage() {
 		0x61: {name: "ADC", bytes: 2, Cycles: 6, action: C.adc, addr: indirectX},
 		0x71: {name: "ADC", bytes: 2, Cycles: 5, action: C.adc, addr: indirectY},
 
+		0x0B: {name: "ANC", bytes: 2, Cycles: 2, action: C.anc, addr: immediate},
+
 		0x29: {name: "AND", bytes: 2, Cycles: 2, action: C.and, addr: immediate},
 		0x25: {name: "AND", bytes: 2, Cycles: 3, action: C.and, addr: zeropage},
 		0x35: {name: "AND", bytes: 2, Cycles: 4, action: C.and, addr: zeropageX},
@@ -20,6 +22,8 @@ func (C *CPU) initLanguage() {
 		0x39: {name: "AND", bytes: 3, Cycles: 4, action: C.and, addr: absoluteY},
 		0x21: {name: "AND", bytes: 2, Cycles: 6, action: C.and, addr: indirectX},
 		0x31: {name: "AND", bytes: 2, Cycles: 5, action: C.and, addr: indirectY},
+
+		0x4B: {name: "ALR", bytes: 2, Cycles: 2, action: C.alr, addr: immediate},
 
 		0x0A: {name: "ASL", bytes: 1, Cycles: 2, action: C.asl, addr: implied},
 		0x06: {name: "ASL", bytes: 2, Cycles: 5, action: C.asl, addr: zeropage},
@@ -244,6 +248,8 @@ func (C *CPU) initLanguage() {
 		0xF9: {name: "SBC", bytes: 3, Cycles: 4, action: C.sbc, addr: absoluteY},
 		0xE1: {name: "SBC", bytes: 2, Cycles: 6, action: C.sbc, addr: indirectX},
 		0xF1: {name: "SBC", bytes: 2, Cycles: 5, action: C.sbc, addr: indirectY},
+
+		0xCB: {name: "SBX", bytes: 2, Cycles: 2, action: C.sbx, addr: immediate},
 
 		0x07: {name: "SLO", bytes: 2, Cycles: 5, action: C.slo, addr: zeropage},
 		0x17: {name: "SLO", bytes: 2, Cycles: 6, action: C.slo, addr: zeropageX},

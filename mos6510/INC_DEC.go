@@ -1,13 +1,8 @@
 package mos6510
 
 import (
-	"fmt"
 	"log"
 )
-
-func (C *CPU) dcp() {
-	fmt.Printf("Not implemented: %v\n", C.Inst)
-}
 
 func (C *CPU) dec() {
 	var val byte
@@ -78,7 +73,6 @@ func (C *CPU) inc() {
 	}
 	C.updateN(val)
 	C.updateZ(val)
-
 }
 
 func (C *CPU) inx() {
@@ -103,9 +97,4 @@ func (C *CPU) iny() {
 	C.updateN(C.Y)
 	C.updateZ(C.Y)
 
-}
-
-func (C *CPU) isc() {
-	fmt.Printf("%s\nNot implemented: %v\n", C.Disassemble(), C.Inst)
-	// log.Fatal("fichier INC_DEC")
 }

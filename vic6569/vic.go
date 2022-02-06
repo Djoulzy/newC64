@@ -68,6 +68,7 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.cycle = 1
 	V.RasterIRQ = 0xFFFF
 	V.SystemClock = 0
+	V.MODE = 0
 }
 
 func (V *VIC) Disassemble() string {
@@ -92,71 +93,21 @@ func (V *VIC) readVideoMatrix() {
 }
 
 func (V *VIC) drawChar(X int, Y int) {
-	var pixelData byte
-
 	if V.drawArea && (V.Reg[REG_CTRL1]&DEN > 0) {
-		if V.BMM {
-			if V.MCM { // Multicolor Bitmap Mode
-				pixAddr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
-				colors := V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
-				col00 := V.Reg[REG_BGCOLOR_0] & 0b00001111
-				col01 := colors >> 4
-				col10 := colors & 0b00001111
-				col11 := V.color.Val[V.VC] & 0b00001111
-				pixelData = V.bankMem[V.BankSel].Read(pixAddr)
-
-				for column := 0; column < 4; column++ {
-					bit := byte(0b11000000) >> (column << 1)
-					switch (pixelData & bit) >> byte((3-column)<<1) {
-					case 0:
-						V.graph.DrawPixel(X+(column<<1), Y, Colors[col00])
-						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col00])
-					case 1:
-						V.graph.DrawPixel(X+(column<<1), Y, Colors[col01])
-						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col01])
-					case 2:
-						V.graph.DrawPixel(X+(column<<1), Y, Colors[col10])
-						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col10])
-					case 3:
-						V.graph.DrawPixel(X+(column<<1), Y, Colors[col11])
-						V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[col11])
-					default:
-						log.Printf("Data: %08b - BAD COLOR: %08b - bit: %08b - col:%d", pixelData, (pixelData&bit)>>byte((3-column)<<1), bit, column)
-					}
-				}
-			} else { // Standard Bitmap Mode
-				pixAddr := (V.CharBase & 0x2000) + (V.VC << 3) + uint16(V.RC)
-				colors := V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
-				col1 := colors >> 4
-				col0 := colors & 0b00001111
-				pixelData = V.bankMem[V.BankSel].Read(pixAddr)
-				// log.Printf("Read VM %04X", pixAddr)
-
-				for column := 0; column < 8; column++ {
-					bit := byte(0b10000000 >> column)
-					if pixelData&bit > 0 {
-						V.graph.DrawPixel(X+column, Y, Colors[col1])
-					} else {
-						V.graph.DrawPixel(X+column, Y, Colors[col0])
-					}
-				}
-			}
-		} else { // Standard Text Mode
-			charAddr := (uint16(V.CharBuffer[V.VMLI]) << 3) + uint16(V.RC)
-			pixelData = V.bankMem[V.BankSel].Read(V.CharBase + charAddr)
-
-			// fmt.Printf("SC: %02X - RC: %d - %04X - %02X = %08b\n", V.CharBuffer[V.VMLI], V.RC, charAddr, charData, charData)
-			// if V.CharBuffer[V.VMLI] == 0 {
-			// 	fmt.Printf("Raster: %d - Cycle: %d - BA: %t - VMLI: %d - VCBASE/VC: %d/%d - RC: %d - Char: %02X\n", Y, X, V.BA, V.VMLI, V.VCBASE, V.VC, V.RC, V.CharBuffer[V.VMLI])
-			// }
-			for column := 0; column < 8; column++ {
-				bit := byte(0b10000000 >> column)
-				if pixelData&bit > 0 {
-					V.graph.DrawPixel(X+column, Y, Colors[V.ColorBuffer[V.VMLI]])
-				} else {
-					V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BGCOLOR_0]&0b00001111])
-				}
-			}
+		switch V.MODE {
+		case 0b00000000:
+			V.StandardTextMode(X, Y)
+		case 0b00010000: // Multicolor text mode
+			V.MulticolTextMode(X, Y)
+		case 0b00100000:
+			V.StandardBitmapMode(X, Y)
+		case 0b00110000:
+			V.MulticolBitmapMode(X, Y)
+		case 0b01000000: // ECM text mode
+			log.Fatal("ECM text mode")
+		case 0b01010000: // Invalid text mode
+		case 0b01100000: // Invalid bitmap mode 1
+		case 0b01110000: // Invalid bitmap mode 2
 		}
 		V.VMLI++
 		V.VC++

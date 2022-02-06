@@ -77,9 +77,10 @@ type VIC struct {
 	CharBase   uint16
 	bankMem    [4]VicMem
 
-	ECM bool
-	BMM bool
-	MCM bool
+	ECM  bool
+	BMM  bool
+	MCM  bool
+	MODE byte
 }
 
 const (

@@ -57,7 +57,6 @@ func (C *CPU) cmp() {
 	C.setC(val >= 0)
 	C.updateN(byte(val))
 	C.updateZ(byte(val))
-
 }
 
 func (C *CPU) cpx() {
