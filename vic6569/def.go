@@ -142,9 +142,9 @@ const (
 	YSCROLL byte = 0b00000111 // From REG_CTRL1
 	RSEL    byte = 0b00001000 // rom REG_CTRL1 : 0 = 24 rows; 1 = 25 rows.
 	DEN     byte = 0b00010000 // rom REG_CTRL1 : 0 = Screen off, 1 = Screen on.
-	BMM     byte = 0b00100000 // rom REG_CTRL1 : 0 = Text mode; 1 = Bitmap mode.
-	ECM     byte = 0b01000000 // rom REG_CTRL1 : 1 = Extended background mode on.
-	MCM     byte = 0b00010000 // rom REG_CTRL2
+	// BMM     byte = 0b00100000 // rom REG_CTRL1 : 0 = Text mode; 1 = Bitmap mode.
+	// ECM     byte = 0b01000000 // rom REG_CTRL1 : 1 = Extended background mode on.
+	// MCM     byte = 0b00010000 // rom REG_CTRL2
 	RST8    byte = 0b10000000 // rom REG_CTRL1 : Read: Current raster line (bit #8). Write: Raster line to generate interrupt at (bit #8).
 
 	IRQ_RST byte = 0b00000001 // Raster line interrupt

@@ -62,6 +62,7 @@ func setup() {
 	mem.Init(ramSize, "")
 	mem.Clear(true)
 	io.Init(ioSize, "")
+	io.Clear(false)
 	kernal.Init(kernalSize, "assets/roms/kernal.bin")
 	basic.Init(basicSize, "assets/roms/basic.bin")
 	chargen.Init(chargenSize, "assets/roms/char.bin")
@@ -106,8 +107,6 @@ func input() {
 		case 'z':
 			Disassamble()
 			pla.Dump(0)
-		case 'v':
-			vic.Dump(0x0000)
 		case 'r':
 			conf.Disassamble = false
 			run = true
@@ -134,7 +133,9 @@ func input() {
 			if len(dumpAddr) == 4 {
 				hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
 				pla.Dump(uint16(hx))
-				vic.Dump(uint16(hx))
+				if hx < 0x4000 {
+					vic.Dump(uint16(hx))
+				}
 				dumpAddr = ""
 			}
 		}
@@ -152,7 +153,7 @@ func RunEmulation() {
 		execInst.Lock()
 	}
 
-	cpuTurn = vic.Run()
+	cpuTurn = vic.Run(!run)
 	if cpuTurn {
 		cpu.NextCycle()
 		if cpu.State == mos6510.ReadInstruction {

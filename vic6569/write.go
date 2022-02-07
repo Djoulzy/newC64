@@ -42,20 +42,18 @@ func (V *VIC) Write(addr uint16, val byte) {
 	case REG_MSBS_X_COOR:
 		V.Reg[reg] = val
 	case REG_CTRL1:
-		V.MODE = (V.MODE & 0b10011111) | val&0b01100000
+		// log.Printf("REG_CTRL1: %08b", val)
+		newMode := (V.MODE & 0b00010000) | val&0b01100000
+		if newMode != V.MODE {
+			V.MODE = newMode
+			log.Printf("Graphic mode: %08b", V.MODE)
+		}
 		V.RasterIRQ &= 0x7FFF
 		V.RasterIRQ |= uint16(val&RST8) << 8
-		if val&ECM == ECM {
-			V.ECM = true
-			log.Printf("Graphic mode: %08b", V.MODE)
-		}
-		if val&BMM == BMM {
-			V.BMM = true
-			log.Printf("Graphic mode: %08b", V.MODE)
-		}
-		V.Reg[REG_CTRL1] |= val & 0b01111111
+		V.Reg[REG_CTRL1] = (V.Reg[REG_CTRL1] & 0b1000000) | (val & 0b01111111)
 	case REG_RASTER:
 		V.RasterIRQ = V.RasterIRQ&0x8000 + uint16(val)
+		// log.Printf("RasterIRQ: %04X", V.RasterIRQ)
 	case REG_LP_X:
 		fallthrough
 	case REG_LP_Y:
@@ -63,9 +61,9 @@ func (V *VIC) Write(addr uint16, val byte) {
 	case REG_SPRT_ENABLED:
 		fallthrough
 	case REG_CTRL2:
-		V.MODE = (V.MODE & 0b11101111) | val&0b00010000
-		if val&MCM == MCM {
-			V.MCM = true
+		newMode := (V.MODE & 0b01100000) | val&0b00010000
+		if newMode != V.MODE {
+			V.MODE = newMode
 			log.Printf("Graphic mode: %08b", V.MODE)
 		}
 		V.Reg[reg] = val
@@ -74,9 +72,10 @@ func (V *VIC) Write(addr uint16, val byte) {
 	case REG_MEM_LOC:
 		V.ScreenBase = uint16(val&0b11110000) << 6
 		V.CharBase = uint16(val&0b00001110) << 10
+		log.Printf("VIC Screenbase: %04X - Charbase: %04X", V.ScreenBase, V.CharBase)
 		V.Reg[reg] = val
 	case REG_IRQ:
-		fallthrough
+		V.Reg[REG_IRQ] &= ^val
 	case REG_IRQ_ENABLED:
 		fallthrough
 	case REG_SPRT_DATA_PRIORITY:

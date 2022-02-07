@@ -191,7 +191,7 @@ func (C *CPU) pullWordStack() uint16 {
 //////////////////////////////////
 
 func (C *CPU) IRQ() {
-	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
+	// fmt.Printf("\nInterrupt ... Raster")
 	// C.IRQ_pin = 0
 	C.pushWordStack(C.PC)
 	C.pushByteStack(C.S)
@@ -327,6 +327,7 @@ func (C *CPU) NextCycle() {
 		C.PC += 3
 		switch C.Inst.addr {
 		case absolute:
+			C.ram.Write(C.oper, C.ram.Read(C.oper))
 			C.State = Compute
 			if C.Inst.Cycles == 3 {
 				C.ComputeInstruction()

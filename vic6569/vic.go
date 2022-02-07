@@ -85,11 +85,9 @@ func (V *VIC) saveRasterPos(val int) {
 }
 
 func (V *VIC) readVideoMatrix() {
-	if !V.BA {
-		V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
-		V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
-		// fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
-	}
+	V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
+	V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
+	// fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
 }
 
 func (V *VIC) drawChar(X int, Y int) {
@@ -118,7 +116,7 @@ func (V *VIC) drawChar(X int, Y int) {
 	}
 }
 
-func (V *VIC) Run() bool {
+func (V *VIC) Run(debug bool) bool {
 	V.SystemClock++
 	V.saveRasterPos(V.BeamY)
 
@@ -138,7 +136,7 @@ func (V *VIC) Run() bool {
 	case 1:
 		if V.testBit(REG_IRQ_ENABLED, IRQ_RST) {
 			if V.RasterIRQ == uint16(V.BeamY) {
-				//fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
+				fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
 				// fmt.Println("Rastrer Interrupt")
 				V.Reg[REG_IRQ] = V.Reg[REG_IRQ] | 0b10000001
 				*V.IRQ_Pin = 1
@@ -168,124 +166,204 @@ func (V *VIC) Run() bool {
 		V.drawChar(V.BeamX, V.BeamY)
 	case 15: // Debut de la lecture de la memoire video en mode BadLine
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 16: // Debut de la zone d'affichage
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 17:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 18:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 19:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 20:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 21:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 22:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 23:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 24:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 25:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 26:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 27:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 28:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 29:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 30:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 31:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 32:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 33:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 34:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 35:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 36:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 37:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 38:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 39:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 40:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 41:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 42:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 43:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 44:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 45:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 46:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 47:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 48:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 49:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 50:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 51:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 52:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 53:
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 54: // Dernier lecture de la matrice video ram
 		V.drawChar(V.BeamX, V.BeamY)
-		V.readVideoMatrix()
+		if !V.BA {
+			V.readVideoMatrix()
+		}
 	case 55: // Fin de la zone de display
 		V.drawChar(V.BeamX, V.BeamY)
 	case 56: // Debut de la zone visible
@@ -319,11 +397,11 @@ func (V *VIC) Run() bool {
 				V.graph.UpdateFrame()
 			}
 		}
-		// if V.conf.Globals.Disassamble == true {
-		// 	if V.conf.Globals.Display {
-		// 		V.graph.UpdateFrame()
-		// 	}
-		// }
+
+		if debug {
+			V.graph.UpdateFrame()
+		}
+
 	}
 	return V.BA
 }
