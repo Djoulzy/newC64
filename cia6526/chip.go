@@ -117,6 +117,7 @@ func (C *CIA) Dump() {
 	} else {
 		fmt.Printf(" (Once)")
 	}
+	fmt.Printf("\nICR: %04X - CTRL_A: %04X - CTRL_B: %04X", C.Reg[ICR], C.Reg[CRA], C.Reg[CRB])
 	fmt.Printf("\nIRQ Line: ")
 	if C.Reg[ICR]&INT_SET > 0 {
 		fmt.Printf("On ")

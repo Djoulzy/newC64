@@ -167,14 +167,6 @@ func RunEmulation() {
 	if cpuTurn {
 		cpu.NextCycle()
 		if cpu.State == mos6510.ReadInstruction {
-			if cpu.NMI_pin > 0 {
-				// log.Printf("NMI")
-				cpu.NMI()
-			}
-			if (cpu.IRQ_pin > 0) && (cpu.S & ^mos6510.I_mask) == 0 {
-				// log.Printf("IRQ")
-				cpu.IRQ()
-			}
 			if conf.Breakpoint == cpu.InstStart {
 				conf.Disassamble = true
 				run = false

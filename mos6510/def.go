@@ -67,6 +67,20 @@ const (
 	ReadIndXY_LO
 	ReadIndXY_HI
 	Compute
+	IRQ1
+	IRQ2
+	IRQ3
+	IRQ4
+	IRQ5
+	IRQ6
+	IRQ7
+	NMI1
+	NMI2
+	NMI3
+	NMI4
+	NMI5
+	NMI6
+	NMI7
 )
 
 // CPU :
@@ -99,6 +113,10 @@ type CPU struct {
 	cycleCount  int
 	State       cpuState
 	ClockCycles *uint16
+
+	NMI_Raised bool
+	IRQ_Raised bool
+	INT_delay  bool
 }
 
 // Mnemonic :

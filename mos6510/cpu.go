@@ -25,6 +25,9 @@ func (C *CPU) Reset() {
 
 	C.IRQ_pin = 0
 	C.NMI_pin = 0
+	C.NMI_Raised = false
+	C.IRQ_Raised = false
+	C.INT_delay = false
 
 	// PLA Settings (Bank switching)
 	// C.ram.Write(0x0000, 0x2F)
@@ -207,6 +210,15 @@ func (C *CPU) NMI() {
 	C.PC = C.readWord(0xFFFA)
 }
 
+func (C *CPU) CheckInterrupts() {
+	if C.NMI_pin > 0 {
+		C.NMI_Raised = true
+	}
+	if (C.IRQ_pin > 0) && (C.S & ^I_mask) == 0 {
+		C.IRQ_Raised = true
+	}
+}
+
 //////////////////////////////////
 ///////////// Running ////////////
 //////////////////////////////////
@@ -223,7 +235,21 @@ func (C *CPU) ComputeInstruction() {
 		log.Printf("%s - Wanted: %d - Getting: %d\n", C.Disassemble(), C.Inst.Cycles, C.cycleCount)
 	}
 	if C.cycleCount == C.Inst.Cycles {
-		C.State = ReadInstruction
+		if C.NMI_Raised || C.IRQ_Raised {
+			if C.Inst.Cycles <= 2 && !C.INT_delay {
+				C.INT_delay = true
+				C.State = ReadInstruction
+			} else {
+				if C.IRQ_Raised {
+					C.State = IRQ1
+				}
+				if C.NMI_Raised {
+					C.State = NMI1
+				}
+			}
+		} else {
+			C.State = ReadInstruction
+		}
 	}
 	C.Inst.action()
 }
@@ -254,8 +280,12 @@ func (C *CPU) NextCycle() {
 		if C.Inst.addr == implied {
 			C.State = Compute
 			C.PC += 1
+			C.CheckInterrupts()
 		} else {
 			C.State = ReadOperLO
+			if C.Inst.Cycles <= 3 {
+				C.CheckInterrupts()
+			}
 		}
 
 	////////////////////////////////////////////////
@@ -295,6 +325,9 @@ func (C *CPU) NextCycle() {
 		default:
 			log.Fatal("Erreur de cycle")
 		}
+		if C.Inst.Cycles == 4 {
+			C.CheckInterrupts()
+		}
 
 	////////////////////////////////////////////////
 	// Cycle 3
@@ -318,6 +351,9 @@ func (C *CPU) NextCycle() {
 		default:
 			log.Fatal("Erreur de cycle")
 		}
+		if C.Inst.Cycles == 5 {
+			C.CheckInterrupts()
+		}
 
 	case ReadOperHI: // Cycle 3
 		tmp := C.ram.Read(C.PC + 2)
@@ -340,6 +376,9 @@ func (C *CPU) NextCycle() {
 			C.State = ReadIndirect
 		default:
 			log.Fatal("Erreur de cycle")
+		}
+		if C.Inst.Cycles == 5 {
+			C.CheckInterrupts()
 		}
 
 	////////////////////////////////////////////////
@@ -366,6 +405,9 @@ func (C *CPU) NextCycle() {
 			C.State = ReadIndXY_HI
 		default:
 			log.Fatal("Erreur de cycle")
+		}
+		if C.Inst.Cycles == 6 {
+			C.CheckInterrupts()
 		}
 
 	case ReadIndirect: // Cycle 4
@@ -400,14 +442,64 @@ func (C *CPU) NextCycle() {
 		default:
 			log.Fatal("Erreur de cycle")
 		}
+		if C.Inst.Cycles > 6 {
+			C.CheckInterrupts()
+		}
 
 	////////////////////////////////////////////////
-	// Exec
+	// Cycle 6-7-8
 	////////////////////////////////////////////////
+
 	case Compute:
 		if C.Inst.Cycles == C.cycleCount {
 			C.ComputeInstruction()
 		}
+
+	////////////////////////////////////////////////
+	// Interrupt
+	////////////////////////////////////////////////
+
+	case NMI1:
+		C.NMI_Raised = false
+		C.INT_delay = false
+		C.State = NMI2
+	case NMI2:
+		C.pushWordStack(C.PC)
+		C.State = NMI3
+	case NMI3:
+		C.State = NMI4
+	case NMI4:
+		C.pushByteStack(C.S)
+		C.State = NMI5
+	case NMI5:
+		C.State = NMI6
+	case NMI6:
+		C.State = NMI7
+	case NMI7:
+		C.PC = C.readWord(0xFFFA)
+		C.State = ReadInstruction
+
+	case IRQ1:
+		C.IRQ_Raised = false
+		C.INT_delay = false
+		C.State = IRQ2
+	case IRQ2:
+		C.pushWordStack(C.PC)
+		C.State = IRQ3
+	case IRQ3:
+		C.State = IRQ4
+	case IRQ4:
+		C.pushByteStack(C.S)
+		C.State = IRQ5
+	case IRQ5:
+		C.State = IRQ6
+	case IRQ6:
+		C.setI(true)
+		C.State = IRQ7
+	case IRQ7:
+		C.PC = C.readWord(0xFFFE)
+		C.State = ReadInstruction
+
 	default:
 		log.Fatal("Unknown CPU state\n")
 	}
