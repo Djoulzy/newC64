@@ -1,6 +1,7 @@
 package cia6526
 
 import (
+	"fmt"
 	"newC64/graphic"
 	"newC64/memory"
 )
@@ -100,4 +101,30 @@ func (C *CIA) Run() {
 	if C.Reg[CRB]&CTRL_START_STOP > 0 {
 		C.TimerB()
 	}
+}
+
+func (C *CIA) Dump() {
+	fmt.Printf("%s\n", C.name)
+	fmt.Printf("Timer A: ")
+	fmt.Printf("Counter: %d - ", (uint16(C.Reg[TAHI])<<8)+uint16(C.Reg[TALO]))
+	if C.Reg[CRA]&CTRL_START_STOP > 0 {
+		fmt.Printf("Running")
+	} else {
+		fmt.Printf("Stopped")
+	}
+	if C.Reg[CRA]&CTRL_LOOP > 0 {
+		fmt.Printf(" (Loop)")
+	} else {
+		fmt.Printf(" (Once)")
+	}
+	fmt.Printf("\nIRQ Line: ")
+	if C.Reg[ICR]&INT_SET > 0 {
+		fmt.Printf("On ")
+	} else {
+		fmt.Printf("Off ")
+	}
+	if C.Reg[ICR]&INT_UNDERFL_TA > 0 {
+		fmt.Printf("INT_UNDERFL_A")
+	}
+	fmt.Println()
 }

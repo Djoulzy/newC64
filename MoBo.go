@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"newC64/cia6526"
 	"newC64/clog"
 	"newC64/confload"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/mattn/go-tty"
 )
@@ -101,6 +103,8 @@ func input() {
 	for {
 		r, _ := keyb.ReadRune()
 		switch r {
+		case 'v':
+			cia1.Dump()
 		case 's':
 			Disassamble()
 			pla.DumpStack(cpu.SP)
@@ -148,7 +152,13 @@ func Disassamble() {
 	fmt.Printf("%s\n", cpu.Disassemble())
 }
 
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Now().Sub(start)
+	log.Printf("%s took %s", name, elapsed)
+}
+
 func RunEmulation() {
+	// defer timeTrack(time.Now(), "RunEmulation")
 	if cpu.State == mos6510.ReadInstruction && !run {
 		execInst.Lock()
 	}
@@ -173,6 +183,10 @@ func RunEmulation() {
 	}
 	cia1.Run()
 	cia2.Run()
+
+	// for i := 0; i < 1000; i++ {
+	// 	// pause
+	// }
 
 	if cpu.State == mos6510.ReadInstruction && !run {
 		Disassamble()

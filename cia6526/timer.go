@@ -21,11 +21,13 @@ func (C *CIA) time_is_over(lo *byte, hi *byte) bool {
 
 func (C *CIA) TimerA() {
 	// log.Printf("Tick Timer A of %s", C.name)
+	// fmt.Printf("Counter: %04X\r", (uint16(C.Reg[TAHI])<<8)+uint16(C.Reg[TALO]))
 	if C.time_is_over(&C.Reg[TALO], &C.Reg[TAHI]) {
+
 		// log.Println("underflow timer A")
 		if C.interrupt_mask&INT_UNDERFL_TA > 0 {
 			C.Reg[ICR] |= INT_UNDERFL_TA | INT_SET
-			// log.Printf("%s: Int timer A\n", C.name)
+			// fmt.Printf("\n%s: Int timer A\n", C.name)
 			*C.Signal_Pin = 1
 		}
 		if C.Reg[CRA]&CTRL_LOOP > 0 {
