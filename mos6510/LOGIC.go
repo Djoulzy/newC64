@@ -60,32 +60,50 @@ func (C *CPU) and() {
 }
 
 func (C *CPU) asl() {
-	var val uint16
+	var val byte
+	var oper byte
+	var dest uint16
 
 	switch C.Inst.addr {
 	case implied:
-		val = uint16(C.A) << 1
-		C.A = byte(val)
+		oper = C.A
+		val = oper << 1
+		C.A = val
 	case zeropage:
-		val = uint16(C.ram.Read(C.oper)) << 1
-		C.ram.Write(C.oper, byte(val))
+		oper = C.ram.Read(C.oper)
+		val = oper << 1
+		C.ram.Write(C.oper, val)
 	case zeropageX:
-		dest := C.oper + uint16(C.X)
-		val = uint16(C.ram.Read(dest)) << 1
-		C.ram.Write(dest, byte(val))
+		dest = C.oper + uint16(C.X)
+		oper = C.ram.Read(dest)
+		val = oper << 1
+		C.ram.Write(dest, val)
 	case absolute:
-		val = uint16(C.ram.Read(C.oper)) << 1
-		C.ram.Write(C.oper, byte(val))
+		oper = C.ram.Read(C.oper)
+		val = oper << 1
+		C.ram.Write(C.oper, val)
 	case absoluteX:
-		dest := C.oper + uint16(C.X)
-		val = uint16(C.ram.Read(dest)) << 1
-		C.ram.Write(dest, byte(val))
+		C.cross_oper = C.oper + uint16(C.X)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			oper = C.ram.Read(C.cross_oper)
+			val = oper << 1
+			C.ram.Write(C.cross_oper, val)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+			return
+		}
+	case CrossPage:
+		oper = C.ram.Read(C.cross_oper)
+		val = oper << 1
+		C.ram.Write(C.cross_oper, val)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
-	C.updateN(byte(val))
-	C.updateZ(byte(val))
-	C.setC(val > 0x00FF)
+	C.updateN(val)
+	C.updateZ(val)
+	C.setC(oper&0b10000000 > 1)
 
 }
 

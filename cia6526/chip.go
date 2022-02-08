@@ -103,7 +103,7 @@ func (C *CIA) Run() {
 	}
 }
 
-func (C *CIA) Dump() {
+func (C *CIA) Stats() {
 	fmt.Printf("%s\n", C.name)
 	fmt.Printf("Timer A: ")
 	fmt.Printf("Counter: %d - ", (uint16(C.Reg[TAHI])<<8)+uint16(C.Reg[TALO]))

@@ -136,7 +136,7 @@ func (V *VIC) Run(debug bool) bool {
 	case 1:
 		if V.testBit(REG_IRQ_ENABLED, IRQ_RST) {
 			if V.RasterIRQ == uint16(V.BeamY) {
-				fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
+				// fmt.Printf("\nIRQ: %04X - %04X", V.RasterIRQ, uint16(V.BeamY))
 				// fmt.Println("Rastrer Interrupt")
 				V.Reg[REG_IRQ] = V.Reg[REG_IRQ] | 0b10000001
 				*V.IRQ_Pin = 1
@@ -397,17 +397,28 @@ func (V *VIC) Run(debug bool) bool {
 				V.graph.UpdateFrame()
 			}
 		}
-
-		if debug {
-			V.graph.UpdateFrame()
-		}
-
+	}
+	if debug {
+		V.graph.UpdateFrame()
 	}
 	return V.BA
 }
 
 func (V *VIC) Dump(addr uint16) {
-	log.Printf("Bank: %d - VideoBase: %04X - CharBase: %04X", V.BankSel, V.ScreenBase, V.CharBase)
+	fmt.Printf("Bank: %d - VideoBase: %04X - CharBase: %04X", V.BankSel, V.ScreenBase, V.CharBase)
 	V.bankMem[V.BankSel].Show()
 	V.bankMem[V.BankSel].Dump(addr)
+}
+
+func (V *VIC) Stats() {
+	fmt.Printf("VIC:\n")
+	fmt.Printf("Bank: %d - VideoBase: %04X - CharBase: %04X\n", V.BankSel, V.ScreenBase, V.CharBase)
+	fmt.Printf("RstX: %04X - RstY: %04X - RC: %02d - VC: %03X - VCBase: %03X - VMLI: %02d\n", V.BeamX, V.BeamY, V.RC, V.VC, V.VCBASE, V.VMLI)
+	fmt.Printf("IRQ Line: ")
+	if V.Reg[REG_IRQ]&0b1000000 > 0 {
+		fmt.Printf("On ")
+	} else {
+		fmt.Printf("Off ")
+	}
+	fmt.Printf("Raster IRQ: %04X\n", V.RasterIRQ)
 }

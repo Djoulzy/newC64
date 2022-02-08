@@ -12,7 +12,7 @@
 //  Macros
 //----------------------------------------------------------
 .macro SetupIRQ(IRQaddr,IRQline,IRQlineHi) {
-    lda #$7f        // Disable CIA IRQ's
+    lda #$7f        // Disable CIA IRQ's  // 0970
     sta $dc0d
     sta $dd0d
 
@@ -34,7 +34,7 @@
 
     asl $d019  // Ack any previous raster interrupt
     bit $dc0d  // reading the interrupt control registers
-    bit $dd0d  // clears them
+    bit $dd0d  // clears them // 099A
 }
 //----------------------------------------------------------
 .macro EndIRQ(nextIRQaddr,nextIRQline,IRQlineHi) {

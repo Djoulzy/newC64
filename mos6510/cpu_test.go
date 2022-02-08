@@ -596,11 +596,40 @@ func TestLSR(t *testing.T) {
 
 func TestASL(t *testing.T) {
 	var allGood bool = true
+	var res byte
+
 	mem.Clear(false)
 	tables := []struct {
 		val     byte
 		x       byte
-		oper    byte
+		oper    uint16
+		flag    byte
+		res     byte
+		resFlag byte
+	}{
+		{0xF1, 0x04, 0x0019, 0b00100101, 0xE2, 0b10100101},
+	}
+	for _, table := range tables {
+		proc.ram.Write(table.oper, table.val)
+		proc.S = table.flag
+		proc.oper = table.oper
+		runInstruction(0x0E) // Absolute
+		res = proc.ram.Read(table.oper)
+		if res != table.res {
+			t.Errorf("Val: $%02X / ASL $%04X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
+			allGood = false
+		}
+		if proc.S != table.resFlag {
+			t.Errorf("Val: $%02X / ASL $%04X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
+			allGood = false
+		}
+	}
+
+	mem.Clear(false)
+	tables = []struct {
+		val     byte
+		x       byte
+		oper    uint16
 		flag    byte
 		res     byte
 		resFlag byte
@@ -616,9 +645,9 @@ func TestASL(t *testing.T) {
 		proc.ram.Write(0x0014, table.val)
 		proc.S = table.flag
 		proc.X = table.x
-		proc.oper = uint16(table.oper)
+		proc.oper = table.oper
 		runInstruction(0x16) // ZeropageX
-		res := proc.ram.Read(0x0014)
+		res = proc.ram.Read(0x0014)
 		if res != table.res {
 			t.Errorf("Val: $%02X / ASL $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
 			allGood = false

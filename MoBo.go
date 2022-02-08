@@ -104,7 +104,8 @@ func input() {
 		r, _ := keyb.ReadRune()
 		switch r {
 		case 'v':
-			cia1.Dump()
+			cia1.Stats()
+			vic.Stats()
 		case 's':
 			Disassamble()
 			pla.DumpStack(cpu.SP)

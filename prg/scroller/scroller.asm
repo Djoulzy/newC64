@@ -24,11 +24,11 @@ start: {
     // bars). The memory map in this routine is slightly funky, with a proper
     // font we could just use the inverted version of the font by orring $80
     // to the char code.
-    jsr copy_inverted_system_font
+    jsr copy_inverted_system_font // 0x09A6
 
-    lda $DD00
+    lda $DD00 // 081C
     and #%11111100
-    ora #%00000010 // VIC-II bank 1
+    ora #%00000010 // VIC-II bank 2
     sta $dd00
 
     lda #0
@@ -48,13 +48,13 @@ start: {
     sta $d018
 
     // clear out two last rows of the bitmap
-    lda #0
+    lda #0 //0833
     .for (var i = 0; i < 40; i++) {
         sta colora + 40*23 + i
         sta colorb + 40*23 + i
     }
 
-    ldx #$00
+    ldx #$00 // 0925
 copyimage:
     .for (var i = 0; i < 4; i++) {
         lda colora+2+i*256, x
@@ -65,7 +65,7 @@ copyimage:
     inx
     bne copyimage
 
-    ldx #$00
+    ldx #$00 // 095A
 clearlastrow:
     lda #BLACK
     sta $d800+24*40, x
@@ -76,13 +76,13 @@ clearlastrow:
     bne clearlastrow
 
     // IRQ setup
-    sei
+    sei     // 096B
     lda #$35        // Bank out kernal and basic
     sta $01
     // Setup raster IRQ
     SetupIRQ(irq0, irq0line, false)
 
-    lda #0
+    lda #0 // 099D
     sta framecount
     cli
 

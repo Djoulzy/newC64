@@ -1,7 +1,5 @@
 package vic6569
 
-import "log"
-
 func (V *VIC) Write(addr uint16, val byte) {
 
 	reg := addr - ((addr >> 6) << 6)
@@ -46,7 +44,7 @@ func (V *VIC) Write(addr uint16, val byte) {
 		newMode := (V.MODE & 0b00010000) | val&0b01100000
 		if newMode != V.MODE {
 			V.MODE = newMode
-			log.Printf("Graphic mode: %08b", V.MODE)
+			// log.Printf("Graphic mode: %08b", V.MODE)
 		}
 		V.RasterIRQ &= 0x7FFF
 		V.RasterIRQ |= uint16(val&RST8) << 8
@@ -64,7 +62,7 @@ func (V *VIC) Write(addr uint16, val byte) {
 		newMode := (V.MODE & 0b01100000) | val&0b00010000
 		if newMode != V.MODE {
 			V.MODE = newMode
-			log.Printf("Graphic mode: %08b", V.MODE)
+			// log.Printf("Graphic mode: %08b", V.MODE)
 		}
 		V.Reg[reg] = val
 	case REG_SPRT_Y_EXP:
@@ -72,10 +70,13 @@ func (V *VIC) Write(addr uint16, val byte) {
 	case REG_MEM_LOC:
 		V.ScreenBase = uint16(val&0b11110000) << 6
 		V.CharBase = uint16(val&0b00001110) << 10
-		log.Printf("VIC Screenbase: %04X - Charbase: %04X", V.ScreenBase, V.CharBase)
+		// log.Printf("VIC Screenbase: %04X - Charbase: %04X", V.ScreenBase, V.CharBase)
 		V.Reg[reg] = val
 	case REG_IRQ:
 		V.Reg[REG_IRQ] &= ^val
+		if V.Reg[REG_IRQ]&0b10000000 == 0 {
+			*V.IRQ_Pin = 0
+		}
 	case REG_IRQ_ENABLED:
 		fallthrough
 	case REG_SPRT_DATA_PRIORITY:

@@ -193,23 +193,6 @@ func (C *CPU) pullWordStack() uint16 {
 /////////// Interrupts ///////////
 //////////////////////////////////
 
-func (C *CPU) IRQ() {
-	// fmt.Printf("\nInterrupt ... Raster")
-	// C.IRQ_pin = 0
-	C.pushWordStack(C.PC)
-	C.pushByteStack(C.S)
-	C.setI(true)
-	C.PC = C.readWord(0xFFFE)
-}
-
-func (C *CPU) NMI() {
-	//fmt.Printf("\nInterrupt ... Raster: %04X", C.readRasterLine())
-	// C.NMI = 0
-	C.pushWordStack(C.PC)
-	C.pushByteStack(C.S)
-	C.PC = C.readWord(0xFFFA)
-}
-
 func (C *CPU) CheckInterrupts() {
 	if C.NMI_pin > 0 {
 		C.NMI_Raised = true
