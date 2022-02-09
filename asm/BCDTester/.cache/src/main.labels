@@ -1,0 +1,26 @@
+al C:0000 .TEST
+al C:0164 .A65C02
+al C:0188 .A65816
+al C:0170 .S65C02
+al C:0194 .S65816
+
+al C:00f1 .SUB2
+al C:00d1 .SUB1
+al C:005b .ADD
+al C:005a .DONE
+al C:00ae .SUB
+al C:00e3 .S11
+al C:00ed .S12
+al C:0143 .C1
+al C:0091 .A1
+al C:009e .A2
+al C:00a1 .A3
+al C:0151 .S6502
+al C:0115 .COMPARE
+al C:0144 .A6502
+al C:0022 .LOOP2
+al C:000d .LOOP1
+al C:0101 .S21
+al C:0111 .S23
+al C:010b .S22
+
