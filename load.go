@@ -44,7 +44,7 @@ func LoadPRG(mem *pla906114.PLA, file string) (uint16, error) {
 	fmt.Printf("PRG: %04X\n", prgStart)
 	for i, val := range content[2:] {
 		mem.Write(startLoadMem+uint16(i), val)
-		// mem.Mem[0][startLoadMem+uint16(i)].Val = val
+		// mem.Mem[0].Val[startLoadMem+uint16(i)] = val
 	}
 	return prgStart, nil
 }
