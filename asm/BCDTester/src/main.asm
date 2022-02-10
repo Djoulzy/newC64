@@ -1,268 +1,235 @@
-; Verify decimal mode behavior
-; Written by Bruce Clark.  This code is public domain.
+;===========================================================================
 ;
-; Returns:
-;   ERROR = 0 if the test passed
-;   ERROR = 1 if the test failed
+; Based on: Bruce Clark: a program to verify decimal mode operation
+;           www.6502.org/tutorials/decimal_mode.html
 ;
-; This routine requires 17 bytes of RAM -- 1 byte each for:
-;   AR, CF, DA, DNVZC, ERROR, HA, HNVZC, N1, N1H, N1L, N2, N2L, NF, VF, and ZF
-; and 2 bytes for N2H
+; NMOS 6502\6510: program for testing accumulator result and flag result
+;                 of ADC and SBC in decimal mode,
+;                 including correct incorrectness of NVZ flags.
 ;
-; Variables:
-;   N1 and N2 are the two numbers to be added or subtracted
-;   N1H, N1L, N2H, and N2L are the upper 4 bits and lower 4 bits of N1 and N2
-;   DA and DNVZC are the actual accumulator and flag results in decimal mode
-;   HA and HNVZC are the accumulator and flag results when N1 and N2 are
-;     added or subtracted using binary arithmetic
-;   AR, NF, VF, ZF, and CF are the predicted decimal mode accumulator and
-;     flag results, calculated using binary arithmetic
+;...........................................................................
 ;
-; This program takes approximately 1 minute at 1 MHz (a few seconds more on
-; a 65C02 than a 6502 or 65816)
+; ttlworks 04/2016: modified the code for testing the 6510 in a C64.
 ;
-TEST:    LDY #1    ; initialize Y (used to loop through carry flag values)
-        STY ERROR ; store 1 in ERROR until the test passes
-        LDA #0    ; initialize N1 and N2
-        STA N1
-        STA N2
-LOOP1:   LDA N2    ; N2L = N2 & $0F
-        AND #$0F  ; [1] see text
-        STA N2L
-        LDA N2    ; N2H = N2 & $F0
-        AND #$F0  ; [2] see text
-        STA N2H
-        ORA #$0F  ; N2H+1 = (N2 & $F0) + $0F
-        STA N2H+1
-LOOP2   LDA N1    ; N1L = N1 & $0F
-        AND #$0F  ; [3] see text
-        STA N1L
-        LDA N1    ; N1H = N1 & $F0
-        AND #$F0  ; [4] see text
-        STA N1H
-        JSR ADD
-        JSR A6502
-        JSR COMPARE
-        BNE DONE
-        JSR SUB
-        JSR S6502
-        JSR COMPARE
-        BNE DONE
-        INC N1    ; [5] see text
-        BNE LOOP2 ; loop through all 256 values of N1
-        INC N2    ; [6] see text
-        BNE LOOP1 ; loop through all 256 values of N2
+; Assembler: AS 1.40r8
+;            john.ccac.rwth-aachen.de:8000/as/index.html
+;
+;===========================================================================
+
+.macpack cbm
+;===============================================================================
+
+.segment "CODE"
+
+	JMP start ; run the init code then flow into the update code
+
+ERROR   = $0400 ; 0='test passed', 1='test failed'
+N1      = $0401 ; first  number to be added/subtrected
+N2      = $0402 ; second number to be added/subtrected
+
+N1L     = $00F7 ; Bit 3..0 of first number
+N1H     = $00F8 ; Bit 7..4 of first number
+N2L     = $00F9 ; Bit 3..0 of second number
+N2H     = $00FA ; Bit 7..4 of second number
+N2HH    = N2H+1 ; Bit 7..4 of second number OR $0F
+
+AR      = $00FC ; predicted ACC  result in decimal mode
+DA      = $00FD ; actual    ACC  result in decimal mode
+HNVZC   = $00FE ; predicted flag result in decimal mode
+DNVZC   = $00FF ; actual    flag result in decimal mode
+
+;--------------------------------------------------------------------------
+start:
+TEST:    LDY     #1      ; initialize Y (used to loop through carry flag values)
+        STY     ERROR   ; store 1 in ERROR until the test passes
+
+        LDA     #0      ; initialize N1 and N2
+        STA     N1
+        STA     N2
+
+LOOP1:   LDA     N2      ; N2L = N2 & #$0F
+        TAX
+        AND     #$0F
+        STA     N2L
+
+        TXA             ; N2H = N2 & #$F0
+        AND     #$F0
+        STA     N2H
+        ORA     #$0F    ; N2HH = (N2 & #$F0) OR #$0F
+        STA     N2HH
+
+LOOP2:   LDA     N1
+        TAX
+        AND     #$0F
+        STA     N1L
+
+        TXA           
+        AND     #$F0
+        STA     N1H
+
+        JSR     ADD
+        BNE     DONE
+
+        JSR     SUB
+        BNE     DONE
+
+        INC     N1      
+        BNE     LOOP2   ; loop through all 256 values of N1
+
+        INC     N2
+        BNE     LOOP1   ; loop through all 256 values of N2
+
         DEY
-        BPL LOOP1 ; loop through both values of the carry flag
-        LDA #0    ; test passed, so store 0 in ERROR
-        STA ERROR
-DONE    RTS
+        BPL     LOOP1   ; loop through both values of the C_Flag
 
-; Calculate the actual decimal mode accumulator and flags, the accumulator
-; and flag results when N1 is added to N2 using binary arithmetic, the
-; predicted accumulator result, the predicted carry flag, and the predicted
-; V flag
+        LDA     #0      ; test passed, so store 0 in ERROR
+        STA     ERROR
+
+DONE:    RTS
+
+;--------------------------------------------------------------------------
 ;
-ADD     SED       ; decimal mode
-        CPY #1    ; set carry if Y = 1, clear carry if Y = 0
-        LDA N1
-        ADC N2
-        STA DA    ; actual accumulator result in decimal mode
-        PHP
-        PLA
-        STA DNVZC ; actual flags result in decimal mode
-        CLD       ; binary mode
-        CPY #1    ; set carry if Y = 1, clear carry if Y = 0
-        LDA N1
-        ADC N2
-        STA HA    ; accumulator result of N1+N2 using binary arithmetic
+; N1 + N2
+;
+;  calculate the actual decimal mode accumulator and flag results,
+;  calculate the actual binary  mode accumulator and flag results
+;
+;  calculate the predicted decimal mode accumulator and flag results
+;  by using binary arithmetic
+;
+ADD:     ; actual decimal
 
+        SED             ; decimal mode
+        CPY     #1      ; set carry if Y=1, clear carry if Y=0
+        LDA     N1
+        ADC     N2
+        STA     DA      ; actual accumulator result in decimal mode
         PHP
         PLA
-        STA HNVZC ; flags result of N1+N2 using binary arithmetic
-        CPY #1
-        LDA N1L
-        ADC N2L
-        CMP #$0A
-        LDX #0
-        BCC A1
+        STA     DNVZC   ; actual flag result in decimal mode
+        CLD             ; binary mode
+
+        ; predicted decimal
+
+        CPY     #1      ; set carry if Y=1, clear carry if Y=0
+        LDA     N1L
+        ADC     N2L
+        CMP     #$0A
+        AND     #$0F
+        PHA
+        LDX     #0
+        STX     HNVZC
+        BCC     A1
+
         INX
-        ADC #5    ; add 6 (carry is set)
-        AND #$0F
+        ADC     #5      ; add 6 (carry is set)
+        AND     #$0F
         SEC
-A1      ORA N1H
+
+A1:      ORA     N1H
 ;
-; if N1L + N2L <  $0A, then add N2 & $F0
-; if N1L + N2L >= $0A, then add (N2 & $F0) + $0F + 1 (carry is set)
+; if N1L + N2L <  $0A, then add  N2 AND $F0
+; if N1L + N2L >= $0A, then add (N2 AND $F0) + $0F +1 (carry is set)
 ;
-        ADC N2H,X
-        PHP
-        BCS A2
-        CMP #$A0
-        BCC A3
-A2      ADC #$5F  ; add $60 (carry is set)
+        ADC     N2H,X
+        BCS     A2
+        CMP     #$A0
+        BCC     A3
+
+A2:      ADC     #$5F    ; add #$60 (carry is set)
         SEC
-A3      STA AR    ; predicted accumulator result
+
+A3:      STA     AR      ; predicted decimal mode accumulator result
+        ROL     HNVZC   ; predicted decimal mode C_Flag
+
+        CPX     #1
+        PLA             ; evaluate NVZ
+        ORA     N1H
+        ADC     N2H,X
+
+        JMP     EV1     ; evaluate/compare
+
+;--------------------------------------------------------------------------
+;
+; N1 - N2
+;
+;  calculate the actual decimal mode accumulator and flag results,
+;  calculate the actual binary  mode accumulator and flag results
+;
+;
+;  calculate the predicted decimal mode accumulator and flag results
+;  by using binary arithmetic
+
+SUB:     ; actual decimal
+
+        SED             ; decimal mode
+        CPY     #1      ; set carry if Y=1, clear carry if Y=0
+        LDA     N1
+        SBC     N2
+        STA     DA      ; actual accumulator result in decimal mode
         PHP
         PLA
-        STA CF    ; predicted carry result
-        PLA
-;
-; note that all 8 bits of the P register are stored in VF
-;
-        STA VF    ; predicted V flags
-        RTS
+        STA     DNVZC   ; actual flag result in decimal mode
+        CLD             ; binary mode
 
-; Calculate the actual decimal mode accumulator and flags, and the
-; accumulator and flag results when N2 is subtracted from N1 using binary
-; arithmetic
-;
-SUB     SED       ; decimal mode
-        CPY #1    ; set carry if Y = 1, clear carry if Y = 0
-        LDA N1
-        SBC N2
-        STA DA    ; actual accumulator result in decimal mode
+        ; predicted decimal
+
+SUB1:    CPY     #1      ; set carry if Y=1, clear carry if Y=0
+        LDA     N1L
+        SBC     N2L
+        AND     #$0F
+        LDX     #0
+        STX     HNVZC
+        PHA
         PHP
-        PLA
-        STA DNVZC ; actual flags result in decimal mode
-        CLD       ; binary mode
-        CPY #1    ; set carry if Y = 1, clear carry if Y = 0
-        LDA N1
-        SBC N2
-        STA HA    ; accumulator result of N1-N2 using binary arithmetic
+        BCS     S11
 
-        PHP
-        PLA
-        STA HNVZC ; flags result of N1-N2 using binary arithmetic
-        RTS
-
-; Calculate the predicted SBC accumulator result for the 6502 and 65816
-
-;
-SUB1    CPY #1    ; set carry if Y = 1, clear carry if Y = 0
-        LDA N1L
-        SBC N2L
-        LDX #0
-        BCS S11
         INX
-        SBC #5    ; subtract 6 (carry is clear)
-        AND #$0F
+        SBC     #5      ; subtract 6 (carry is clear)
+        AND     #$0F
         CLC
-S11     ORA N1H
-;
-; if N1L - N2L >= 0, then subtract N2 & $F0
-; if N1L - N2L <  0, then subtract (N2 & $F0) + $0F + 1 (carry is clear)
-;
-        SBC N2H,X
-        BCS S12
-        SBC #$5F  ; subtract $60 (carry is clear)
-S12     STA AR
-        RTS
 
-; Calculate the predicted SBC accumulator result for the 6502 and 65C02
-
+S11:     ORA     N1H
 ;
-SUB2    CPY #1    ; set carry if Y = 1, clear carry if Y = 0
-        LDA N1L
-        SBC N2L
-        LDX #0
-        BCS S21
-        INX
-        AND #$0F
+; if N1L - N2L >= 0, then subtract  N2 AND $F0
+; if N1L - N2L <  0, then subtract (N2 AND $F0) + $0F + 1 (carry is clear)
+;
+        SBC     N2H,X
+        BCS     S12
+        SBC     #$5F    ; subtract #$60 (carry is clear)
         CLC
-S21     ORA N1H
-;
-; if N1L - N2L >= 0, then subtract N2 & $F0
-; if N1L - N2L <  0, then subtract (N2 & $F0) + $0F + 1 (carry is clear)
-;
-        SBC N2H,X
-        BCS S22
-        SBC #$5F   ; subtract $60 (carry is clear)
-S22     CPX #0
-        BEQ S23
-        SBC #6
-S23     STA AR     ; predicted accumulator result
-        RTS
 
-; Compare accumulator actual results to predicted results
-;
-; Return:
-;   Z flag = 1 (BEQ branch) if same
-;   Z flag = 0 (BNE branch) if different
-;
-COMPARE LDA DA
-        CMP AR
-        BNE C1
-        LDA DNVZC ; [7] see text
-        EOR NF
-        AND #$80  ; mask off N flag
-        BNE C1
-        LDA DNVZC ; [8] see text
-        EOR VF
-        AND #$40  ; mask off V flag
-        BNE C1    ; [9] see text
-        LDA DNVZC
-        EOR ZF    ; mask off Z flag
-        AND #2
-        BNE C1    ; [10] see text
-        LDA DNVZC
-        EOR CF
-        AND #1    ; mask off C flag
-C1      RTS
+S12:     STA     AR
+        ROL     HNVZC
 
-; These routines store the predicted values for ADC and SBC for the 6502,
-; 65C02, and 65816 in AR, CF, NF, VF, and ZF
-
-A6502   LDA VF
-;
-; since all 8 bits of the P register were stored in VF, bit 7 of VF contains
-; the N flag for NF
-;
-        STA NF
-        LDA HNVZC
-        STA ZF
-        RTS
-
-S6502   JSR SUB1
-        LDA HNVZC
-        STA NF
-        STA VF
-        STA ZF
-        STA CF
-        RTS
-
-A65C02  LDA AR
-        PHP
+        PLP             ; evaluate NVZ
         PLA
-        STA NF
-        STA ZF
-        RTS
+        ORA     N1H
+        SBC     N2H,X
 
-S65C02  JSR SUB2
-        LDA AR
-        PHP
+EV1:     PHP
         PLA
-        STA NF
-        STA ZF
-        LDA HNVZC
-        STA VF
-        STA CF
-        RTS
+        AND     #$C2
+        ORA     HNVZC
+        STA     HNVZC
 
-A65816  LDA AR
-        PHP
-        PLA
-        STA NF
-        STA ZF
-        RTS
+;..........................................................................
+;compare actual results to predicted results
+;
+; Return: Z_Flag = 1 (BEQ branch) if same
+;         Z_Flag = 0 (BNE branch) if different
 
-S65816  JSR SUB1
-        LDA AR
-        PHP
-        PLA
-        STA NF
-        STA ZF
-        LDA HNVZC
-        STA VF
-        STA CF
-        RTS
+COMPARE:
+
+      ; LDA     HNVZC
+        EOR     DNVZC
+        AND     #$C3
+        BNE     C1
+
+        LDA     AR      ; accumulator
+        CMP     DA
+
+C1:      RTS
+
+;--------------------------------------------------------------------------
+

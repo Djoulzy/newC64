@@ -5,6 +5,7 @@ import (
 )
 
 func toBCD(i byte) byte {
+	log.Printf("Input: %02X", i)
 	var bcd []byte
 	for i > 0 {
 		low := i % 10
@@ -14,6 +15,10 @@ func toBCD(i byte) byte {
 		var x []byte
 		x = append(x, byte((hi&0xf)<<4)|byte(low&0xf))
 		bcd = append(x, bcd[:]...)
+	}
+	log.Printf("Result: %v", bcd)
+	if len(bcd) == 0 {
+		return 0
 	}
 	return bcd[0]
 }
