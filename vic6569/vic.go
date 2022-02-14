@@ -38,6 +38,11 @@ const (
 	// lastHBlankCol   = 50
 	// visibleFirstCol = 92
 	// visibleLastCol  = 412
+
+	BankStart0 = 0xC000
+	BankStart1 = 0x8000
+	BankStart2 = 0x4000
+	BankStart3 = 0x0000
 )
 
 func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video interface{}, conf *confload.ConfigData) {
@@ -48,18 +53,18 @@ func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video i
 	V.color = io.GetView(colorStart, 1024)
 
 	V.bankMem[3].Init(2, 0x4000)
-	V.bankMem[3].Attach("RAM", 0, 0, 0, ram.Val[0x0000:0x4000])
+	V.bankMem[3].Attach("RAM", 0, 0, 0, ram.Val[BankStart3:BankStart3+0x4000])
 	V.bankMem[3].Attach("Char ROM", 1, 1, 0x1000, chargen.Val)
 
 	V.bankMem[2].Init(1, 0x4000)
-	V.bankMem[2].Attach("RAM", 0, 0, 0, ram.Val[0x4000:0x8000])
+	V.bankMem[2].Attach("RAM", 0, 0, 0, ram.Val[BankStart2:BankStart2+0x4000])
 
 	V.bankMem[1].Init(2, 0x4000)
-	V.bankMem[1].Attach("RAM", 0, 0, 0, ram.Val[0x8000:0xC000])
+	V.bankMem[1].Attach("RAM", 0, 0, 0, ram.Val[BankStart1:BankStart1+0x4000])
 	V.bankMem[1].Attach("Char ROM", 1, 1, 0x1000, chargen.Val)
 
 	V.bankMem[0].Init(1, 0x4000)
-	V.bankMem[0].Attach("RAM", 0, 0, 0, ram.Val[0xC000:])
+	V.bankMem[0].Attach("RAM", 0, 0, 0, ram.Val[BankStart0:BankStart0+0x4000])
 
 	V.BA = true
 	V.VCBASE = 0
@@ -411,14 +416,22 @@ func (V *VIC) Dump(addr uint16) {
 }
 
 func (V *VIC) Stats() {
+	banks := [4]uint16{BankStart0, BankStart1, BankStart2, BankStart3}
+
 	fmt.Printf("VIC:\n")
-	fmt.Printf("Bank: %d - VideoBase: %04X - CharBase: %04X\n", V.BankSel, V.ScreenBase, V.CharBase)
+	fmt.Printf("Bank: %d - VideoBase: %04X (%04X) - CharBase: %04X (%04X)\n", V.BankSel, V.ScreenBase, banks[V.BankSel]+V.ScreenBase, V.CharBase, banks[V.BankSel]+V.CharBase)
 	fmt.Printf("RstX: %04X - RstY: %04X - RC: %02d - VC: %03X - VCBase: %03X - VMLI: %02d\n", V.BeamX, V.BeamY, V.RC, V.VC, V.VCBASE, V.VMLI)
 	fmt.Printf("IRQ Line: ")
-	if V.Reg[REG_IRQ]&0b1000000 > 0 {
-		fmt.Printf("On ")
+	if V.Reg[REG_IRQ]&0b10000000 > 0 {
+		fmt.Printf("On")
 	} else {
-		fmt.Printf("Off ")
+		fmt.Printf("Off")
 	}
-	fmt.Printf("Raster IRQ: %04X\n", V.RasterIRQ)
+	fmt.Printf(" - IRQ Enabled: ")
+	if V.Reg[REG_IRQ_ENABLED]&0b00001111 > 0 {
+		fmt.Printf("Yes")
+	} else {
+		fmt.Printf("None")
+	}
+	fmt.Printf(" - Raster IRQ: %04X\n", V.RasterIRQ)
 }

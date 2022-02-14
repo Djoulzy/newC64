@@ -5,6 +5,8 @@ import "log"
 func (C *CPU) alr() {
 	var val byte
 
+	log.Fatal("Illegal: ALR")
+
 	switch C.Inst.addr {
 	case immediate:
 		C.A &= byte(C.oper)
@@ -19,6 +21,9 @@ func (C *CPU) alr() {
 }
 
 func (C *CPU) sbx() {
+
+	log.Fatal("Illegal: SBX")
+
 	switch C.Inst.addr {
 	case immediate:
 		C.X = (C.A & C.X) - byte(C.oper)
@@ -31,6 +36,10 @@ func (C *CPU) sbx() {
 }
 
 func (C *CPU) anc() {
+
+	log.Fatal("Illegal: ANC")
+
+
 	switch C.Inst.addr {
 	case immediate:
 		C.A &= byte(C.oper)
@@ -46,6 +55,8 @@ func (C *CPU) isc() {
 	var val int
 	var oper byte
 	var crossed bool
+
+	log.Fatal("Illegal: ISC")
 
 	switch C.Inst.addr {
 	case immediate:
@@ -149,6 +160,8 @@ func (C *CPU) isc() {
 func (C *CPU) dcp() {
 	var val int
 	var crossed bool
+
+	log.Fatal("Illegal: DCP")
 
 	switch C.Inst.addr {
 	case immediate:
