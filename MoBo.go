@@ -160,11 +160,10 @@ func timeTrack(start time.Time, name string) {
 
 func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
+	cpuTurn = vic.Run(!run)
 	if cpu.State == mos6510.ReadInstruction && !run {
 		execInst.Lock()
 	}
-
-	cpuTurn = vic.Run(!run)
 	if cpuTurn {
 		cpu.NextCycle()
 		if cpu.State == mos6510.ReadInstruction {
@@ -176,10 +175,6 @@ func RunEmulation() {
 	}
 	cia1.Run()
 	cia2.Run()
-
-	// for i := 0; i < 1000; i++ {
-	// 	// pause
-	// }
 
 	if cpu.State == mos6510.ReadInstruction && !run {
 		Disassamble()

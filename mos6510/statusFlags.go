@@ -83,6 +83,7 @@ func (C *CPU) setB(val bool) {
 	} else {
 		C.S &= B_mask
 	}
+	// log.Printf("Break flag: %04X - %s", C.InstStart, C.registers())
 }
 
 //////////////////////////////////
@@ -91,9 +92,9 @@ func (C *CPU) setB(val bool) {
 
 func (C *CPU) setU(val bool) {
 	if val {
-		C.S |= ^B_mask
+		C.S |= ^U_mask
 	} else {
-		C.S &= B_mask
+		C.S &= U_mask
 	}
 }
 

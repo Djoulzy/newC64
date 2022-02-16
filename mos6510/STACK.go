@@ -17,9 +17,10 @@ func (C *CPU) pha() {
 func (C *CPU) php() {
 	switch C.Inst.addr {
 	case implied:
-		C.setB(true)
-		C.setU(true)
-		C.pushByteStack(C.S)
+		tmp := C.S
+		tmp |= ^B_mask
+		tmp |= ^U_mask
+		C.pushByteStack(tmp)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
