@@ -177,8 +177,10 @@ func RunEmulation() {
 	cia1.Run()
 	cia2.Run()
 
-	if cpu.State == mos6510.ReadInstruction && !run {
-		Disassamble()
+	if cpu.State == mos6510.ReadInstruction {
+		if !run || conf.Disassamble {
+			Disassamble()
+		}
 	}
 }
 

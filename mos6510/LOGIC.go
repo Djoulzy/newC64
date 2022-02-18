@@ -71,21 +71,25 @@ func (C *CPU) asl() {
 		C.A = val
 	case zeropage:
 		oper = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, oper)
 		val = oper << 1
 		C.ram.Write(C.oper, val)
 	case zeropageX:
 		dest = C.oper + uint16(C.X)
 		oper = C.ram.Read(dest)
+		C.ram.Write(dest, oper)
 		val = oper << 1
 		C.ram.Write(dest, val)
 	case absolute:
 		oper = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, oper)
 		val = oper << 1
 		C.ram.Write(C.oper, val)
 	case absoluteX:
 		C.cross_oper = C.oper + uint16(C.X)
 		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
 			oper = C.ram.Read(C.cross_oper)
+			C.ram.Write(C.cross_oper, oper)
 			val = oper << 1
 			C.ram.Write(C.cross_oper, val)
 		} else {
@@ -96,6 +100,7 @@ func (C *CPU) asl() {
 		}
 	case CrossPage:
 		oper = C.ram.Read(C.cross_oper)
+		C.ram.Write(C.cross_oper, oper)
 		val = oper << 1
 		C.ram.Write(C.cross_oper, val)
 	default:
@@ -163,6 +168,8 @@ func (C *CPU) eor() {
 
 func (C *CPU) lsr() {
 	var val byte
+	var oper byte
+	var dest uint16
 
 	switch C.Inst.addr {
 	case implied:
@@ -171,26 +178,41 @@ func (C *CPU) lsr() {
 		C.A = val
 	case zeropage:
 		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
 		C.ram.Write(C.oper, val)
 	case zeropageX:
-		dest := C.oper + uint16(C.X)
+		dest = C.oper + uint16(C.X)
 		val = C.ram.Read(dest)
+		C.ram.Write(dest, val)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
 		C.ram.Write(dest, val)
 	case absolute:
 		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
 		C.setC(val&0x01 == 0x01)
 		val >>= 1
 		C.ram.Write(C.oper, val)
 	case absoluteX:
-		dest := C.oper + uint16(C.X)
-		val = C.ram.Read(dest)
-		C.setC(val&0x01 == 0x01)
-		val >>= 1
-		C.ram.Write(dest, val)
+		C.cross_oper = C.oper + uint16(C.X)
+		if C.oper&0xFF00 == C.cross_oper&0xFF00 {
+			oper = C.ram.Read(C.cross_oper)
+			C.ram.Write(C.cross_oper, oper)
+			val = oper >> 1
+			C.ram.Write(C.cross_oper, val)
+		} else {
+			C.Inst.addr = CrossPage
+			C.State = Compute
+			C.Inst.Cycles++
+			return
+		}
+	case CrossPage:
+		oper = C.ram.Read(C.cross_oper)
+		C.ram.Write(C.cross_oper, oper)
+		val = oper >> 1
+		C.ram.Write(C.cross_oper, val)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -230,6 +252,7 @@ func (C *CPU) rla() {
 
 func (C *CPU) rol() {
 	var val uint16
+	var dest uint16
 
 	switch C.Inst.addr {
 	case implied:
@@ -239,27 +262,35 @@ func (C *CPU) rol() {
 		}
 		C.A = byte(val)
 	case zeropage:
-		val = uint16(C.ram.Read(C.oper)) << 1
+		val = uint16(C.ram.Read(C.oper))
+		C.ram.Write(C.oper, byte(val))
+		val <<= 1
 		if C.issetC() {
 			val++
 		}
 		C.ram.Write(C.oper, byte(val))
 	case zeropageX:
-		dest := C.oper + uint16(C.X)
-		val = uint16(C.ram.Read(dest)) << 1
+		dest = C.oper + uint16(C.X)
+		val = uint16(C.ram.Read(dest))
+		C.ram.Write(dest, byte(val))
+		val <<= 1
 		if C.issetC() {
 			val++
 		}
 		C.ram.Write(dest, byte(val))
 	case absolute:
-		val = uint16(C.ram.Read(C.oper)) << 1
+		val = uint16(C.ram.Read(C.oper))
+		C.ram.Write(C.oper, byte(val))
+		val <<= 1
 		if C.issetC() {
 			val++
 		}
 		C.ram.Write(C.oper, byte(val))
 	case absoluteX:
-		dest := C.oper + uint16(C.X)
-		val = uint16(C.ram.Read(dest)) << 1
+		dest = C.oper + uint16(C.X)
+		val = uint16(C.ram.Read(dest))
+		C.ram.Write(dest, byte(val))
+		val <<= 1
 		if C.issetC() {
 			val++
 		}
@@ -287,6 +318,7 @@ func (C *CPU) ror() {
 		val = C.A
 	case zeropage:
 		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
 		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
@@ -297,6 +329,7 @@ func (C *CPU) ror() {
 	case zeropageX:
 		dest := C.oper + uint16(C.X)
 		val = C.ram.Read(dest)
+		C.ram.Write(dest, val)
 		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
@@ -306,6 +339,7 @@ func (C *CPU) ror() {
 		C.ram.Write(dest, val)
 	case absolute:
 		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
 		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {
@@ -316,6 +350,7 @@ func (C *CPU) ror() {
 	case absoluteX:
 		dest := C.oper + uint16(C.X)
 		val = C.ram.Read(dest)
+		C.ram.Write(dest, val)
 		carry := val&0b00000001 > 0
 		val >>= 1
 		if C.issetC() {

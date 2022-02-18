@@ -9,17 +9,26 @@ func (C *CPU) dec() {
 
 	switch C.Inst.addr {
 	case zeropage:
-		val = C.ram.Read(C.oper) - 1
+		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
+		val--
 		C.ram.Write(C.oper, val)
 	case zeropageX:
-		val = C.ram.Read(C.oper+uint16(C.X)) - 1
-		C.ram.Write(C.oper+uint16(C.X), val)
+		oper := C.oper + uint16(C.X)
+		val = C.ram.Read(oper)
+		C.ram.Write(oper, val)
+		val--
+		C.ram.Write(oper, val)
 	case absolute:
-		val = C.ram.Read(C.oper) - 1
+		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
+		val--
 		C.ram.Write(C.oper, val)
 	case absoluteX:
-		val = C.ram.Read(C.oper+uint16(C.X)) - 1
-		C.ram.Write(C.oper+uint16(C.X), val)
+		oper := C.oper + uint16(C.X)
+		C.ram.Write(oper, val)
+		val--
+		C.ram.Write(oper, val)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
@@ -57,17 +66,26 @@ func (C *CPU) inc() {
 
 	switch C.Inst.addr {
 	case zeropage:
-		val = C.ram.Read(C.oper) + 1
+		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
+		val++
 		C.ram.Write(C.oper, val)
 	case zeropageX:
-		val = C.ram.Read(C.oper+uint16(C.X)) + 1
-		C.ram.Write(C.oper+uint16(C.X), val)
+		oper := C.oper + uint16(C.X)
+		val = C.ram.Read(oper)
+		C.ram.Write(oper, val)
+		val++
+		C.ram.Write(oper, val)
 	case absolute:
-		val = C.ram.Read(C.oper) + 1
+		val = C.ram.Read(C.oper)
+		C.ram.Write(C.oper, val)
+		val++
 		C.ram.Write(C.oper, val)
 	case absoluteX:
-		val = C.ram.Read(C.oper+uint16(C.X)) + 1
-		C.ram.Write(C.oper+uint16(C.X), val)
+		oper := C.oper + uint16(C.X)
+		C.ram.Write(oper, val)
+		val++
+		C.ram.Write(oper, val)
 	default:
 		log.Fatal("Bad addressing mode")
 	}
