@@ -45,7 +45,6 @@ var (
 	chargen memory.MEM
 	io      memory.MEM
 	vic     vic6569.VIC
-	cycles  int32
 
 	outputDriver graphic.Driver
 	cpuTurn      bool
@@ -112,6 +111,8 @@ func input() {
 		case 'z':
 			Disassamble()
 			pla.Dump(0)
+		case 'x':
+			DumpMem(&pla, "memDump.bin")
 		case 'r':
 			conf.Disassamble = false
 			run = true

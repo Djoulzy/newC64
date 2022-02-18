@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.bin
 .DS_Store
 
 # Test binary, built with `go test -c`
@@ -13,6 +14,8 @@
 *.out
 newC64
 newC64.prof
+vic
 
+!cmd/newC64
 # Dependency directories (remove the comment below to include it)
 vendor/

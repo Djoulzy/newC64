@@ -398,9 +398,7 @@ func (V *VIC) Run(debug bool) bool {
 		if V.BeamY >= screenHeightPAL {
 			V.BeamY = 0
 			V.VCBASE = 0
-			if V.conf.Globals.Display {
-				V.graph.UpdateFrame()
-			}
+			V.graph.UpdateFrame()
 		}
 	}
 	if debug {
