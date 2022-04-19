@@ -15,14 +15,76 @@ const (
 	ioSize     = 4096
 )
 
-var proc CPU
-var pla pla906114.PLA
-var conf confload.ConfigData
-var mem, io, kernal memory.MEM
-var SystemClock uint16
+type TestData struct {
+	proc    *CPU
+	inst    byte
+	mem     byte
+	memVal  byte
+	memDest byte
+	acc     byte
+	x       byte
+	y       byte
+	pc      uint16
+	oper    byte
+	flag    byte
+	res     uint16
+	resFlag byte
+}
 
-func runInstruction(code byte) {
-	proc.Inst = mnemonic[code]
+type TestSuite struct {
+	proc *CPU
+	inst byte
+	data []TestData
+}
+
+func getAddrName(a addressing) string {
+	switch a {
+	case implied:
+		return "implied"
+	case immediate:
+		return "immediate"
+	case relative:
+		return "relative"
+	case zeropage:
+		return "zeropage"
+	case zeropageX:
+		return "zeropageX"
+	case zeropageY:
+		return "zeropageY"
+	case absolute:
+		return "absolute"
+	case absoluteX:
+		return "absoluteX"
+	case absoluteY:
+		return "absoluteY"
+	case indirect:
+		return "indirect"
+	case indirectX:
+		return "indirectX"
+	case indirectY:
+		return "indirectY"
+	case Branching:
+		return "Branching"
+	case CrossPage:
+		return "CrossPage"
+	}
+	return "Unknown"
+}
+
+func (TS *TestSuite) Add(td TestData) {
+	td.proc = TS.proc
+	td.inst = TS.inst
+	TS.data = append(TS.data, td)
+}
+
+func (TD *TestData) run() {
+	proc.Inst = mnemonic[TD.inst]
+	proc.PC = TD.pc + uint16(proc.Inst.bytes)
+	proc.S = TD.flag
+	proc.A = TD.acc
+	proc.X = TD.x
+	proc.Y = TD.y
+	proc.oper = uint16(TD.oper)
 	for {
 		cycle := proc.Inst.Cycles
 		proc.Inst.action()
@@ -31,6 +93,44 @@ func runInstruction(code byte) {
 		}
 	}
 }
+
+func (TD *TestData) checkBit(t *testing.T, val1, val2 byte, name string) bool {
+	if val1 != val2 {
+		t.Errorf("%s %s - Incorrect %s - get: %08b - want: %08b", mnemonic[TD.inst].name, getAddrName(mnemonic[TD.inst].addr), name, val1, val2)
+		return false
+	}
+	return true
+}
+
+func (TD *TestData) checkByte(t *testing.T, val1, val2 byte, name string) bool {
+	if val1 != val2 {
+		t.Errorf("%s %s - Incorrect %s - get: %02X - want: %02X", mnemonic[TD.inst].name, getAddrName(mnemonic[TD.inst].addr), name, val1, val2)
+		return false
+	}
+	return true
+}
+
+func (TD *TestData) checkWord(t *testing.T, val1, val2 uint16, name string) bool {
+	if val1 != val2 {
+		t.Errorf("%s %s - Incorrect %s - get: %04X - want: %04X", mnemonic[TD.inst].name, getAddrName(mnemonic[TD.inst].addr), name, val1, val2)
+		return false
+	}
+	return true
+}
+
+func finalize(name string, allGood bool) {
+	if allGood {
+		log.Printf("%s OK", name)
+	} else {
+		log.Printf("%s %c[1;31mECHEC%c[0m", name, 27, 27)
+	}
+}
+
+var proc CPU
+var pla pla906114.PLA
+var conf confload.ConfigData
+var mem, io, kernal memory.MEM
+var SystemClock uint16
 
 func TestMain(m *testing.M) {
 	conf.Disassamble = false
@@ -71,143 +171,43 @@ func TestStack(t *testing.T) {
 			allGood = false
 		}
 	}
-	if allGood {
-		log.Printf("Stack OK")
-	} else {
-		log.Printf("Stack %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize("Stack", allGood)
 }
 
 func TestLDA(t *testing.T) {
 	var allGood bool = true
 	mem.Clear(false)
-	tables := []struct {
-		oper byte
-		res  byte
-		flag byte
-	}{
-		{0x6E, 0x6E, 0b00000000},
-		{0xFF, 0xFF, 0b10000000},
-		{0x00, 0x00, 0b00000010},
-		{0x81, 0x81, 0b10000000},
-	}
 
-	for _, table := range tables {
-		proc.S = 0b00000000
-		proc.oper = uint16(table.oper)
-		runInstruction(0xA9)
-		if proc.S != table.flag {
-			t.Errorf("LDA #$%02X - Incorrect status - get: %08b - want: %08b", proc.oper, proc.S, table.flag)
-			allGood = false
-		}
-		if proc.A != table.res {
-			t.Errorf("LDA #$%02X - Incorrect assignement - get: %02X - want: %02X", proc.oper, proc.A, table.res)
-			allGood = false
-		}
+	ts := TestSuite{proc: &proc, inst: 0xA9}
+	ts.Add(TestData{oper: 0x6E, res: 0x6E, flag: 0b00100000, resFlag: 0b00100000})
+	ts.Add(TestData{oper: 0xFF, res: 0xFF, flag: 0b00100000, resFlag: 0b10100000})
+	ts.Add(TestData{oper: 0x00, res: 0x00, flag: 0b00100000, resFlag: 0b00100010})
+	ts.Add(TestData{oper: 0x81, res: 0x81, flag: 0b00100000, resFlag: 0b10100000})
+
+	for _, table := range ts.data {
+		table.run()
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Status Flag")
+		allGood = allGood && table.checkByte(t, proc.A, byte(table.res), "Assignement")
 	}
-	if allGood {
-		log.Printf("LDA OK")
-	} else {
-		log.Printf("LDA %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestBNE(t *testing.T) {
 	var allGood bool = true
 	mem.Clear(false)
-	tables := []struct {
-		s    byte
-		pc   uint16
-		oper byte
-		res  uint16
-	}{
-		{0b00000000, 0xBC16, 0xF9, 0xBC11},
-		{0b00000010, 0xBC16, 0xF9, 0xBC18},
-	}
+	ts := TestSuite{proc: &proc, inst: 0xD0}
 
-	for _, table := range tables {
-		proc.PC = table.pc + uint16(proc.Inst.bytes)
-		proc.S = table.s
-		proc.oper = uint16(table.oper)
-		runInstruction(0xD0)
-		if proc.PC != table.res {
-			t.Errorf("%04X:BNE #$%02X with %08b - Incorrect status - get: %04X - want: %04X", table.pc, proc.oper, table.s, proc.PC, table.res)
-			allGood = false
-		}
+	ts.Add(TestData{flag: 0b00000000, pc: 0xBC16, oper: 0xF9, res: 0xBC11})
+	ts.Add(TestData{flag: 0b00000010, pc: 0xBC16, oper: 0xF9, res: 0xBC18})
+
+	for _, table := range ts.data {
+		table.run()
+		allGood = allGood && table.checkWord(t, proc.PC, table.res, "Address")
 	}
-	if allGood {
-		log.Printf("BNE OK")
-	} else {
-		log.Printf("BNE %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestADC(t *testing.T) {
-	var allGood bool = true
-	mem.Clear(false)
-	tables := []struct {
-		acc     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x01, 0x04, 0x10, 0b00110000, 0x07, 0b00110000},
-		{0x01, 0x04, 0x10, 0b00110001, 0x08, 0b00110000},
-		{0xFE, 0x04, 0x10, 0b00110000, 0x04, 0b00110001},
-		{0xFE, 0x04, 0x10, 0b00110001, 0x05, 0b00110001},
-	}
-	proc.ram.Write(0x0014, 0x06)
-	for _, table := range tables {
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0x75) // ZeropageX
-		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result - get: %02X - want: %02X", table.acc, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / ADC $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
-	}
-
-	mem.Clear(false)
-	tables = []struct {
-		acc     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x20, 0x04, 0x10, 0b00110000, 0x2E, 0b00110000},
-		{0x01, 0x04, 0x10, 0b00110001, 0x10, 0b00110000},
-		{0xA0, 0x04, 0x10, 0b00110000, 0xAE, 0b10110000},
-		{0xFE, 0x04, 0x10, 0b00110001, 0x0D, 0b00110001},
-	}
-	proc.ram.Write(0x0014, 0x06)
-	proc.ram.Write(0x0015, 0x02)
-	proc.ram.Write(0x0206, 0x0E)
-	for _, table := range tables {
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0x61) // IndirectX
-		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC ($%02X,X) - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / ADC ($%02X,X) - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
-	}
-
 	// LDA #$06
 	// STA $0014
 	// LDA #$02
@@ -220,141 +220,47 @@ func TestADC(t *testing.T) {
 	// LDA #$20
 	// CLC
 	// ADC ($14),Y
+	var allGood bool = true
 	mem.Clear(false)
-	tables = []struct {
-		acc     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x20, 0x04, 0x14, 0b00110000, 0x2E, 0b00110000},
-		{0x01, 0x04, 0x14, 0b00110001, 0x10, 0b00110000},
-		{0xA0, 0x04, 0x14, 0b00110000, 0xAE, 0b10110000},
-		{0xFE, 0x04, 0x14, 0b00110001, 0x0D, 0b00110001},
-	}
+
+	ts := TestSuite{proc: &proc, inst: 0x75}
+	ts.Add(TestData{acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x07, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x08, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0xFE, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x04, resFlag: 0b00110001})
+	ts.Add(TestData{acc: 0xFE, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x05, resFlag: 0b00110001})
+
+	ts.inst = 0x69 // immediate
+	ts.Add(TestData{acc: 0x78, x: 0x04, oper: 0x80, flag: 0b00110000, res: 0xF8, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0x80, x: 0x04, oper: 0x12, flag: 0b00111000, res: 0x92, resFlag: 0b10111000})
+	ts.Add(TestData{acc: 0x58, x: 0x04, oper: 0x46, flag: 0b00111001, res: 0x05, resFlag: 0b01111001})
+	ts.Add(TestData{acc: 0x99, x: 0x04, oper: 0x01, flag: 0b00111000, res: 0x00, resFlag: 0b00111011})
+
+
+	ts.inst = 0x61
+	ts.Add(TestData{acc: 0x20, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x2E, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x10, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0xA0, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0xAE, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0xFE, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x0D, resFlag: 0b00110001})
+
+	ts.inst = 0x71
+	ts.Add(TestData{acc: 0x20, x: 0x04, oper: 0x14, flag: 0b00110000, res: 0x2E, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0x01, x: 0x04, oper: 0x14, flag: 0b00110001, res: 0x10, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0xA0, x: 0x04, oper: 0x14, flag: 0b00110000, res: 0xAE, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0xFE, x: 0x04, oper: 0x14, flag: 0b00110001, res: 0x0D, resFlag: 0b00110001})
+
 	proc.ram.Write(0x0014, 0x06)
 	proc.ram.Write(0x0015, 0x02)
+	proc.ram.Write(0x0206, 0x0E)
 	proc.ram.Write(0x020A, 0x0E)
-	for _, table := range tables {
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.Y = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0x71) // IndirectY
-		if proc.A != table.res {
-			t.Errorf("A: %02X / ADC ($%02X),Y - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / ADC ($%02X),Y - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	for _, table := range ts.data {
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.A, byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("ADC OK")
-	} else {
-		log.Printf("ADC %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestSBC(t *testing.T) {
-	var allGood bool = true
-	mem.Clear(false)
-	tableIm := []struct {
-		acc     byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x03, 0x08, 0b00110000, 0xFA, 0b10110000},
-		{0x03, 0x08, 0b00110001, 0xFB, 0b10110000},
-	}
-	for _, table := range tableIm {
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.oper = uint16(table.oper)
-		runInstruction(0xE9) // immediate
-		if proc.A != table.res {
-			t.Errorf("A: %02X / SBC #$%02X - Incorrect result - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / SBC #$%02X - Incorrect result Flags - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
-	}
-
-	mem.Clear(false)
-	tables := []struct {
-		mem     byte
-		memVal  byte
-		acc     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x06, 0x0E, 0x01, 0x04, 0x10, 0b00110000, 0xFA, 0b10110000},
-		{0x06, 0x0E, 0x20, 0x04, 0x10, 0b00110000, 0x19, 0b00110001},
-	}
-
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.mem)
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0xF5) // ZeropageX
-		if proc.A != table.res {
-			t.Errorf("A: %02X / SBC $%02X,X - Incorrect result - get: %04X - want: %04X", proc.A, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / SBC $%02X,X - Incorrect result Flags - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
-	}
-
-	mem.Clear(false)
-	tables = []struct {
-		mem     byte
-		memVal  byte
-		acc     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x06, 0x0E, 0x20, 0x04, 0x10, 0b00110000, 0x11, 0b00110001},
-		{0x06, 0x0E, 0x01, 0x04, 0x10, 0b00110001, 0xF3, 0b10110000},
-		{0x06, 0x0E, 0xA0, 0x04, 0x10, 0b00110000, 0x91, 0b10110001},
-		{0x06, 0x0E, 0xFE, 0x04, 0x10, 0b00110001, 0xF0, 0b10110001},
-	}
-
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.mem)
-		proc.ram.Write(0x0015, 0x02)
-		proc.ram.Write(0x0206, table.memVal)
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0xE1) // IndirectX
-		if proc.A != table.res {
-			t.Errorf("A: %02X / SBC ($%02X,X) - Incorrect RESULT - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / SBC ($%02X,X) - Incorrect FLAGS - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
-	}
-
 	// LDA #$06
 	// STA $0014
 	// LDA #$02
@@ -367,349 +273,170 @@ func TestSBC(t *testing.T) {
 	// LDA #$fe
 	// SEC
 	// SBC ($14),Y
+	var allGood bool = true
 	mem.Clear(false)
-	tables = []struct {
-		mem     byte
-		memVal  byte
-		acc     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x06, 0x0E, 0x20, 0x04, 0x14, 0b00110000, 0x11, 0b00110001},
-		{0x06, 0x0E, 0x01, 0x04, 0x14, 0b00110001, 0xF3, 0b10110000},
-		{0x06, 0x0E, 0xA0, 0x04, 0x14, 0b00110000, 0x91, 0b10110001},
-		{0x06, 0x0E, 0xFE, 0x04, 0x14, 0b00110001, 0xF0, 0b10110001},
-		{0x06, 0x08, 0x03, 0x04, 0x14, 0b00110001, 0xFB, 0b10110000},
-		{0x06, 0x08, 0x03, 0x04, 0x14, 0b00110000, 0xFA, 0b10110000},
-		{0x06, 0x0E, 0xFE, 0x04, 0x14, 0b00110011, 0xF0, 0b10110001},
-	}
-	for _, table := range tables {
+	ts := TestSuite{proc: &proc, inst: 0xE9} // Immediate
+	ts.Add(TestData{acc: 0x03, oper: 0x08, flag: 0b00110000, res: 0xFA, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0x03, oper: 0x08, flag: 0b00110001, res: 0xFB, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0x58, oper: 0x46, flag: 0b00111000, res: 0x11, resFlag: 0b00111001})
+
+
+	ts.inst = 0xF5
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0xFA, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x20, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x19, resFlag: 0b00110001})
+
+	ts.inst = 0xE1
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x20, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x11, resFlag: 0b00110001})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0xF3, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0xA0, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x91, resFlag: 0b10110001})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0xFE, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0xF0, resFlag: 0b10110001})
+
+	ts.inst = 0xF1
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x20, y: 0x04, oper: 0x14, flag: 0b00110000, res: 0x11, resFlag: 0b00110001})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x01, y: 0x04, oper: 0x14, flag: 0b00110001, res: 0xF3, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0xA0, y: 0x04, oper: 0x14, flag: 0b00110000, res: 0x91, resFlag: 0b10110001})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0xFE, y: 0x04, oper: 0x14, flag: 0b00110001, res: 0xF0, resFlag: 0b10110001})
+	ts.Add(TestData{mem: 0x06, memVal: 0x08, acc: 0x03, y: 0x04, oper: 0x14, flag: 0b00110001, res: 0xFB, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x06, memVal: 0x08, acc: 0x03, y: 0x04, oper: 0x14, flag: 0b00110000, res: 0xFA, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0xFE, y: 0x04, oper: 0x14, flag: 0b00110011, res: 0xF0, resFlag: 0b10110001})
+
+	for _, table := range ts.data {
 		proc.ram.Write(0x0014, table.mem)
 		proc.ram.Write(0x0015, 0x02)
+		proc.ram.Write(0x0206, table.memVal)
 		proc.ram.Write(0x020A, table.memVal)
-		proc.S = table.flag
-		proc.A = table.acc
-		proc.Y = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0xF1) // IndirectY
-		if proc.A != table.res {
-			t.Errorf("A: %02X / SBC ($%02X),Y - Incorrect RESULT - get: %04X - want: %04X", table.acc, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("A: %02X / SBC ($%02X),Y - Incorrect FLAGS - get: %08b - want: %08b", table.acc, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.A, byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("SBC OK")
-	} else {
-		log.Printf("SBC %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestCMP(t *testing.T) {
 	var allGood bool = true
 	mem.Clear(false)
-	tables := []struct {
-		acc  byte
-		oper byte
-		flag byte
-	}{
-		{0x50, 0x20, 0b00110001},
-		{0xF0, 0x20, 0b10110001},
-		{0x00, 0x20, 0b10110000},
-		{0x20, 0x20, 0b00110011},
-		{0x01, 0x20, 0b10110000},
-		{0x00, 0x00, 0b00110011},
-		{0xFF, 0xFF, 0b00110011},
-	}
 
-	for _, table := range tables {
-		proc.S = 0b00110000
-		proc.A = table.acc
-		proc.oper = uint16(table.oper)
-		runInstruction(0xC9)
-		if proc.S != table.flag {
-			t.Errorf("LDA #$%02X;CMP #$%02X - Incorrect status - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.flag)
-			allGood = false
-		}
-	}
+	ts := TestSuite{proc: &proc, inst: 0xC9}
+	ts.Add(TestData{acc: 0x50, oper: 0x20, flag: 0b00110000, resFlag: 0b00110001})
+	ts.Add(TestData{acc: 0xF0, oper: 0x20, flag: 0b00110000, resFlag: 0b10110001})
+	ts.Add(TestData{acc: 0x00, oper: 0x20, flag: 0b00110000, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0x20, oper: 0x20, flag: 0b00110000, resFlag: 0b00110011})
+	ts.Add(TestData{acc: 0x01, oper: 0x20, flag: 0b00110000, resFlag: 0b10110000})
+	ts.Add(TestData{acc: 0x00, oper: 0x00, flag: 0b00110000, resFlag: 0b00110011})
+	ts.Add(TestData{acc: 0xFF, oper: 0xFF, flag: 0b00110000, resFlag: 0b00110011})
 
-	mem.Clear(false)
-	tables = []struct {
-		acc  byte
-		oper byte
-		flag byte
-	}{
-		{0x50, 0xC1, 0b00110000},
-		{0xF0, 0xC1, 0b00110001},
-		{0x00, 0xC1, 0b00110000},
-		{0x20, 0xC1, 0b00110000},
-		{0xEE, 0xC1, 0b00110011},
-		{0xFF, 0xC1, 0b00110001},
-	}
+	ts.inst = 0xD1
+	ts.Add(TestData{acc: 0x50, y: 0x08, oper: 0xC1, flag: 0b00110000, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0xF0, y: 0x08, oper: 0xC1, flag: 0b00110000, resFlag: 0b00110001})
+	ts.Add(TestData{acc: 0x00, y: 0x08, oper: 0xC1, flag: 0b00110000, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0x20, y: 0x08, oper: 0xC1, flag: 0b00110000, resFlag: 0b00110000})
+	ts.Add(TestData{acc: 0xEE, y: 0x08, oper: 0xC1, flag: 0b00110000, resFlag: 0b00110011})
+	ts.Add(TestData{acc: 0xFF, y: 0x08, oper: 0xC1, flag: 0b00110000, resFlag: 0b00110001})
 
-	proc.ram.Write(0x0408, 0xEE)
-	proc.ram.Write(0xC1, 0x00)
-	proc.ram.Write(0xC2, 0x04)
-	for _, table := range tables {
-		proc.S = 0b00110000
-		proc.Y = 0x08
-		proc.A = table.acc
-		proc.oper = uint16(table.oper)
-		runInstruction(0xD1)
-		if proc.S != table.flag {
-			t.Errorf("LDA #$%02X;CMP ($%02X),Y - Incorrect status - get: %08b - want: %08b", proc.A, proc.oper, proc.S, table.flag)
-			allGood = false
-		}
+	for _, table := range ts.data {
+		proc.ram.Write(0x0408, 0xEE)
+		proc.ram.Write(0xC1, 0x00)
+		proc.ram.Write(0xC2, 0x04)
+		table.run()
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("CMP OK")
-	} else {
-		log.Printf("CMP %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestROR(t *testing.T) {
 	var allGood bool = true
 	mem.Clear(false)
-	tables := []struct {
-		val     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x06, 0x04, 0x10, 0b00110000, 0x03, 0b00110000},
-		{0x06, 0x04, 0x10, 0b00110001, 0x83, 0b10110000},
-	}
+	ts := TestSuite{proc: &proc, inst: 0x76}
 
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.val)
-		proc.S = table.flag
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0x76) // ZeropageX
-		res := proc.ram.Read(0x0014)
-		if res != table.res {
-			t.Errorf("Val: $%02X / ROR $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("Val: $%02X / ROR $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x03, resFlag: 0b00110000})
+	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x83, resFlag: 0b10110000})
+
+	for _, table := range ts.data {
+		proc.ram.Write(0x0014, table.mem)
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.ram.Read(0x0014), byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("ROR OK")
-	} else {
-		log.Printf("ROR %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestROL(t *testing.T) {
 	var allGood bool = true
 	mem.Clear(false)
-	tables := []struct {
-		val     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x06, 0x04, 0x10, 0b00110000, 0x0C, 0b00110000},
-		{0x06, 0x04, 0x10, 0b00110001, 0x0D, 0b00110000},
-		{0x80, 0x04, 0x10, 0b00110001, 0x01, 0b00110001},
-		{0xF0, 0x04, 0x10, 0b00110001, 0xE1, 0b10110001},
-		{0xF0, 0x04, 0x10, 0b00110000, 0xE0, 0b10110001},
-	}
+	ts := TestSuite{proc: &proc, inst: 0x36}
+	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x0C, resFlag: 0b00110000})
+	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x0D, resFlag: 0b00110000})
+	ts.Add(TestData{mem: 0x80, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x01, resFlag: 0b00110001})
+	ts.Add(TestData{mem: 0xF0, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0xE1, resFlag: 0b10110001})
+	ts.Add(TestData{mem: 0xF0, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0xE0, resFlag: 0b10110001})
 
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.val)
-		proc.S = table.flag
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0x36) // ZeropageX
-		res := proc.ram.Read(0x0014)
-		if res != table.res {
-			t.Errorf("Val: $%02X / ROL $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("Val: $%02X / ROL $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	for _, table := range ts.data {
+		proc.ram.Write(0x0014, table.mem)
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.ram.Read(0x0014), byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("ROL OK")
-	} else {
-		log.Printf("ROL %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestLSR(t *testing.T) {
 	var allGood bool = true
 	mem.Clear(false)
-	tables := []struct {
-		val     byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x80, 0x04, 0x10, 0b00110000, 0x40, 0b00110000},
-		{0x0F, 0x04, 0x10, 0b00110000, 0x07, 0b00110001},
-		{0x0F, 0x04, 0x10, 0b00110001, 0x07, 0b00110001},
-		{0x80, 0x04, 0x10, 0b00110001, 0x40, 0b00110000},
-		{0xFF, 0x04, 0x10, 0b00110001, 0x7F, 0b00110001},
-	}
+	ts := TestSuite{proc: &proc, inst: 0x56}
+	ts.Add(TestData{mem: 0x80, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x40, resFlag: 0b00110000})
+	ts.Add(TestData{mem: 0x0F, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x07, resFlag: 0b00110001})
+	ts.Add(TestData{mem: 0x0F, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x07, resFlag: 0b00110001})
+	ts.Add(TestData{mem: 0x80, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x40, resFlag: 0b00110000})
+	ts.Add(TestData{mem: 0xFF, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x7F, resFlag: 0b00110001})
 
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.val)
-		proc.S = table.flag
-		proc.X = table.x
-		proc.oper = uint16(table.oper)
-		runInstruction(0x56) // ZeropageX
-		res := proc.ram.Read(0x0014)
-		if res != table.res {
-			t.Errorf("Val: $%02X / LSR $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("Val: $%02X / LSR $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	for _, table := range ts.data {
+		proc.ram.Write(0x0014, table.mem)
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.ram.Read(0x0014), byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("LSR OK")
-	} else {
-		log.Printf("LSR %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestASL(t *testing.T) {
 	var allGood bool = true
-	var res byte
-
 	mem.Clear(false)
-	tables := []struct {
-		val     byte
-		x       byte
-		oper    uint16
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0xF1, 0x04, 0x0019, 0b00100101, 0xE2, 0b10100101},
-	}
-	for _, table := range tables {
-		proc.ram.Write(table.oper, table.val)
-		proc.S = table.flag
-		proc.oper = table.oper
-		runInstruction(0x0E) // Absolute
-		res = proc.ram.Read(table.oper)
-		if res != table.res {
-			t.Errorf("Val: $%02X / ASL $%04X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("Val: $%02X / ASL $%04X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
-	}
+	ts := TestSuite{proc: &proc, inst: 0x0E}
+	ts.Add(TestData{mem: 0xF1, x: 0x04, memDest: 0x19, oper: 0x0019, flag: 0b00100101, res: 0xE2, resFlag: 0b10100101})
 
-	mem.Clear(false)
-	tables = []struct {
-		val     byte
-		x       byte
-		oper    uint16
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x80, 0x04, 0x10, 0b00110000, 0x00, 0b00110011},
-		{0x7F, 0x04, 0x10, 0b00110000, 0xFE, 0b10110000},
-		{0x7F, 0x04, 0x10, 0b00110001, 0xFE, 0b10110000},
-		{0x80, 0x04, 0x10, 0b00110001, 0x00, 0b00110011},
-		{0xFF, 0x04, 0x10, 0b00110001, 0xFE, 0b10110001},
-	}
+	ts.inst = 0x16
+	ts.Add(TestData{mem: 0x80, x: 0x04, memDest: 0x14, oper: 0x10, flag: 0b00110000, res: 0x00, resFlag: 0b00110011})
+	ts.Add(TestData{mem: 0x7F, x: 0x04, memDest: 0x14, oper: 0x10, flag: 0b00110000, res: 0xFE, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x7F, x: 0x04, memDest: 0x14, oper: 0x10, flag: 0b00110001, res: 0xFE, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x80, x: 0x04, memDest: 0x14, oper: 0x10, flag: 0b00110001, res: 0x00, resFlag: 0b00110011})
+	ts.Add(TestData{mem: 0xFF, x: 0x04, memDest: 0x14, oper: 0x10, flag: 0b00110001, res: 0xFE, resFlag: 0b10110001})
 
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.val)
-		proc.S = table.flag
-		proc.X = table.x
-		proc.oper = table.oper
-		runInstruction(0x16) // ZeropageX
-		res = proc.ram.Read(0x0014)
-		if res != table.res {
-			t.Errorf("Val: $%02X / ASL $%02X,X - Incorrect result - get: %02X - want: %02X", table.val, proc.oper, res, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("Val: $%02X / ASL $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.val, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	for _, table := range ts.data {
+		proc.ram.Write(uint16(table.memDest), table.mem)
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.ram.Read(uint16(table.memDest)), byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("ASL OK")
-	} else {
-		log.Printf("ASL %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestEOR(t *testing.T) {
 	var allGood bool = true
-	// LDA #$80
-	// STA $14
-	// LDX #$04
-	// CLC
-	// LDA #$11
-	// EOR $10,X
 	mem.Clear(false)
-	tables := []struct {
-		val     byte
-		a       byte
-		x       byte
-		oper    byte
-		flag    byte
-		res     byte
-		resFlag byte
-	}{
-		{0x80, 0x11, 0x04, 0x10, 0b00110000, 0x91, 0b10110000},
-		{0x80, 0x80, 0x04, 0x10, 0b00110000, 0x00, 0b00110010},
-		{0x80, 0x0F, 0x04, 0x10, 0b00110001, 0x8F, 0b10110001},
-		{0x80, 0xFF, 0x04, 0x10, 0b00110001, 0x7F, 0b00110001},
-		{0x80, 0x00, 0x04, 0x10, 0b00110001, 0x80, 0b10110001},
-	}
+	ts := TestSuite{proc: &proc, inst: 0x55}
+	ts.Add(TestData{mem: 0x80, acc: 0x11, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x91, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x80, acc: 0x80, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x00, resFlag: 0b00110010})
+	ts.Add(TestData{mem: 0x80, acc: 0x0F, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x8F, resFlag: 0b10110001})
+	ts.Add(TestData{mem: 0x80, acc: 0xFF, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x7F, resFlag: 0b00110001})
+	ts.Add(TestData{mem: 0x80, acc: 0x00, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x80, resFlag: 0b10110001})
 
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.val)
-		proc.S = table.flag
-		proc.X = table.x
-		proc.A = table.a
-		proc.oper = uint16(table.oper)
-		runInstruction(0x55) // ZeropageX
-		if proc.A != table.res {
-			t.Errorf("LDA #$%02X / EOR $%02X,X - Incorrect result - get: %02X - want: %02X", table.a, proc.oper, proc.A, table.res)
-			allGood = false
-		}
-		if proc.S != table.resFlag {
-			t.Errorf("LDA #$%02X / EOR $%02X,X - Incorrect result Flags - get: %08b - want: %08b", table.a, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	for _, table := range ts.data {
+		proc.ram.Write(0x0014, table.mem)
+		table.run()
+		allGood = allGood && table.checkByte(t, proc.A, byte(table.res), "Result")
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("EOR OK")
-	} else {
-		log.Printf("EOR %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }
 
 func TestBIT(t *testing.T) {
@@ -720,33 +447,18 @@ func TestBIT(t *testing.T) {
 	// LDA #$11
 	// BIT $14
 	mem.Clear(false)
-	tables := []struct {
-		val     byte
-		a       byte
-		flag    byte
-		resFlag byte
-	}{
-		{0x80, 0x11, 0b00110000, 0b10110010},
-		{0x80, 0x80, 0b00110000, 0b10110000},
-		{0x80, 0x0F, 0b00110001, 0b10110011},
-		{0x80, 0xFF, 0b00110001, 0b10110001},
-		{0x80, 0x00, 0b00110011, 0b10110011},
-	}
+	ts := TestSuite{proc: &proc, inst: 0x24}
 
-	for _, table := range tables {
-		proc.ram.Write(0x0014, table.val)
-		proc.S = table.flag
-		proc.A = table.a
-		proc.oper = 0x14
-		runInstruction(0x24) // Zeropage
-		if proc.S != table.resFlag {
-			t.Errorf("LDA #$%02X / LDA #$%02X -> BIT $%02X - Incorrect result Flags - get: %08b - want: %08b", table.val, table.a, proc.oper, proc.S, table.resFlag)
-			allGood = false
-		}
+	ts.Add(TestData{mem: 0x80, acc: 0x11, oper: 0x14, flag: 0b00110000, resFlag: 0b10110010})
+	ts.Add(TestData{mem: 0x80, acc: 0x80, oper: 0x14, flag: 0b00110000, resFlag: 0b10110000})
+	ts.Add(TestData{mem: 0x80, acc: 0x0F, oper: 0x14, flag: 0b00110001, resFlag: 0b10110011})
+	ts.Add(TestData{mem: 0x80, acc: 0xFF, oper: 0x14, flag: 0b00110001, resFlag: 0b10110001})
+	ts.Add(TestData{mem: 0x80, acc: 0x00, oper: 0x14, flag: 0b00110011, resFlag: 0b10110011})
+
+	for _, table := range ts.data {
+		proc.ram.Write(0x0014, table.mem)
+		table.run()
+		allGood = allGood && table.checkBit(t, proc.S, table.resFlag, "Flags")
 	}
-	if allGood {
-		log.Printf("BIT OK")
-	} else {
-		log.Printf("BIT %c[1;31mECHEC%c[0m", 27, 27)
-	}
+	finalize(mnemonic[ts.inst].name, allGood)
 }

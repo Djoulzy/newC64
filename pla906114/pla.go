@@ -113,11 +113,9 @@ func (P *PLA) Read(addr uint16) byte {
 
 func (P *PLA) Write(addr uint16, value byte) {
 	var transAddr uint16
-	// if addr == 0x0065 {
-	// 	P.count++
-	// 	if P.count > 1 {
-	// 		P.conf.Disassamble = true
-	// 	}
+	// if addr >= 0xE000 {
+	// 	log.Printf("Write to %04X", addr)
+	// 	os.Exit(1)
 	// }
 	if P.getChip(addr) == IO {
 		transAddr = addr - uint16(P.startLocation[IO])
@@ -128,10 +126,12 @@ func (P *PLA) Write(addr uint16, value byte) {
 		if transAddr < 0x0800 {
 			// log.Fatal("SID Not implemented")
 			P.Mem[IO].Val[transAddr] = value
+			// P.Mem[RAM].Val[addr] = value
 			return
 		}
 		if transAddr < 0x0C00 {
 			P.Mem[IO].Val[transAddr] = value
+			// P.Mem[RAM].Val[addr] = value
 			return
 		}
 		if transAddr < 0x0D00 {
@@ -144,13 +144,10 @@ func (P *PLA) Write(addr uint16, value byte) {
 		} else {
 			// log.Fatal("I/O Not implemented")
 			P.Mem[IO].Val[transAddr] = value
+			// P.Mem[RAM].Val[addr] = value
 			return
 		}
 	}
-	// if addr == 0x028D {
-	// 	log.Printf("shift: %d\r", value)
-	// 	value = 1
-	// }
 	P.Mem[RAM].Val[addr] = value
 }
 
@@ -170,7 +167,8 @@ func (P *PLA) Dump(startAddr uint16) {
 		line = ""
 		ascii = ""
 		for i := 0; i < 16; i++ {
-			val = P.Read(cpt)
+			// val = P.Read(cpt)
+			val = P.Mem[RAM].Val[cpt]
 			if val != 0x00 && val != 0xFF {
 				line = line + clog.CSprintf("white", "black", "%02X", val) + " "
 			} else {

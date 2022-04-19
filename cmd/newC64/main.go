@@ -45,7 +45,6 @@ var (
 	chargen memory.MEM
 	io      memory.MEM
 	vic     vic6569.VIC
-	cycles  int32
 
 	outputDriver graphic.Driver
 	cpuTurn      bool
@@ -112,6 +111,8 @@ func input() {
 		case 'z':
 			Disassamble()
 			pla.Dump(0)
+		case 'x':
+			DumpMem(&pla, "memDump.bin")
 		case 'r':
 			conf.Disassamble = false
 			run = true
@@ -160,11 +161,10 @@ func timeTrack(start time.Time, name string) {
 
 func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
+	cpuTurn = vic.Run(!run)
 	if cpu.State == mos6510.ReadInstruction && !run {
 		execInst.Lock()
 	}
-
-	cpuTurn = vic.Run(!run)
 	if cpuTurn {
 		cpu.NextCycle()
 		if cpu.State == mos6510.ReadInstruction {
@@ -177,12 +177,10 @@ func RunEmulation() {
 	cia1.Run()
 	cia2.Run()
 
-	// for i := 0; i < 1000; i++ {
-	// 	// pause
-	// }
-
-	if cpu.State == mos6510.ReadInstruction && !run {
-		Disassamble()
+	if cpu.State == mos6510.ReadInstruction {
+		if !run || conf.Disassamble {
+			Disassamble()
+		}
 	}
 }
 
