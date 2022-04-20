@@ -7,3 +7,6 @@ main:
 
 vic: cmd/vicTest/main.go
 	go build -o vic cmd/vicTest/*
+
+mem: cmd/mem/main.go mem/config.go
+	go build -o TestMem cmd/mem/*

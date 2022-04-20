@@ -346,7 +346,7 @@ func (C *CPU) NextCycle() {
 		C.PC += 3
 		switch C.Inst.addr {
 		case absolute:
-			// C.ram.Write(C.oper, C.ram.Read(C.oper))
+			// C.ram.Write(C.oper, C.ram.Read(C.oper)) // Pour Bruce Lee mais pourquoi ?
 			C.State = Compute
 			if C.Inst.Cycles == 3 {
 				C.ComputeInstruction()
