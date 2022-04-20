@@ -1,6 +1,9 @@
 package main
 
-import "newC64/mem"
+import (
+	"fmt"
+	"newC64/mem"
+)
 
 const (
 	ramSize     = 65536
@@ -25,4 +28,6 @@ func main() {
 	Mem.Attach("CHARGEN", 3, 13, 0, CHARGEN)
 	Mem.Attach("IO", 4, 13, 0, IO)
 	Mem.Show()
+
+	fmt.Printf("Read: %04X\n", Mem.Read(0xF000))
 }

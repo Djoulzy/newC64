@@ -9,11 +9,17 @@ import (
 
 const PAGE_DIVIDER = 12
 
+type MEMAccess interface {
+	MRead([]byte, uint16) byte
+	MWrite([]byte, uint16, byte)
+}
+
 type CONFIG struct {
 	Pages      []int
 	Layers     [][]byte
 	LayersName []string
 	Start      []uint16
+	Accessor   []MEMAccess
 }
 
 func Init(nbLayers int, size int) CONFIG {
@@ -23,6 +29,7 @@ func Init(nbLayers int, size int) CONFIG {
 	C.Start = make([]uint16, nbLayers)
 	nbPages := int(size >> PAGE_DIVIDER)
 	C.Pages = make([]int, nbPages)
+	C.Accessor = make([]MEMAccess, nbLayers)
 	return C
 }
 
@@ -51,25 +58,39 @@ func (C *CONFIG) Attach(name string, layerNum int, pageNum int, start uint16, co
 	for i := 0; i < nbPages; i++ {
 		C.Pages[pageNum+i] = layerNum
 	}
+	C.Accessor[layerNum] = C
+}
+
+func (C *CONFIG) Accessors(layerNum int, access MEMAccess) {
+	C.Accessor[layerNum] = access
 }
 
 func (C *CONFIG) Read(addr uint16) byte {
 	layerNum := C.Pages[int(addr>>PAGE_DIVIDER)]
-	return C.Layers[layerNum][addr-C.Start[layerNum]]
+	// return C.Layers[layerNum][addr-C.Start[layerNum]]
+	return C.Accessor[layerNum].MRead(C.Layers[layerNum], addr-C.Start[layerNum])
+}
+
+func (C *CONFIG) MRead(mem []byte, addr uint16) byte {
+	return mem[addr]
+}
+
+func (C *CONFIG) MWrite(meme []byte, addr uint16, val byte) {
+
 }
 
 func (C *CONFIG) Show() {
-	clog.CPrintf("dark_gray", "black", "%10s: ", " ")
+	clog.CPrintf("dark_gray", "black", "\n%10s: ", "Pages")
 	for p := range C.Pages {
 		clog.CPrintf("dark_gray", "black", " %02d  ", p)
 	}
-	clog.CPrintf("dark_gray", "black", "\n%10s: ", " ")
+	clog.CPrintf("dark_gray", "black", "\n%10s: ", "Start Addr")
 	for p := range C.Pages {
 		clog.CPrintf("light_gray", "black", "%04X ", p<<PAGE_DIVIDER)
 	}
 	fmt.Printf("\n")
 	for l := range C.Layers {
-		clog.CPrintf("dark_gray", "black", "%10s: ", C.LayersName[l])
+		clog.CPrintf("light_gray", "black", "%10s: ", C.LayersName[l])
 		for _, page := range C.Pages {
 			if page == l {
 				clog.CPrintf("black", "white", "     ")
@@ -79,6 +100,7 @@ func (C *CONFIG) Show() {
 		}
 		fmt.Printf("\n")
 	}
+	fmt.Printf("\n")
 }
 
 func (C *CONFIG) Dump(startAddr uint16) {
