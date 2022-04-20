@@ -3,8 +3,7 @@ package mos6510
 import (
 	"log"
 	"newC64/confload"
-	"newC64/memory"
-	"newC64/pla906114"
+	"newC64/mem"
 	"os"
 	"testing"
 )
@@ -127,31 +126,36 @@ func finalize(name string, allGood bool) {
 }
 
 var proc CPU
-var pla pla906114.PLA
+var BankSel byte
+var MEM mem.BANK
 var conf confload.ConfigData
-var mem, io, kernal memory.MEM
+var RAM, IO, KERNAL []byte
 var SystemClock uint16
 
 func TestMain(m *testing.M) {
 	conf.Disassamble = false
 	SystemClock = 0
 
-	mem.Init(ramSize, "")
-	io.Init(ioSize, "")
-	kernal.Init(kernalSize, "../assets/roms/kernal.bin")
+	RAM = make([]byte, ramSize)
+	IO = make([]byte, ioSize)
+	KERNAL = mem.LoadROM(kernalSize, "assets/roms/kernal.bin")
 
-	pla.Init(&mem.Val[1], &conf)
-	pla.Attach(&mem, pla906114.RAM, 0)
-	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
-	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
+	BankSel = 0
+	MEM = mem.InitBanks(1, &BankSel)
 
-	proc.Init(&pla, &SystemClock, &conf)
+	MEM.Layouts[0] = mem.InitConfig(5, ramSize)
+	MEM.Layouts[0].Attach("RAM", 0, 0, RAM, mem.READWRITE)
+	MEM.Layouts[0].Attach("IO", 1, 13, IO, mem.READWRITE)
+	MEM.Layouts[0].Attach("KERNAL", 2, 14, KERNAL, mem.READONLY)
+	MEM.Layouts[0].Show()
+
+	proc.Init(MEM, &SystemClock, &conf)
 	os.Exit(m.Run())
 }
 
 func TestStack(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	for i := 0; i <= 0xFF; i++ {
 		proc.pushByteStack(byte(i))
 	}
@@ -176,7 +180,7 @@ func TestStack(t *testing.T) {
 
 func TestLDA(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 
 	ts := TestSuite{proc: &proc, inst: 0xA9}
 	ts.Add(TestData{oper: 0x6E, res: 0x6E, flag: 0b00100000, resFlag: 0b00100000})
@@ -194,7 +198,7 @@ func TestLDA(t *testing.T) {
 
 func TestBNE(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0xD0}
 
 	ts.Add(TestData{flag: 0b00000000, pc: 0xBC16, oper: 0xF9, res: 0xBC11})
@@ -221,7 +225,7 @@ func TestADC(t *testing.T) {
 	// CLC
 	// ADC ($14),Y
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 
 	ts := TestSuite{proc: &proc, inst: 0x75}
 	ts.Add(TestData{acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x07, resFlag: 0b00110000})
@@ -234,7 +238,6 @@ func TestADC(t *testing.T) {
 	ts.Add(TestData{acc: 0x80, x: 0x04, oper: 0x12, flag: 0b00111000, res: 0x92, resFlag: 0b10111000})
 	ts.Add(TestData{acc: 0x58, x: 0x04, oper: 0x46, flag: 0b00111001, res: 0x05, resFlag: 0b01111001})
 	ts.Add(TestData{acc: 0x99, x: 0x04, oper: 0x01, flag: 0b00111000, res: 0x00, resFlag: 0b00111011})
-
 
 	ts.inst = 0x61
 	ts.Add(TestData{acc: 0x20, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x2E, resFlag: 0b00110000})
@@ -274,12 +277,11 @@ func TestSBC(t *testing.T) {
 	// SEC
 	// SBC ($14),Y
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0xE9} // Immediate
 	ts.Add(TestData{acc: 0x03, oper: 0x08, flag: 0b00110000, res: 0xFA, resFlag: 0b10110000})
 	ts.Add(TestData{acc: 0x03, oper: 0x08, flag: 0b00110001, res: 0xFB, resFlag: 0b10110000})
 	ts.Add(TestData{acc: 0x58, oper: 0x46, flag: 0b00111000, res: 0x11, resFlag: 0b00111001})
-
 
 	ts.inst = 0xF5
 	ts.Add(TestData{mem: 0x06, memVal: 0x0E, acc: 0x01, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0xFA, resFlag: 0b10110000})
@@ -314,7 +316,7 @@ func TestSBC(t *testing.T) {
 
 func TestCMP(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 
 	ts := TestSuite{proc: &proc, inst: 0xC9}
 	ts.Add(TestData{acc: 0x50, oper: 0x20, flag: 0b00110000, resFlag: 0b00110001})
@@ -345,7 +347,7 @@ func TestCMP(t *testing.T) {
 
 func TestROR(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0x76}
 
 	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x03, resFlag: 0b00110000})
@@ -362,7 +364,7 @@ func TestROR(t *testing.T) {
 
 func TestROL(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0x36}
 	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x0C, resFlag: 0b00110000})
 	ts.Add(TestData{mem: 0x06, x: 0x04, oper: 0x10, flag: 0b00110001, res: 0x0D, resFlag: 0b00110000})
@@ -381,7 +383,7 @@ func TestROL(t *testing.T) {
 
 func TestLSR(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0x56}
 	ts.Add(TestData{mem: 0x80, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x40, resFlag: 0b00110000})
 	ts.Add(TestData{mem: 0x0F, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x07, resFlag: 0b00110001})
@@ -400,7 +402,7 @@ func TestLSR(t *testing.T) {
 
 func TestASL(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0x0E}
 	ts.Add(TestData{mem: 0xF1, x: 0x04, memDest: 0x19, oper: 0x0019, flag: 0b00100101, res: 0xE2, resFlag: 0b10100101})
 
@@ -422,7 +424,7 @@ func TestASL(t *testing.T) {
 
 func TestEOR(t *testing.T) {
 	var allGood bool = true
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0x55}
 	ts.Add(TestData{mem: 0x80, acc: 0x11, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x91, resFlag: 0b10110000})
 	ts.Add(TestData{mem: 0x80, acc: 0x80, x: 0x04, oper: 0x10, flag: 0b00110000, res: 0x00, resFlag: 0b00110010})
@@ -446,7 +448,7 @@ func TestBIT(t *testing.T) {
 	// CLC
 	// LDA #$11
 	// BIT $14
-	mem.Clear(false)
+	mem.Clear(RAM)
 	ts := TestSuite{proc: &proc, inst: 0x24}
 
 	ts.Add(TestData{mem: 0x80, acc: 0x11, oper: 0x14, flag: 0b00110000, resFlag: 0b10110010})

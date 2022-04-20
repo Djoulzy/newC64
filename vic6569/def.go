@@ -3,7 +3,7 @@ package vic6569
 import (
 	"newC64/confload"
 	"newC64/graphic"
-	"newC64/memory"
+	"newC64/mem"
 )
 
 var (
@@ -71,11 +71,11 @@ type VIC struct {
 	RasterIRQ uint16
 	graph     graphic.Driver
 
-	color      *memory.MEM
-	BankSel    int
+	color      []byte
+	BankSel    byte
 	ScreenBase uint16
 	CharBase   uint16
-	bankMem    [4]VicMem
+	bankMem    mem.BANK
 
 	ECM  bool
 	BMM  bool
@@ -145,7 +145,7 @@ const (
 	// BMM     byte = 0b00100000 // rom REG_CTRL1 : 0 = Text mode; 1 = Bitmap mode.
 	// ECM     byte = 0b01000000 // rom REG_CTRL1 : 1 = Extended background mode on.
 	// MCM     byte = 0b00010000 // rom REG_CTRL2
-	RST8    byte = 0b10000000 // rom REG_CTRL1 : Read: Current raster line (bit #8). Write: Raster line to generate interrupt at (bit #8).
+	RST8 byte = 0b10000000 // rom REG_CTRL1 : Read: Current raster line (bit #8). Write: Raster line to generate interrupt at (bit #8).
 
 	IRQ_RST byte = 0b00000001 // Raster line interrupt
 	IRQ_MBC byte = 0b00000010 // Sprite collision with background

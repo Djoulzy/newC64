@@ -7,9 +7,8 @@ import (
 	"newC64/clog"
 	"newC64/confload"
 	"newC64/graphic"
-	"newC64/memory"
+	"newC64/mem"
 	"newC64/mos6510"
-	"newC64/pla906114"
 	"newC64/vic6569"
 	"os"
 	"strconv"
@@ -25,6 +24,9 @@ const (
 	basicSize   = 8192
 	ioSize      = 4096
 	chargenSize = 4096
+	cartSize    = 8192
+
+	nbMemLayout = 32
 
 	Stopped = 0
 	Paused  = 1
@@ -35,16 +37,19 @@ var (
 	conf = &confload.ConfigData{}
 
 	cpu  mos6510.CPU
-	pla  pla906114.PLA
 	cia1 cia6526.CIA
 	cia2 cia6526.CIA
 
-	mem     memory.MEM
-	kernal  memory.MEM
-	basic   memory.MEM
-	chargen memory.MEM
-	io      memory.MEM
-	vic     vic6569.VIC
+	RAM     []byte
+	IO      []byte
+	KERNAL  []byte
+	BASIC   []byte
+	CHARGEN []byte
+	CART_LO []byte
+	CART_HI []byte
+	MEM     mem.BANK
+
+	vic vic6569.VIC
 
 	outputDriver graphic.Driver
 	cpuTurn      bool
@@ -60,33 +65,28 @@ var (
 
 func setup() {
 	// ROMs & RAM Setup
-	mem.Init(ramSize, "")
-	mem.Clear(true)
-	io.Init(ioSize, "")
-	io.Clear(false)
-	kernal.Init(kernalSize, "assets/roms/kernal.bin")
-	basic.Init(basicSize, "assets/roms/basic.bin")
-	chargen.Init(chargenSize, "assets/roms/char.bin")
+	RAM = make([]byte, ramSize)
+	IO = make([]byte, ioSize)
+	CART_LO = make([]byte, cartSize)
+	CART_HI = make([]byte, cartSize)
+	KERNAL = mem.LoadROM(kernalSize, "assets/roms/kernal.bin")
+	BASIC = mem.LoadROM(basicSize, "assets/roms/basic.bin")
+	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/char.bin")
 
-	// PLA Setup
-	pla.Init(&mem.Val[1], conf)
-	pla.Attach(&mem, pla906114.RAM, 0)
-	pla.Attach(&io, pla906114.IO, pla906114.IOStart)
-	pla.Attach(&kernal, pla906114.KERNAL, pla906114.KernalStart)
-	pla.Attach(&basic, pla906114.BASIC, pla906114.BasicStart)
-	pla.Attach(&chargen, pla906114.CHAR, pla906114.CharStart)
+	MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
+
+	// MEM Setup
+	memLayouts()
 
 	outputDriver = &graphic.SDLDriver{}
-	vic.Init(&mem, &io, &chargen, outputDriver, conf)
+	vic.Init(RAM, IO, CHARGEN, outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(&pla, &vic.SystemClock, conf)
+	cpu.Init(MEM, &vic.SystemClock, conf)
 
-	cia1.Init("CIA1", io.GetView(0x0C00, 0x0200), &vic.SystemClock)
+	cia1.Init("CIA1", IO[0x0C00:0x0C00+0x0200], &vic.SystemClock)
 	outputDriver.SetKeyboardLine(&cia1.InputLine)
-	cia2.Init("CIA2", io.GetView(0x0D00, 0x0200), &vic.SystemClock)
-
-	pla.Connect(&vic, &cia1, &cia2)
+	cia2.Init("CIA2", IO[0x0D00:0x0D00+0x0200], &vic.SystemClock)
 
 	vic.IRQ_Pin = &cpu.IRQ_pin
 	cia1.Signal_Pin = &cpu.IRQ_pin
@@ -107,19 +107,19 @@ func input() {
 			vic.Stats()
 		case 's':
 			Disassamble()
-			pla.DumpStack(cpu.SP)
+			// pla.DumpStack(cpu.SP)
 		case 'z':
 			Disassamble()
-			pla.Dump(0)
+			// pla.Dump(0)
 		case 'x':
-			DumpMem(&pla, "memDump.bin")
+			// DumpMem(&pla, "memDump.bin")
 		case 'r':
 			conf.Disassamble = false
 			run = true
 			execInst.Unlock()
 		case 'l':
 			// LoadPRG(&pla, "./prg/GARDEN.prg")
-			LoadPRG(&pla, conf.LoadPRG)
+			// LoadPRG(&pla, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
 		case ' ':
@@ -138,7 +138,7 @@ func input() {
 			fmt.Printf("%c", r)
 			if len(dumpAddr) == 4 {
 				hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
-				pla.Dump(uint16(hx))
+				// pla.Dump(uint16(hx))
 				if hx < 0x4000 {
 					vic.Dump(uint16(hx))
 				}

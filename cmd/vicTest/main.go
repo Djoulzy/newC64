@@ -52,7 +52,7 @@ func start() {
 	LoadData(&mem, "assets/roms/bruce2.bin", 0xE000)
 
 	outputDriver = &graphic.SDLDriver{}
-	vic.Init(&mem, &io, &chargen, outputDriver, &conf)
+	vic.Init(mem.Val, io.Val, chargen.Val, outputDriver, &conf)
 	vic.BankSel = 0
 	vic.Write(vic6569.REG_MEM_LOC, 0x78)
 	vic.Write(vic6569.REG_CTRL1, 0x3B)

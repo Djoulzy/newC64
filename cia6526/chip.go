@@ -3,7 +3,6 @@ package cia6526
 import (
 	"fmt"
 	"newC64/graphic"
-	"newC64/memory"
 )
 
 type CIA struct {
@@ -25,7 +24,7 @@ type CIA struct {
 	interrupt_mask byte
 
 	cycleDelay    int
-	VICBankSelect *int
+	VICBankSelect *byte
 }
 
 const (
@@ -56,7 +55,7 @@ const (
 	INT_SET             = 0b10000000
 )
 
-func (C *CIA) Init(name string, memCells *memory.MEM, timer *uint16) {
+func (C *CIA) Init(name string, memCells []byte, timer *uint16) {
 	C.name = name
 	C.systemCycle = timer
 

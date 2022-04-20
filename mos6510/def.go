@@ -2,7 +2,7 @@ package mos6510
 
 import (
 	"newC64/confload"
-	"newC64/pla906114"
+	"newC64/mem"
 )
 
 //
@@ -95,7 +95,7 @@ type CPU struct {
 	NMI_pin int
 
 	conf      *confload.ConfigData
-	ram       *pla906114.PLA
+	ram       mem.BANK
 	stack     []byte
 	InstStart uint16
 	instDump  string

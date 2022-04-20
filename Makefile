@@ -5,7 +5,7 @@ all:
 main:
 	go build -o newC64 cmd/newC64/*
 
-vic: cmd/vicTest/main.go
+vic: cmd/vicTest/main.go vic6569/vic.go
 	go build -o vic cmd/vicTest/*
 
 mem: cmd/mem/main.go mem/config.go

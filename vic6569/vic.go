@@ -5,7 +5,7 @@ import (
 	"log"
 	"newC64/confload"
 	"newC64/graphic"
-	"newC64/memory"
+	"newC64/mem"
 )
 
 const (
@@ -45,26 +45,28 @@ const (
 	BankStart3 = 0x0000
 )
 
-func (V *VIC) Init(ram *memory.MEM, io *memory.MEM, chargen *memory.MEM, video interface{}, conf *confload.ConfigData) {
+func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video interface{}, conf *confload.ConfigData) {
 	V.graph = video.(graphic.Driver)
 	V.graph.Init(winWidth, winHeight)
 	V.conf = conf
 
-	V.color = io.GetView(colorStart, 1024)
+	V.color = io[colorStart : colorStart+1024]
 
-	V.bankMem[3].Init(2, 0x4000)
-	V.bankMem[3].Attach("RAM", 0, 0, 0, ram.Val[BankStart3:BankStart3+0x4000])
-	V.bankMem[3].Attach("Char ROM", 1, 1, 0x1000, chargen.Val)
+	V.bankMem = mem.InitBanks(4, &V.BankSel)
 
-	V.bankMem[2].Init(1, 0x4000)
-	V.bankMem[2].Attach("RAM", 0, 0, 0, ram.Val[BankStart2:BankStart2+0x4000])
+	V.bankMem.Layouts[3] = mem.InitConfig(2, 0x4000)
+	V.bankMem.Layouts[3].Attach("RAM", 0, 0, ram[BankStart3:BankStart3+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[3].Attach("Char ROM", 1, 1, chargen, mem.READONLY)
 
-	V.bankMem[1].Init(2, 0x4000)
-	V.bankMem[1].Attach("RAM", 0, 0, 0, ram.Val[BankStart1:BankStart1+0x4000])
-	V.bankMem[1].Attach("Char ROM", 1, 1, 0x1000, chargen.Val)
+	V.bankMem.Layouts[2] = mem.InitConfig(1, 0x4000)
+	V.bankMem.Layouts[2].Attach("RAM", 0, 0, ram[BankStart2:BankStart2+0x4000], mem.READWRITE)
 
-	V.bankMem[0].Init(1, 0x4000)
-	V.bankMem[0].Attach("RAM", 0, 0, 0, ram.Val[BankStart0:BankStart0+0x4000])
+	V.bankMem.Layouts[1] = mem.InitConfig(2, 0x4000)
+	V.bankMem.Layouts[1].Attach("RAM", 0, 0, ram[BankStart1:BankStart1+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[1].Attach("Char ROM", 1, 1, chargen, mem.READONLY)
+
+	V.bankMem.Layouts[0] = mem.InitConfig(1, 0x4000)
+	V.bankMem.Layouts[0].Attach("RAM", 0, 0, ram[BankStart0:BankStart0+0x4000], mem.READWRITE)
 
 	V.BA = true
 	V.VCBASE = 0
@@ -90,8 +92,8 @@ func (V *VIC) saveRasterPos(val int) {
 }
 
 func (V *VIC) readVideoMatrix() {
-	V.ColorBuffer[V.VMLI] = V.color.Val[V.VC] & 0b00001111
-	V.CharBuffer[V.VMLI] = V.bankMem[V.BankSel].Read(V.ScreenBase + V.VC)
+	V.ColorBuffer[V.VMLI] = V.color[V.VC] & 0b00001111
+	V.CharBuffer[V.VMLI] = V.bankMem.Read(V.ScreenBase + V.VC)
 	// fmt.Printf("VMLI: %02X - VC: %02X - Screen Code: %d - Color: %04X\n", V.VMLI, V.VC, V.CharBuffer[V.VMLI], V.ColorBuffer[V.VMLI])
 }
 
@@ -409,8 +411,8 @@ func (V *VIC) Run(debug bool) bool {
 
 func (V *VIC) Dump(addr uint16) {
 	fmt.Printf("Bank: %d - VideoBase: %04X - CharBase: %04X", V.BankSel, V.ScreenBase, V.CharBase)
-	V.bankMem[V.BankSel].Show()
-	V.bankMem[V.BankSel].Dump(addr)
+	V.bankMem.Show()
+	V.bankMem.Dump(addr)
 }
 
 func (V *VIC) Stats() {

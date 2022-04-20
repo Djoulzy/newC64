@@ -15,6 +15,7 @@
 newC64
 newC64.prof
 vic
+TestMem
 
 !cmd/newC64
 # Dependency directories (remove the comment below to include it)
