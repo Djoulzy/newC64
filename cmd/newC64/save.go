@@ -1,11 +1,11 @@
 package main
 
 import (
-	"newC64/pla906114"
+	"newC64/mem"
 	"os"
 )
 
-func DumpMem(mem *pla906114.PLA, file string) error {
+func DumpMem(mem *mem.BANK, file string) error {
 	var tmp []byte
 	f, err := os.Create(file)
 	if err != nil {
@@ -15,7 +15,7 @@ func DumpMem(mem *pla906114.PLA, file string) error {
 	tmp = make([]byte, ramSize)
 	for i := 0; i < ramSize; i++ {
 		// tmp[i] = mem.Read(uint16(i))
-		tmp[i] = mem.Mem[0].Val[i]
+		tmp[i] = mem.Layouts[0].Layers[0][i]
 	}
 	f.Write(tmp)
 

@@ -23,6 +23,7 @@ func (C *CIA) stopOncount() {
 
 func (C *CIA) Read(addr uint16) byte {
 	reg := addr - ((addr >> 4) << 4)
+	// clog.Trace("CIA", "Read", "%s - addr: %04X - Reg: %02X (%d)", C.name, addr, reg, reg)
 	switch reg {
 	case PRA:
 		if C.name == "CIA1" {

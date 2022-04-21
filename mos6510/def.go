@@ -95,7 +95,7 @@ type CPU struct {
 	NMI_pin int
 
 	conf      *confload.ConfigData
-	ram       mem.BANK
+	ram       *mem.BANK
 	stack     []byte
 	InstStart uint16
 	instDump  string

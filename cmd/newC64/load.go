@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"newC64/pla906114"
+	"newC64/mem"
 	"strconv"
 	"strings"
 )
@@ -32,7 +32,7 @@ func LoadFile(mem []byte, file string) (uint16, error) {
 	return LoadHex(mem, text)
 }
 
-func LoadPRG(mem *pla906114.PLA, file string) (uint16, error) {
+func LoadPRG(mem *mem.BANK, file string) (uint16, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return 0, err
@@ -49,7 +49,7 @@ func LoadPRG(mem *pla906114.PLA, file string) (uint16, error) {
 	return prgStart, nil
 }
 
-func LoadData(mem *pla906114.PLA, file string, memStart uint16) error {
+func LoadData(mem *mem.BANK, file string, memStart uint16) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err

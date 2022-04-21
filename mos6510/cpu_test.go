@@ -138,18 +138,18 @@ func TestMain(m *testing.M) {
 
 	RAM = make([]byte, ramSize)
 	IO = make([]byte, ioSize)
-	KERNAL = mem.LoadROM(kernalSize, "assets/roms/kernal.bin")
+	KERNAL = mem.LoadROM(kernalSize, "../assets/roms/kernal.bin")
 
 	BankSel = 0
 	MEM = mem.InitBanks(1, &BankSel)
 
-	MEM.Layouts[0] = mem.InitConfig(5, ramSize)
+	MEM.Layouts[0] = mem.InitConfig(3, ramSize)
 	MEM.Layouts[0].Attach("RAM", 0, 0, RAM, mem.READWRITE)
 	MEM.Layouts[0].Attach("IO", 1, 13, IO, mem.READWRITE)
 	MEM.Layouts[0].Attach("KERNAL", 2, 14, KERNAL, mem.READONLY)
 	MEM.Layouts[0].Show()
 
-	proc.Init(MEM, &SystemClock, &conf)
+	proc.Init(&MEM, &SystemClock, &conf)
 	os.Exit(m.Run())
 }
 

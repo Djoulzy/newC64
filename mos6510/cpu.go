@@ -44,13 +44,12 @@ func (C *CPU) Reset() {
 	}
 }
 
-func (C *CPU) Init(MEM mem.BANK, clock *uint16, conf *confload.ConfigData) {
+func (C *CPU) Init(MEM *mem.BANK, clock *uint16, conf *confload.ConfigData) {
 	fmt.Printf("mos6510 - Init\n")
 	C.conf = conf
 	C.ClockCycles = clock
 	C.ram = MEM
-	C.stack = MEM.Layouts[31].Layers[0][StackStart : StackStart+256]
-	MEM.Layouts[31].Layers[0][0x0001] = 0x1F
+	C.stack = MEM.Layouts[0].Layers[0][StackStart : StackStart+256]
 	C.initLanguage()
 	C.Reset()
 }

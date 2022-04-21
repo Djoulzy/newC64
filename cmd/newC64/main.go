@@ -40,14 +40,15 @@ var (
 	cia1 cia6526.CIA
 	cia2 cia6526.CIA
 
-	RAM     []byte
-	IO      []byte
-	KERNAL  []byte
-	BASIC   []byte
-	CHARGEN []byte
-	CART_LO []byte
-	CART_HI []byte
-	MEM     mem.BANK
+	RAM      []byte
+	IO       []byte
+	KERNAL   []byte
+	BASIC    []byte
+	CHARGEN  []byte
+	CART_LO  []byte
+	CART_HI  []byte
+	MEM      mem.BANK
+	IOAccess mem.MEMAccess
 
 	vic vic6569.VIC
 
@@ -73,7 +74,12 @@ func setup() {
 	BASIC = mem.LoadROM(basicSize, "assets/roms/basic.bin")
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/char.bin")
 
-	MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
+	RAM[0x0001] = 0x1F
+	// MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
+	var test byte = 31
+	MEM = mem.InitBanks(nbMemLayout, &test)
+	IOAccess = &accessor{}
+	fillIOMapper()
 
 	// MEM Setup
 	memLayouts()
@@ -82,7 +88,7 @@ func setup() {
 	vic.Init(RAM, IO, CHARGEN, outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(MEM, &vic.SystemClock, conf)
+	cpu.Init(&MEM, &vic.SystemClock, conf)
 
 	cia1.Init("CIA1", IO[0x0C00:0x0C00+0x0200], &vic.SystemClock)
 	outputDriver.SetKeyboardLine(&cia1.InputLine)
@@ -119,7 +125,7 @@ func input() {
 			execInst.Unlock()
 		case 'l':
 			// LoadPRG(&pla, "./prg/GARDEN.prg")
-			// LoadPRG(&pla, conf.LoadPRG)
+			LoadPRG(&MEM, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
 		case ' ':

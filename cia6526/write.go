@@ -1,6 +1,8 @@
 package cia6526
 
-import "log"
+import (
+	"log"
+)
 
 var loggerWrite bool = false
 
@@ -19,7 +21,7 @@ func (C *CIA) dispWriteDir(label string, mode uint16, pr uint16, val byte, res b
 func (C *CIA) Write(addr uint16, val byte) {
 
 	reg := addr - ((addr >> 4) << 4)
-
+	// clog.Trace("CIA", "Write", "%s - addr: %04X - Reg: %02X (%d)", C.name, addr, reg, reg)
 	switch reg {
 	case PRA:
 		newPr := (C.Reg[PRA] & ^C.Reg[DDRA]) | (val & C.Reg[DDRA])

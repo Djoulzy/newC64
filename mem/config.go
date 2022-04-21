@@ -2,9 +2,7 @@ package mem
 
 import (
 	"fmt"
-	"io/ioutil"
 	"newC64/clog"
-	"newC64/trace"
 )
 
 const (
@@ -42,36 +40,6 @@ func InitConfig(nbLayers int, size int) CONFIG {
 	return C
 }
 
-func LoadROM(size int, file string) []byte {
-	val := make([]byte, size)
-	if len(file) > 0 {
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			panic(err)
-		}
-		if len(data) != size {
-			panic("Bad ROM Size")
-		}
-		for i := 0; i < size; i++ {
-			val[i] = byte(data[i])
-		}
-	}
-	return val
-}
-
-func Clear(zone []byte) {
-	cpt := 0
-	fill := byte(0x00)
-	for i := range zone {
-		zone[i] = fill
-		cpt++
-		if cpt == 0x40 {
-			fill = ^fill
-			cpt = 0
-		}
-	}
-}
-
 func (C *CONFIG) Attach(name string, layerNum int, pageNum int, content []byte, mode bool) {
 	nbPages := len(content) >> PAGE_DIVIDER
 	C.LayersName[layerNum] = name
@@ -101,37 +69,6 @@ func (C *CONFIG) MRead(mem []byte, addr uint16) byte {
 func (C *CONFIG) MWrite(mem []byte, addr uint16, val byte) {
 	// clog.Test("MEM", "MWrite", "Addr: %04X -> %02X", addr, val)
 	mem[addr] = val
-}
-
-type BANK struct {
-	Selector *byte
-	Layouts  []CONFIG
-}
-
-func InitBanks(nbMemLayout int, sel *byte) BANK {
-	B := BANK{}
-	B.Layouts = make([]CONFIG, nbMemLayout)
-	B.Selector = sel
-	return B
-}
-
-func (B *BANK) Read(addr uint16) byte {
-	// clog.Test("MEM", "Read", "Addr: %04X, Page: %d, Selector: %d", addr, int(addr>>PAGE_DIVIDER), *B.Selector&0x1F)
-	bank := B.Layouts[*B.Selector&0x1F]
-	layerNum := bank.LayerByPages[int(addr>>PAGE_DIVIDER)]
-	// return C.Layers[layerNum][addr-C.Start[layerNum]]
-	// clog.Test("MEM", "Read", "Addr: %04X, Page: %d, Layer: %d", addr, int(addr>>PAGE_DIVIDER), layerNum)
-	return bank.Accessors[layerNum].MRead(bank.Layers[layerNum], addr-bank.Start[layerNum])
-}
-
-func (B *BANK) Write(addr uint16, value byte) {
-	bank := B.Layouts[*B.Selector&0x1F]
-	layerNum := bank.LayerByPages[int(addr>>PAGE_DIVIDER)]
-	if bank.ReadOnly[layerNum] {
-		layerNum = 0
-	}
-	// clog.Test("MEM", "Write", "Addr: %04X, Page: %d, Layer: %d", addr, int(addr>>PAGE_DIVIDER), layerNum)
-	bank.Accessors[layerNum].MWrite(bank.Layers[layerNum], addr-bank.Start[layerNum], value)
 }
 
 func (C *CONFIG) Show() {
@@ -179,34 +116,21 @@ func (C *CONFIG) Show() {
 	fmt.Printf("\n\n")
 }
 
-func (B *BANK) Dump(startAddr uint16) {
-	var val byte
-	var line string
-	var ascii string
-
-	cpt := startAddr
-	for j := 0; j < 16; j++ {
-		fmt.Printf("%04X : ", cpt)
-		line = ""
-		ascii = ""
-		for i := 0; i < 16; i++ {
-			val = B.Read(cpt)
-			if val != 0x00 && val != 0xFF {
-				line = line + clog.CSprintf("white", "black", "%02X", val) + " "
-			} else {
-				line = fmt.Sprintf("%s%02X ", line, val)
-			}
-			if _, ok := trace.PETSCII[val]; ok {
-				ascii += fmt.Sprintf("%s", string(trace.PETSCII[val]))
-			} else {
-				ascii += "."
-			}
-			cpt++
-		}
-		fmt.Printf("%s - %s\n", line, ascii)
-	}
-}
-
-func (B *BANK) Show() {
-	B.Layouts[*B.Selector&0x1F].Show()
-}
+// func (P *PLA) DumpStack(sp byte) {
+// 	cpt := uint16(0x0100)
+// 	fmt.Printf("\n")
+// 	for j := 0; j < 16; j++ {
+// 		fmt.Printf("%04X : ", cpt)
+// 		for i := 0; i < 16; i++ {
+// 			if cpt == StackStart+uint16(sp) {
+// 				clog.CPrintf("white", "red", "%02X", P.Mem[RAM].Val[cpt])
+// 				fmt.Print(" ")
+// 				// fmt.Printf("%c[41m%c[0m[0;31m%02X%c[0m ", 27, 27, P.Mem[RAM].Val[cpt], 27)
+// 			} else {
+// 				fmt.Printf("%02X ", P.Mem[RAM].Val[cpt])
+// 			}
+// 			cpt++
+// 		}
+// 		fmt.Println()
+// 	}
+// }
