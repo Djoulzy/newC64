@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"newC64/confload"
 	"newC64/graphic"
-	"newC64/memory"
+	"newC64/mem"
 	"newC64/vic6569"
 	"runtime"
 )
@@ -17,7 +17,7 @@ const (
 
 var (
 	conf             confload.ConfigData
-	mem, io, chargen memory.MEM
+	RAM, IO, CHARGEN []byte
 	vic              vic6569.VIC
 	outputDriver     graphic.Driver
 )
@@ -28,14 +28,14 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func LoadData(mem *memory.MEM, file string, memStart uint16) error {
+func LoadData(mem []byte, file string, memStart uint16) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
 
 	for i, val := range content {
-		mem.Val[memStart+uint16(i)] = val
+		mem[memStart+uint16(i)] = val
 	}
 	return nil
 }
@@ -43,16 +43,16 @@ func LoadData(mem *memory.MEM, file string, memStart uint16) error {
 func start() {
 	conf.Disassamble = false
 
-	mem.Init(ramSize, "")
-	mem.Clear(true)
-	io.Init(ioSize, "")
-	io.Clear(false)
+	RAM = make([]byte, ramSize)
+	mem.Clear(RAM)
+	IO = make([]byte, ioSize)
+	mem.Clear(IO)
+	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/char.bin")
 
-	chargen.Init(chargenSize, "assets/roms/char.bin")
-	LoadData(&mem, "assets/roms/bruce2.bin", 0xE000)
+	LoadData(RAM, "assets/roms/bruce2.bin", 0xE000)
 
 	outputDriver = &graphic.SDLDriver{}
-	vic.Init(mem.Val, io.Val, chargen.Val, outputDriver, &conf)
+	vic.Init(RAM, IO, CHARGEN, outputDriver, &conf)
 	vic.BankSel = 0
 	vic.Write(vic6569.REG_MEM_LOC, 0x78)
 	vic.Write(vic6569.REG_CTRL1, 0x3B)

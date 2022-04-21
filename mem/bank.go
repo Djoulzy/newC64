@@ -6,6 +6,8 @@ import (
 	"newC64/trace"
 )
 
+const StackStart = 0x0100
+
 type BANK struct {
 	Selector *byte
 	Layouts  []CONFIG
@@ -67,4 +69,23 @@ func (B *BANK) Dump(startAddr uint16) {
 
 func (B *BANK) Show() {
 	B.Layouts[*B.Selector&0x1F].Show()
+}
+
+func (B *BANK) DumpStack(sp byte) {
+	cpt := uint16(0x0100)
+	fmt.Printf("\n")
+	for j := 0; j < 16; j++ {
+		fmt.Printf("%04X : ", cpt)
+		for i := 0; i < 16; i++ {
+			if cpt == StackStart+uint16(sp) {
+				clog.CPrintf("white", "red", "%02X", B.Read(cpt))
+				fmt.Print(" ")
+				// fmt.Printf("%c[41m%c[0m[0;31m%02X%c[0m ", 27, 27, P.Mem[RAM].Val[cpt], 27)
+			} else {
+				fmt.Printf("%02X ", B.Read(cpt))
+			}
+			cpt++
+		}
+		fmt.Println()
+	}
 }

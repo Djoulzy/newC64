@@ -74,6 +74,9 @@ func setup() {
 	BASIC = mem.LoadROM(basicSize, "assets/roms/basic.bin")
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/char.bin")
 
+	mem.Clear(RAM)
+	mem.Clear(IO)
+
 	RAM[0x0001] = 0x1F
 	// MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
 	var test byte = 31
@@ -113,10 +116,10 @@ func input() {
 			vic.Stats()
 		case 's':
 			Disassamble()
-			// pla.DumpStack(cpu.SP)
+			MEM.DumpStack(cpu.SP)
 		case 'z':
 			Disassamble()
-			// pla.Dump(0)
+			MEM.Dump(0)
 		case 'x':
 			// DumpMem(&pla, "memDump.bin")
 		case 'r':
@@ -136,6 +139,14 @@ func input() {
 				execInst.Unlock()
 			}
 			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
+		case 'w':
+			fmt.Printf("\nFill Color RAM")
+			for i := 0xD800; i < 0xDC00; i++ {
+				MEM.Write(uint16(i), 0)
+			}
+			// for i := 0x0800; i < 0x0C00; i++ {
+			// 	IO[uint16(i)] = 0
+			// }
 		case 'q':
 			cpu.DumpStats()
 			os.Exit(0)
@@ -144,7 +155,7 @@ func input() {
 			fmt.Printf("%c", r)
 			if len(dumpAddr) == 4 {
 				hx, _ := strconv.ParseInt(dumpAddr, 16, 64)
-				// pla.Dump(uint16(hx))
+				MEM.Dump(uint16(hx))
 				if hx < 0x4000 {
 					vic.Dump(uint16(hx))
 				}

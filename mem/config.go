@@ -61,14 +61,14 @@ func (C *CONFIG) Accessor(layerNum int, access MEMAccess) {
 	C.Accessors[layerNum] = access
 }
 
-func (C *CONFIG) MRead(mem []byte, addr uint16) byte {
+func (C *CONFIG) MRead(mem []byte, translatedAddr uint16) byte {
 	// clog.Test("MEM", "MRead", "Addr: %04X -> %02X", addr, mem[addr])
-	return mem[addr]
+	return mem[translatedAddr]
 }
 
-func (C *CONFIG) MWrite(mem []byte, addr uint16, val byte) {
+func (C *CONFIG) MWrite(mem []byte, translatedAddr uint16, val byte) {
 	// clog.Test("MEM", "MWrite", "Addr: %04X -> %02X", addr, val)
-	mem[addr] = val
+	mem[translatedAddr] = val
 }
 
 func (C *CONFIG) Show() {
@@ -115,22 +115,3 @@ func (C *CONFIG) Show() {
 	clog.CPrintf("black", "black", "%s", " ")
 	fmt.Printf("\n\n")
 }
-
-// func (P *PLA) DumpStack(sp byte) {
-// 	cpt := uint16(0x0100)
-// 	fmt.Printf("\n")
-// 	for j := 0; j < 16; j++ {
-// 		fmt.Printf("%04X : ", cpt)
-// 		for i := 0; i < 16; i++ {
-// 			if cpt == StackStart+uint16(sp) {
-// 				clog.CPrintf("white", "red", "%02X", P.Mem[RAM].Val[cpt])
-// 				fmt.Print(" ")
-// 				// fmt.Printf("%c[41m%c[0m[0;31m%02X%c[0m ", 27, 27, P.Mem[RAM].Val[cpt], 27)
-// 			} else {
-// 				fmt.Printf("%02X ", P.Mem[RAM].Val[cpt])
-// 			}
-// 			cpt++
-// 		}
-// 		fmt.Println()
-// 	}
-// }

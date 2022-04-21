@@ -4,19 +4,6 @@ import (
 	"newC64/mem"
 )
 
-type accessor struct {
-}
-
-func (C *accessor) MRead(mem []byte, addr uint16) byte {
-	// clog.Test("Accessor", "MRead", "Addr: %04X", addr)
-	return IORead_Mapper[addr](addr)
-}
-
-func (C *accessor) MWrite(meme []byte, addr uint16, val byte) {
-	// clog.Test("Accessor", "MWrite", "Addr: %04X", addr)
-	IOWrite_Mapper[addr](addr, val)
-}
-
 func memLayouts() {
 	MEM.Layouts[31] = mem.InitConfig(4, ramSize)
 	MEM.Layouts[31].Attach("RAM", 0, 0, RAM, mem.READWRITE)

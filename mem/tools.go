@@ -31,3 +31,9 @@ func Clear(zone []byte) {
 		}
 	}
 }
+
+func Fill(zone []byte, val byte) {
+	for i := range zone {
+		zone[i] = val
+	}
+}
