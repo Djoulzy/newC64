@@ -27,25 +27,43 @@ var (
 	Lightgrey  byte = 15
 )
 
+// var Colors [16]color.Color = [16]color.Color{
+// 	color.RGBA{R: 0, G: 0, B: 0, A: 255},       // Black
+// 	color.RGBA{R: 255, G: 255, B: 255, A: 255}, // White
+// 	color.RGBA{R: 137, G: 78, B: 67, A: 255},   // Red
+// 	color.RGBA{R: 146, G: 195, B: 203, A: 255}, // Cyan
+// 	color.RGBA{R: 138, G: 87, B: 176, A: 255},  // Violet
+// 	color.RGBA{R: 128, G: 174, B: 89, A: 255},  // Green
+// 	color.RGBA{R: 68, G: 63, B: 164, A: 255},   // Blue
+// 	color.RGBA{R: 215, G: 221, B: 137, A: 255}, // Yellow
+// 	color.RGBA{R: 146, G: 106, B: 56, A: 255},  // Orange
+// 	color.RGBA{R: 100, G: 82, B: 23, A: 255},   // Brown
+// 	color.RGBA{R: 184, G: 132, B: 122, A: 255}, // Lightred
+// 	color.RGBA{R: 96, G: 96, B: 96, A: 255},    // Darkgrey
+// 	color.RGBA{R: 138, G: 138, B: 138, A: 255}, // Grey
+// 	color.RGBA{R: 191, G: 233, B: 155, A: 255}, // Lightgreen
+// 	color.RGBA{R: 131, G: 125, B: 216, A: 255}, // Lightblue
+// 	color.RGBA{R: 179, G: 179, B: 179, A: 255}, // Lightgrey
+// }
+
 var Colors [16]color.Color = [16]color.Color{
 	color.RGBA{R: 0, G: 0, B: 0, A: 255},       // Black
 	color.RGBA{R: 255, G: 255, B: 255, A: 255}, // White
-	color.RGBA{R: 137, G: 78, B: 67, A: 255},   // Red
-	color.RGBA{R: 146, G: 195, B: 203, A: 255}, // Cyan
-	color.RGBA{R: 138, G: 87, B: 176, A: 255},  // Violet
-	color.RGBA{R: 128, G: 174, B: 89, A: 255},  // Green
-	color.RGBA{R: 68, G: 63, B: 164, A: 255},   // Blue
-	color.RGBA{R: 215, G: 221, B: 137, A: 255}, // Yellow
-	color.RGBA{R: 146, G: 106, B: 56, A: 255},  // Orange
-	color.RGBA{R: 100, G: 82, B: 23, A: 255},   // Brown
-	color.RGBA{R: 184, G: 132, B: 122, A: 255}, // Lightred
+	color.RGBA{R: 67, G: 78, B: 137, A: 255},   // Red
+	color.RGBA{R: 203, G: 195, B: 146, A: 255}, // Cyan
+	color.RGBA{R: 176, G: 87, B: 138, A: 255},  // Violet
+	color.RGBA{R: 89, G: 174, B: 128, A: 255},  // Green
+	color.RGBA{R: 164, G: 63, B: 68, A: 255},   // Blue
+	color.RGBA{R: 137, G: 221, B: 215, A: 255}, // Yellow
+	color.RGBA{R: 56, G: 106, B: 146, A: 255},  // Orange
+	color.RGBA{R: 23, G: 82, B: 100, A: 255},   // Brown
+	color.RGBA{R: 122, G: 132, B: 184, A: 255}, // Lightred
 	color.RGBA{R: 96, G: 96, B: 96, A: 255},    // Darkgrey
 	color.RGBA{R: 138, G: 138, B: 138, A: 255}, // Grey
-	color.RGBA{R: 191, G: 233, B: 155, A: 255}, // Lightgreen
-	color.RGBA{R: 131, G: 125, B: 216, A: 255}, // Lightblue
+	color.RGBA{R: 155, G: 233, B: 191, A: 255}, // Lightgreen
+	color.RGBA{R: 216, G: 125, B: 131, A: 255}, // Lightblue
 	color.RGBA{R: 179, G: 179, B: 179, A: 255}, // Lightgrey
 }
-
 // VIC :
 type VIC struct {
 	VML         [40]uint16 // Video Matrix Line

@@ -45,11 +45,14 @@ const (
 	BankStart1 = 0x8000
 	BankStart2 = 0x4000
 	BankStart3 = 0x0000
+
+	DisplayOriginX = 80
+	DisplayOriginY = 16
 )
 
 func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Driver, conf *config.ConfigData) {
 	V.graph = video
-	V.graph.Init(winWidth, winHeight, "Go Commodore 64")
+	V.graph.Init(winWidth-DisplayOriginX-32, winHeight-DisplayOriginY-12, "Go Commodore 64")
 	V.conf = conf
 
 	V.color = io[colorStart : colorStart+1024]
@@ -120,7 +123,7 @@ func (V *VIC) drawChar(X int, Y int) {
 		V.VC++
 	} else if V.visibleArea {
 		for column := 0; column < 8; column++ {
-			V.graph.DrawPixel(X+column, Y, Colors[V.Reg[REG_BORDER_COL]&0b00001111])
+			V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[V.Reg[REG_BORDER_COL]&0b00001111])
 		}
 	}
 }

@@ -1,0 +1,5 @@
+
+al C:002b .Irq
+al C:0032 .Pause
+al C:0003 .start
+

@@ -12,9 +12,9 @@ func (V *VIC) StandardTextMode(X int, Y int) {
 	for column := 0; column < 8; column++ {
 		bit := byte(0b10000000 >> column)
 		if pixelData&bit > 0 {
-			V.graph.DrawPixel(X+column, Y, Colors[palette[1]])
+			V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[palette[1]])
 		} else {
-			V.graph.DrawPixel(X+column, Y, Colors[palette[0]])
+			V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[palette[0]])
 		}
 	}
 }
@@ -36,8 +36,8 @@ func (V *VIC) MulticolTextMode(X int, Y int) {
 		bit := byte(0b11000000)
 		for column := 0; column < 4; column++ {
 			colNum := (pixelData & bit) >> byte((3-column)<<1)
-			V.graph.DrawPixel(X+(column<<1), Y, Colors[palette[colNum]])
-			V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[palette[colNum]])
+			V.graph.DrawPixel(X+(column<<1)-DisplayOriginX, Y-DisplayOriginY, Colors[palette[colNum]])
+			V.graph.DrawPixel(X+(column<<1)+1-DisplayOriginX, Y-DisplayOriginY, Colors[palette[colNum]])
 			bit >>= 2
 		}
 	} else {
@@ -47,9 +47,9 @@ func (V *VIC) MulticolTextMode(X int, Y int) {
 		for column := 0; column < 8; column++ {
 			bit := byte(0b10000000 >> column)
 			if pixelData&bit > 0 {
-				V.graph.DrawPixel(X+column, Y, Colors[palette[1]])
+				V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[palette[1]])
 			} else {
-				V.graph.DrawPixel(X+column, Y, Colors[palette[0]])
+				V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[palette[0]])
 			}
 		}
 	}
@@ -70,8 +70,8 @@ func (V *VIC) MulticolBitmapMode(X int, Y int) {
 	bit := byte(0b11000000)
 	for column := 0; column < 4; column++ {
 		colNum := (pixelData & bit) >> byte((3-column)<<1)
-		V.graph.DrawPixel(X+(column<<1), Y, Colors[palette[colNum]])
-		V.graph.DrawPixel(X+(column<<1)+1, Y, Colors[palette[colNum]])
+		V.graph.DrawPixel(X+(column<<1)-DisplayOriginX, Y-DisplayOriginY, Colors[palette[colNum]])
+		V.graph.DrawPixel(X+(column<<1)+1-DisplayOriginX, Y-DisplayOriginY, Colors[palette[colNum]])
 		bit >>= 2
 	}
 }
@@ -90,9 +90,9 @@ func (V *VIC) StandardBitmapMode(X int, Y int) {
 	for column := 0; column < 8; column++ {
 		bit := byte(0b10000000 >> column)
 		if pixelData&bit > 0 {
-			V.graph.DrawPixel(X+column, Y, Colors[palette[1]])
+			V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[palette[1]])
 		} else {
-			V.graph.DrawPixel(X+column, Y, Colors[palette[0]])
+			V.graph.DrawPixel(X+column-DisplayOriginX, Y-DisplayOriginY, Colors[palette[0]])
 		}
 	}
 }
