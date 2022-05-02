@@ -2,7 +2,8 @@ package main
 
 import (
 	"newC64/clog"
-	"newC64/mem"
+
+	"github.com/Djoulzy/emutools/mem"
 )
 
 const (

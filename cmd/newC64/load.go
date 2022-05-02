@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"newC64/mem"
+	"github.com/Djoulzy/emutools/mem"
 	"strconv"
 	"strings"
 )

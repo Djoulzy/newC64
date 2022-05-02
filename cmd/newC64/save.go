@@ -1,7 +1,7 @@
 package main
 
 import (
-	"newC64/mem"
+	"github.com/Djoulzy/emutools/mem"
 	"os"
 )
 

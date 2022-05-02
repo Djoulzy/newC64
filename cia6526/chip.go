@@ -2,7 +2,7 @@ package cia6526
 
 import (
 	"fmt"
-	"newC64/graphic"
+	"github.com/Djoulzy/emutools/render"
 )
 
 type CIA struct {
@@ -10,7 +10,7 @@ type CIA struct {
 	Reg         [16]byte
 	Signal_Pin  *int
 	systemCycle *uint16
-	InputLine   graphic.KEYPressed
+	InputLine   render.KEYPressed
 	buffer      Keyboard
 
 	internalPRA    byte

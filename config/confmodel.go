@@ -1,4 +1,4 @@
-package confload
+package config
 
 // Globals : Partie globale du fichier de conf
 type Globals struct {

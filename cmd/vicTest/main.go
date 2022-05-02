@@ -2,9 +2,9 @@ package main
 
 import (
 	"io/ioutil"
-	"newC64/confload"
-	"newC64/graphic"
-	"newC64/mem"
+	"newC64/config"
+	"github.com/Djoulzy/emutools/render"
+	"github.com/Djoulzy/emutools/mem"
 	"newC64/vic6569"
 	"runtime"
 )
@@ -16,10 +16,10 @@ const (
 )
 
 var (
-	conf             confload.ConfigData
+	conf             config.ConfigData
 	RAM, IO, CHARGEN []byte
 	vic              vic6569.VIC
-	outputDriver     graphic.Driver
+	outputDriver     render.SDL2Driver
 )
 
 func init() {
@@ -51,8 +51,8 @@ func start() {
 
 	LoadData(RAM, "assets/roms/bruce2.bin", 0xE000)
 
-	outputDriver = &graphic.SDLDriver{}
-	vic.Init(RAM, IO, CHARGEN, outputDriver, &conf)
+	outputDriver = render.SDL2Driver{}
+	vic.Init(RAM, IO, CHARGEN, &outputDriver, &conf)
 	vic.BankSel = 0
 	vic.Write(vic6569.REG_MEM_LOC, 0x78)
 	vic.Write(vic6569.REG_CTRL1, 0x3B)
@@ -67,8 +67,7 @@ func start() {
 
 func main() {
 	start()
-	for {
-		vic.Run(false)
-		// vic.Stats()
-	}
+
+	go vic.Run(false)
+	outputDriver.Run()
 }

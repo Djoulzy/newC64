@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"log"
 	"newC64/cia6526"
-	"newC64/clog"
-	"newC64/confload"
-	"newC64/graphic"
-	"newC64/mem"
-	"newC64/mos6510"
+	"newC64/config"
 	"newC64/vic6569"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/Djoulzy/emutools/render"
+
+	"github.com/Djoulzy/Tools/clog"
+	"github.com/Djoulzy/Tools/confload"
+	"github.com/Djoulzy/emutools/mem"
+	"github.com/Djoulzy/emutools/mos6510"
 
 	"github.com/mattn/go-tty"
 )
@@ -34,7 +37,7 @@ const (
 )
 
 var (
-	conf = &confload.ConfigData{}
+	conf = &config.ConfigData{}
 
 	cpu  mos6510.CPU
 	cia1 cia6526.CIA
@@ -52,7 +55,7 @@ var (
 
 	vic vic6569.VIC
 
-	outputDriver graphic.Driver
+	outputDriver render.SDL2Driver
 	cpuTurn      bool
 	run          bool
 	execInst     sync.Mutex
@@ -78,20 +81,20 @@ func setup() {
 	mem.Clear(IO)
 
 	RAM[0x0001] = 0x1F
-	// MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
-	var test byte = 31
-	MEM = mem.InitBanks(nbMemLayout, &test)
+	MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
+	// var test byte = 31
+	// MEM = mem.InitBanks(nbMemLayout, &test)
 	IOAccess = &accessor{}
 	fillIOMapper()
 
 	// MEM Setup
 	memLayouts()
 
-	outputDriver = &graphic.SDLDriver{}
-	vic.Init(RAM, IO, CHARGEN, outputDriver, conf)
+	outputDriver = render.SDL2Driver{}
+	vic.Init(RAM, IO, CHARGEN, &outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(&MEM, &vic.SystemClock, conf)
+	cpu.Init(&MEM)
 
 	cia1.Init("CIA1", IO[0x0C00:0x0C00+0x0200], &vic.SystemClock)
 	outputDriver.SetKeyboardLine(&cia1.InputLine)
@@ -168,7 +171,7 @@ func input() {
 
 func Disassamble() {
 	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
-	fmt.Printf("%s\n", cpu.Disassemble())
+	fmt.Printf("%s\n", cpu.Trace())
 }
 
 func timeTrack(start time.Time, name string) {
@@ -178,25 +181,28 @@ func timeTrack(start time.Time, name string) {
 
 func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
-	cpuTurn = vic.Run(!run)
-	if cpu.State == mos6510.ReadInstruction && !run {
-		execInst.Lock()
-	}
-	if cpuTurn {
-		cpu.NextCycle()
-		if cpu.State == mos6510.ReadInstruction {
-			if conf.Breakpoint == cpu.InstStart {
-				conf.Disassamble = true
-				run = false
+	for {
+		cpuTurn = vic.Run(!run)
+		if cpu.State == mos6510.ReadInstruction && !run {
+			execInst.Lock()
+		}
+		if cpuTurn {
+			cpu.NextCycle()
+			if cpu.State == mos6510.ReadInstruction {
+				outputDriver.DumpCode(cpu.FullInst)
+				if conf.Breakpoint == cpu.InstStart {
+					conf.Disassamble = true
+					run = false
+				}
 			}
 		}
-	}
-	cia1.Run()
-	cia2.Run()
+		cia1.Run()
+		cia2.Run()
 
-	if cpu.State == mos6510.ReadInstruction {
-		if !run || conf.Disassamble {
-			Disassamble()
+		if cpu.State == mos6510.ReadInstruction {
+			if !run || conf.Disassamble {
+				Disassamble()
+			}
 		}
 	}
 }
@@ -226,12 +232,11 @@ func main() {
 	run = true
 	cpuTurn = true
 	// go func() {
-	for {
-		RunEmulation()
-	}
+	go RunEmulation()
+
 	// }()
 
-	// outputDriver.Run()
+	outputDriver.Run()
 
 	// cpu.DumpStats()
 	// <-exit

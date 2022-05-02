@@ -3,9 +3,11 @@ package vic6569
 import (
 	"fmt"
 	"log"
-	"newC64/confload"
-	"newC64/graphic"
-	"newC64/mem"
+	"newC64/config"
+
+	"github.com/Djoulzy/emutools/render"
+
+	"github.com/Djoulzy/emutools/mem"
 )
 
 const (
@@ -45,28 +47,28 @@ const (
 	BankStart3 = 0x0000
 )
 
-func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video interface{}, conf *confload.ConfigData) {
-	V.graph = video.(graphic.Driver)
-	V.graph.Init(winWidth, winHeight)
+func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Driver, conf *config.ConfigData) {
+	V.graph = video
+	V.graph.Init(winWidth, winHeight, "Go Commodore 64")
 	V.conf = conf
 
 	V.color = io[colorStart : colorStart+1024]
 
 	V.bankMem = mem.InitBanks(4, &V.BankSel)
 
-	V.bankMem.Layouts[3] = mem.InitConfig(2, 0x4000)
-	V.bankMem.Layouts[3].Attach("RAM", 0, 0, ram[BankStart3:BankStart3+0x4000], mem.READWRITE)
-	V.bankMem.Layouts[3].Attach("Char ROM", 1, 1, chargen, mem.READONLY)
+	V.bankMem.Layouts[3] = mem.InitConfig(0x4000)
+	V.bankMem.Layouts[3].Attach("RAM", 0, ram[BankStart3:BankStart3+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[3].Attach("Char ROM", 0x1000, chargen, mem.READONLY)
 
-	V.bankMem.Layouts[2] = mem.InitConfig(1, 0x4000)
-	V.bankMem.Layouts[2].Attach("RAM", 0, 0, ram[BankStart2:BankStart2+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[2] = mem.InitConfig(0x4000)
+	V.bankMem.Layouts[2].Attach("RAM", 0, ram[BankStart2:BankStart2+0x4000], mem.READWRITE)
 
-	V.bankMem.Layouts[1] = mem.InitConfig(2, 0x4000)
-	V.bankMem.Layouts[1].Attach("RAM", 0, 0, ram[BankStart1:BankStart1+0x4000], mem.READWRITE)
-	V.bankMem.Layouts[1].Attach("Char ROM", 1, 1, chargen, mem.READONLY)
+	V.bankMem.Layouts[1] = mem.InitConfig(0x4000)
+	V.bankMem.Layouts[1].Attach("RAM", 0, ram[BankStart1:BankStart1+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[1].Attach("Char ROM", 0x1000, chargen, mem.READONLY)
 
-	V.bankMem.Layouts[0] = mem.InitConfig(1, 0x4000)
-	V.bankMem.Layouts[0].Attach("RAM", 0, 0, ram[BankStart0:BankStart0+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[0] = mem.InitConfig(0x4000)
+	V.bankMem.Layouts[0].Attach("RAM", 0, ram[BankStart0:BankStart0+0x4000], mem.READWRITE)
 
 	V.BA = true
 	V.VCBASE = 0
