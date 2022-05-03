@@ -1,7 +1,7 @@
 package main
 
 import (
-	"newC64/clog"
+	"github.com/Djoulzy/Tools/clog"
 
 	"github.com/Djoulzy/emutools/mem"
 )
@@ -56,24 +56,24 @@ func setup() {
 }
 
 func layout() {
-	Mem.Layouts[0] = mem.InitConfig(5, ramSize)
-	Mem.Layouts[0].Attach("RAM", 0, 0, RAM, mem.READWRITE)
-	Mem.Layouts[0].Attach("KERNAL", 1, 14, KERNAL, mem.READONLY)
-	Mem.Layouts[0].Attach("BASIC", 2, 10, BASIC, mem.READONLY)
-	Mem.Layouts[0].Attach("CHARGEN", 3, 13, CHARGEN, mem.READONLY)
-	Mem.Layouts[0].Attach("IO", 4, 13, IO, mem.READWRITE)
-	Mem.Layouts[0].Accessor(1, KernalAccess)
+	Mem.Layouts[0] = mem.InitConfig(ramSize)
+	Mem.Layouts[0].Attach("RAM", 0, RAM, mem.READWRITE)
+	Mem.Layouts[0].Attach("KERNAL", 14, KERNAL, mem.READONLY)
+	Mem.Layouts[0].Attach("BASIC", 10, BASIC, mem.READONLY)
+	Mem.Layouts[0].Attach("CHARGEN", 13, CHARGEN, mem.READONLY)
+	Mem.Layouts[0].Attach("IO", 4, IO, mem.READWRITE)
+	Mem.Layouts[0].Accessor("KERNAL", KernalAccess)
 	Mem.Layouts[0].Show()
 
-	Mem.Layouts[1] = mem.InitConfig(3, ramSize)
-	Mem.Layouts[1].Attach("RAM", 0, 0, RAM, mem.READWRITE)
-	Mem.Layouts[1].Attach("KERNAL", 1, 14, KERNAL, mem.READONLY)
-	Mem.Layouts[1].Attach("CHARGEN", 2, 13, CHARGEN, mem.READONLY)
+	Mem.Layouts[1] = mem.InitConfig(ramSize)
+	Mem.Layouts[1].Attach("RAM", 0, RAM, mem.READWRITE)
+	Mem.Layouts[1].Attach("KERNAL", 14, KERNAL, mem.READONLY)
+	Mem.Layouts[1].Attach("CHARGEN", 13, CHARGEN, mem.READONLY)
 	Mem.Layouts[1].Show()
 
-	Mem.Layouts[2] = mem.InitConfig(2, ramSize)
-	Mem.Layouts[2].Attach("RAM", 0, 0, RAM, mem.READWRITE)
-	Mem.Layouts[2].Attach("IO", 1, 13, IO, mem.READWRITE)
+	Mem.Layouts[2] = mem.InitConfig(ramSize)
+	Mem.Layouts[2].Attach("RAM", 0, RAM, mem.READWRITE)
+	Mem.Layouts[2].Attach("IO", 13, IO, mem.READWRITE)
 	Mem.Layouts[2].Show()
 }
 
