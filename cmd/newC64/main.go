@@ -23,6 +23,7 @@ import (
 
 const (
 	ramSize     = 65536
+	firstPages  = 512
 	kernalSize  = 8192
 	basicSize   = 8192
 	ioSize      = 4096
@@ -44,6 +45,7 @@ var (
 	cia2 cia6526.CIA
 
 	RAM      []byte
+	FIRST    []byte
 	IO       []byte
 	KERNAL   []byte
 	BASIC    []byte
