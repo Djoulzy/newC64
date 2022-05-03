@@ -1,11 +1,9 @@
 package vic6569
 
-import "github.com/Djoulzy/Tools/clog"
-
 func (V *VIC) Write(addr uint16, val byte) {
 
 	reg := addr - ((addr >> 6) << 6)
-	clog.Trace("VIC", "Write", "addr: %04X - Reg: %02X (%d)", addr, reg, reg)
+	// clog.Trace("VIC", "Write", "addr: %04X - Reg: %02X (%d)", addr, reg, reg)
 	switch reg {
 	case REG_X_SPRT_0:
 		fallthrough
