@@ -118,10 +118,10 @@ func input() {
 			cia1.Stats()
 			vic.Stats()
 		case 's':
-			Disassamble()
+			// Disassamble()
 			MEM.DumpStack(cpu.SP)
 		case 'z':
-			Disassamble()
+			// Disassamble()
 			MEM.Dump(0)
 		case 'x':
 			// DumpMem(&pla, "memDump.bin")
@@ -169,11 +169,6 @@ func input() {
 	}
 }
 
-func Disassamble() {
-	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
-	fmt.Printf("%s\n", cpu.Trace())
-}
-
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Now().Sub(start)
 	log.Printf("%s took %s", name, elapsed)
@@ -183,25 +178,27 @@ func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
 	for {
 		cpuTurn = vic.Run(!run)
-		if cpu.State == mos6510.ReadInstruction && !run {
-			execInst.Lock()
-		}
+		// if cpu.CycleCount == 0 && !run {
+		// 	execInst.Lock()
+		// }
 		if cpuTurn {
+			log.Printf("%04X\n", RAM[0x0001])
+			// MEM.Read(cpu.PC)
 			cpu.NextCycle()
-			if cpu.State == mos6510.ReadInstruction {
-				// outputDriver.DumpCode(cpu.FullInst)
-				if conf.Breakpoint == cpu.InstStart {
-					conf.Disassamble = true
-					run = false
-				}
-			}
+			// if cpu.CycleCount == 0 {
+			// 	// outputDriver.DumpCode(cpu.FullInst)
+			// 	if conf.Breakpoint == cpu.InstStart {
+			// 		conf.Disassamble = true
+			// 		run = false
+			// 	}
+			// }
 		}
 		cia1.Run()
 		cia2.Run()
 
-		if cpu.State == mos6510.ReadInstruction {
+		if cpu.CycleCount == 1 {
 			if !run || conf.Disassamble {
-				Disassamble()
+				fmt.Printf("%s\n", cpu.FullDebug)
 			}
 		}
 	}

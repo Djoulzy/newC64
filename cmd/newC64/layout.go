@@ -11,20 +11,20 @@ func memLayouts() {
 	MEM.Layouts[31].Attach("IO", 0xD000, IO, mem.READWRITE)
 	MEM.Layouts[31].Attach("KERNAL", 0xE000, KERNAL, mem.READONLY)
 	MEM.Layouts[31].Accessor("IO", IOAccess)
-	MEM.Layouts[31].Show()
+	// MEM.Layouts[31].Show()
 
 	MEM.Layouts[30] = mem.InitConfig(ramSize)
 	MEM.Layouts[30].Attach("RAM", 0, RAM, mem.READWRITE)
 	MEM.Layouts[30].Attach("IO", 0xD000, IO, mem.READWRITE)
 	MEM.Layouts[30].Attach("KERNAL", 0xE000, KERNAL, mem.READONLY)
 	MEM.Layouts[31].Accessor("IO", IOAccess)
-	MEM.Layouts[30].Show()
+	// MEM.Layouts[30].Show()
 
 	MEM.Layouts[29] = mem.InitConfig(ramSize)
 	MEM.Layouts[29].Attach("RAM", 0, RAM, mem.READWRITE)
 	MEM.Layouts[29].Attach("IO", 0xD000, IO, mem.READWRITE)
 	MEM.Layouts[31].Accessor("IO", IOAccess)
-	MEM.Layouts[29].Show()
+	// MEM.Layouts[29].Show()
 
 	MEM.Layouts[28] = mem.InitConfig(ramSize)
 	MEM.Layouts[28].Attach("RAM", 0, RAM, mem.READWRITE)
@@ -33,30 +33,12 @@ func memLayouts() {
 	MEM.Layouts[26].Attach("RAM", 0, RAM, mem.READWRITE)
 	MEM.Layouts[26].Attach("CHARGEN", 0xD000, CHARGEN, mem.READONLY)
 	MEM.Layouts[26].Attach("KERNAL", 0xE000, KERNAL, mem.READONLY)
-	MEM.Layouts[26].Show()
+	// MEM.Layouts[26].Show()
 
 	MEM.Layouts[25] = mem.InitConfig(ramSize)
 	MEM.Layouts[25].Attach("RAM", 0, RAM, mem.READWRITE)
 	MEM.Layouts[25].Attach("CHARGEN", 0xD000, CHARGEN, mem.READONLY)
-	MEM.Layouts[25].Show()
-
-
-
-	// MEM.Layouts[7] = mem.InitConfig(5, ramSize)
-	// MEM.Layouts[7].Attach("RAM", 0, 0, RAM, mem.READWRITE)
-	// MEM.Layouts[7].Attach("CART_LO", 1, 8, CHARGEN, mem.READONLY)
-	// MEM.Layouts[7].Attach("CART_HI", 2, 10, CHARGEN, mem.READONLY)
-	// MEM.Layouts[7].Attach("IO", 3, 13, IO, mem.READWRITE)
-	// MEM.Layouts[7].Attach("KERNAL", 4, 14, KERNAL, mem.READONLY)
-	// MEM.Layouts[7].Show()
-
-	// MEM.Layouts[7] = mem.InitConfig(4, ramSize)
-	// MEM.Layouts[7].Attach("RAM", 0, 0, RAM, mem.READWRITE)
-	// MEM.Layouts[7].Attach("BASIC", 1, 10, BASIC, mem.READONLY)
-	// MEM.Layouts[7].Attach("IO", 2, 13, IO, mem.READWRITE)
-	// MEM.Layouts[7].Attach("KERNAL", 3, 14, KERNAL, mem.READONLY)
-	// MEM.Layouts[7].Accessor(2, IOAccess)
-	// MEM.Layouts[7].Show()
+	// MEM.Layouts[25].Show()
 
 	MEM.Layouts[24] = MEM.Layouts[28]
 	MEM.Layouts[23] = MEM.Layouts[31]
