@@ -3,15 +3,15 @@ package main
 var IORead_Mapper [](func(uint16) byte)
 var IOWrite_Mapper []func(uint16, byte)
 
-type accessor struct {
+type io_accessor struct {
 }
 
-func (C *accessor) MRead(mem []byte, translatedAddr uint16) byte {
+func (C *io_accessor) MRead(mem []byte, translatedAddr uint16) byte {
 	// clog.Test("Accessor", "MRead", "Addr: %04X", addr)
 	return IORead_Mapper[translatedAddr](translatedAddr)
 }
 
-func (C *accessor) MWrite(meme []byte, translatedAddr uint16, val byte) {
+func (C *io_accessor) MWrite(mem []byte, translatedAddr uint16, val byte) {
 	// clog.Test("Accessor", "MWrite", "Addr: %04X", translatedAddr)
 	IOWrite_Mapper[translatedAddr](translatedAddr, val)
 }

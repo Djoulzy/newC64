@@ -23,6 +23,7 @@ import (
 
 const (
 	ramSize     = 65536
+	firstPages  = 512
 	kernalSize  = 8192
 	basicSize   = 8192
 	ioSize      = 4096
@@ -43,15 +44,17 @@ var (
 	cia1 cia6526.CIA
 	cia2 cia6526.CIA
 
-	RAM      []byte
-	IO       []byte
-	KERNAL   []byte
-	BASIC    []byte
-	CHARGEN  []byte
-	CART_LO  []byte
-	CART_HI  []byte
-	MEM      mem.BANK
-	IOAccess mem.MEMAccess
+	RAM            []byte
+	IO             []byte
+	KERNAL         []byte
+	BASIC          []byte
+	CHARGEN        []byte
+	CART_LO        []byte
+	CART_HI        []byte
+	MEM            mem.BANK
+	IOAccess       mem.MEMAccess
+	RAMAccess      mem.MEMAccess
+	LayoutSelector byte
 
 	vic vic6569.VIC
 
@@ -80,11 +83,12 @@ func setup() {
 	mem.Clear(RAM)
 	mem.Clear(IO)
 
-	RAM[0x0001] = 0x1F
-	MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])
+	LayoutSelector = 31
+	MEM = mem.InitBanks(nbMemLayout, &LayoutSelector)
 	// var test byte = 31
 	// MEM = mem.InitBanks(nbMemLayout, &test)
-	IOAccess = &accessor{}
+	IOAccess = &io_accessor{}
+	RAMAccess = &ram_accessor{}
 	fillIOMapper()
 
 	// MEM Setup
