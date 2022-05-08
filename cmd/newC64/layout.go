@@ -20,14 +20,14 @@ func memLayouts() {
 	MEM.Layouts[30].Attach("KERNAL", 0xE000, KERNAL, mem.READONLY)
 	MEM.Layouts[30].Accessor("RAM", RAMAccess)
 	MEM.Layouts[30].Accessor("IO", IOAccess)
-	MEM.Layouts[30].Show()
+	// MEM.Layouts[30].Show()
 
 	MEM.Layouts[29] = mem.InitConfig(ramSize)
 	MEM.Layouts[29].Attach("RAM", 0, RAM, mem.READWRITE)
 	MEM.Layouts[29].Attach("IO", 0xD000, IO, mem.READWRITE)
 	MEM.Layouts[29].Accessor("RAM", RAMAccess)
 	MEM.Layouts[29].Accessor("IO", IOAccess)
-	MEM.Layouts[29].Show()
+	// MEM.Layouts[29].Show()
 
 	MEM.Layouts[28] = mem.InitConfig(ramSize)
 	MEM.Layouts[28].Attach("RAM", 0, RAM, mem.READWRITE)
@@ -38,13 +38,13 @@ func memLayouts() {
 	MEM.Layouts[26].Attach("CHARGEN", 0xD000, CHARGEN, mem.READONLY)
 	MEM.Layouts[26].Attach("KERNAL", 0xE000, KERNAL, mem.READONLY)
 	MEM.Layouts[26].Accessor("RAM", RAMAccess)
-	MEM.Layouts[26].Show()
+	// MEM.Layouts[26].Show()
 
 	MEM.Layouts[25] = mem.InitConfig(ramSize)
 	MEM.Layouts[25].Attach("RAM", 0, RAM, mem.READWRITE)
 	MEM.Layouts[25].Attach("CHARGEN", 0xD000, CHARGEN, mem.READONLY)
 	MEM.Layouts[25].Accessor("RAM", RAMAccess)
-	MEM.Layouts[25].Show()
+	// MEM.Layouts[25].Show()
 
 	// MEM.Layouts[7] = mem.InitConfig(5, ramSize)
 	// MEM.Layouts[7].Attach("RAM", 0, 0, RAM, mem.READWRITE)

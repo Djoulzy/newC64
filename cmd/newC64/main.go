@@ -182,11 +182,11 @@ func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
 	for {
 		cpuTurn = vic.Run(!run)
-		// if cpu.CycleCount == 0 && !run {
-		// 	execInst.Lock()
-		// }
+		if cpu.CycleCount == 1 && !run {
+			execInst.Lock()
+		}
 		if cpuTurn {
-			log.Printf("%04X\n", RAM[0x0001])
+			// log.Printf("%04X\n", RAM[0x0001])
 			// MEM.Read(cpu.PC)
 			cpu.NextCycle()
 			// if cpu.CycleCount == 0 {
@@ -201,6 +201,7 @@ func RunEmulation() {
 		cia2.Run()
 
 		if cpu.CycleCount == 1 {
+			outputDriver.DumpCode(cpu.FullInst)
 			if !run || conf.Disassamble {
 				fmt.Printf("%s\n", cpu.FullDebug)
 			}
@@ -232,7 +233,7 @@ func main() {
 
 	run = true
 	cpuTurn = true
-	outputDriver.ShowCode = false
+	outputDriver.ShowCode = true
 	outputDriver.ShowFps = true
 
 	go RunEmulation()
