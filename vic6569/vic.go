@@ -52,7 +52,7 @@ const (
 
 func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Driver, conf *config.ConfigData) {
 	V.graph = video
-	V.graph.Init(winWidth-DisplayOriginX-32, winHeight-DisplayOriginY-12, "Go Commodore 64", false, false)
+	V.graph.Init(winWidth-DisplayOriginX-32, winHeight-DisplayOriginY-12, "Go Commodore 64", false, conf.Disassamble)
 	V.conf = conf
 
 	V.color = io[colorStart : colorStart+1024]
