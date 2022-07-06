@@ -64,6 +64,7 @@ var Colors [16]color.Color = [16]color.Color{
 	color.RGBA{R: 216, G: 125, B: 131, A: 255}, // Lightblue
 	color.RGBA{R: 179, G: 179, B: 179, A: 255}, // Lightgrey
 }
+
 // VIC :
 type VIC struct {
 	VML         [40]uint16 // Video Matrix Line
@@ -104,53 +105,53 @@ type VIC struct {
 }
 
 const (
-	REG_X_SPRT_0           uint16 = iota // X coordinate sprite 0
-	REG_Y_SPRT_0                         // Y coordinate sprite 0
-	REG_X_SPRT_1                         // X coordinate sprite 1
-	REG_Y_SPRT_1                         // Y coordinate sprite 1
-	REG_X_SPRT_2                         // X coordinate sprite 2
-	REG_Y_SPRT_2                         // Y coordinate sprite 2
-	REG_X_SPRT_3                         // X coordinate sprite 3
-	REG_Y_SPRT_3                         // Y coordinate sprite 3
-	REG_X_SPRT_4                         // X coordinate sprite 4
-	REG_Y_SPRT_4                         // Y coordinate sprite 4
-	REG_X_SPRT_5                         // X coordinate sprite 5
-	REG_Y_SPRT_5                         // Y coordinate sprite 5
-	REG_X_SPRT_6                         // X coordinate sprite 6
-	REG_Y_SPRT_6                         // Y coordinate sprite 6
-	REG_X_SPRT_7                         // X coordinate sprite 7
-	REG_Y_SPRT_7                         // Y coordinate sprite 7
-	REG_MSBS_X_COOR                      // MSBs of X coordinates
-	REG_CTRL1                            // Control register 1
-	REG_RASTER                           // Raster counter
-	REG_LP_X                             // Light pen X
-	REG_LP_Y                             // Light pen Y
-	REG_SPRT_ENABLED                     // Sprite enabled
-	REG_CTRL2                            // Control register 2
-	REG_SPRT_Y_EXP                       // Sprite Y expansion
-	REG_MEM_LOC                          // Memory pointers
-	REG_IRQ                              // Interrupt register
-	REG_IRQ_ENABLED                      // Interrupt enabled
-	REG_SPRT_DATA_PRIORITY               // Sprite data priority
-	REG_SPRT_MLTCOLOR                    // Sprite multicolor
-	REG_SPRT_X_EXP                       // Sprite X expansion
-	REG_SPRT_SPRT_COLL                   // Spritesprite collision
-	REG_SPRT_DATA_COLL                   // Spritedata collision
-	REG_BORDER_COL                       // Border color
-	REG_BGCOLOR_0                        // Background color 0
-	REG_BGCOLOR_1                        // Background color 1
-	REG_BGCOLOR_2                        // Background color 2
-	REG_BGCOLOR_3                        // Background color 3
-	REG_SPRT_MLTCOLOR_0                  // Sprite multicolor 0
-	REG_SPRT_MLTCOLOR_1                  // Sprite multicolor 1
-	REG_COLOR_SPRT_0                     // Color sprite 0
-	REG_COLOR_SPRT_1                     // Color sprite 1
-	REG_COLOR_SPRT_2                     // Color sprite 2
-	REG_COLOR_SPRT_3                     // Color sprite 3
-	REG_COLOR_SPRT_4                     // Color sprite 4
-	REG_COLOR_SPRT_5                     // Color sprite 5
-	REG_COLOR_SPRT_6                     // Color sprite 6
-	REG_COLOR_SPRT_7                     // Color sprite 7
+	REG_X_SPRT_0           byte = iota // X coordinate sprite 0
+	REG_Y_SPRT_0                       // Y coordinate sprite 0
+	REG_X_SPRT_1                       // X coordinate sprite 1
+	REG_Y_SPRT_1                       // Y coordinate sprite 1
+	REG_X_SPRT_2                       // X coordinate sprite 2
+	REG_Y_SPRT_2                       // Y coordinate sprite 2
+	REG_X_SPRT_3                       // X coordinate sprite 3
+	REG_Y_SPRT_3                       // Y coordinate sprite 3
+	REG_X_SPRT_4                       // X coordinate sprite 4
+	REG_Y_SPRT_4                       // Y coordinate sprite 4
+	REG_X_SPRT_5                       // X coordinate sprite 5
+	REG_Y_SPRT_5                       // Y coordinate sprite 5
+	REG_X_SPRT_6                       // X coordinate sprite 6
+	REG_Y_SPRT_6                       // Y coordinate sprite 6
+	REG_X_SPRT_7                       // X coordinate sprite 7
+	REG_Y_SPRT_7                       // Y coordinate sprite 7
+	REG_MSBS_X_COOR                    // MSBs of X coordinates
+	REG_CTRL1                          // Control register 1
+	REG_RASTER                         // Raster counter
+	REG_LP_X                           // Light pen X
+	REG_LP_Y                           // Light pen Y
+	REG_SPRT_ENABLED                   // Sprite enabled
+	REG_CTRL2                          // Control register 2
+	REG_SPRT_Y_EXP                     // Sprite Y expansion
+	REG_MEM_LOC                        // Memory pointers
+	REG_IRQ                            // Interrupt register
+	REG_IRQ_ENABLED                    // Interrupt enabled
+	REG_SPRT_DATA_PRIORITY             // Sprite data priority
+	REG_SPRT_MLTCOLOR                  // Sprite multicolor
+	REG_SPRT_X_EXP                     // Sprite X expansion
+	REG_SPRT_SPRT_COLL                 // Spritesprite collision
+	REG_SPRT_DATA_COLL                 // Spritedata collision
+	REG_BORDER_COL                     // Border color
+	REG_BGCOLOR_0                      // Background color 0
+	REG_BGCOLOR_1                      // Background color 1
+	REG_BGCOLOR_2                      // Background color 2
+	REG_BGCOLOR_3                      // Background color 3
+	REG_SPRT_MLTCOLOR_0                // Sprite multicolor 0
+	REG_SPRT_MLTCOLOR_1                // Sprite multicolor 1
+	REG_COLOR_SPRT_0                   // Color sprite 0
+	REG_COLOR_SPRT_1                   // Color sprite 1
+	REG_COLOR_SPRT_2                   // Color sprite 2
+	REG_COLOR_SPRT_3                   // Color sprite 3
+	REG_COLOR_SPRT_4                   // Color sprite 4
+	REG_COLOR_SPRT_5                   // Color sprite 5
+	REG_COLOR_SPRT_6                   // Color sprite 6
+	REG_COLOR_SPRT_7                   // Color sprite 7
 )
 
 const (

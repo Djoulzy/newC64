@@ -28,7 +28,7 @@ type CIA struct {
 }
 
 const (
-	PRA uint16 = iota
+	PRA byte = iota
 	PRB
 	DDRA
 	DDRB

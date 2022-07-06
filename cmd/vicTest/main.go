@@ -44,9 +44,9 @@ func start() {
 	conf.Disassamble = false
 
 	RAM = make([]byte, ramSize)
-	mem.Clear(RAM)
+	mem.Clear(RAM, 0x100, 0xFF)
 	IO = make([]byte, ioSize)
-	mem.Clear(IO)
+	mem.Clear(IO, 0x100, 0xFF)
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/char.bin")
 
 	LoadData(RAM, "assets/roms/bruce2.bin", 0xE000)
@@ -54,14 +54,14 @@ func start() {
 	outputDriver = render.SDL2Driver{}
 	vic.Init(RAM, IO, CHARGEN, &outputDriver, &conf)
 	vic.BankSel = 0
-	vic.Write(vic6569.REG_MEM_LOC, 0x78)
-	vic.Write(vic6569.REG_CTRL1, 0x3B)
-	vic.Write(vic6569.REG_CTRL2, 0x18)
-	vic.Write(vic6569.REG_BORDER_COL, 0x0E)
-	vic.Write(vic6569.REG_BGCOLOR_0, 0x00)
-	vic.Write(vic6569.REG_BGCOLOR_1, 0x01)
-	vic.Write(vic6569.REG_BGCOLOR_2, 0x02)
-	vic.Write(vic6569.REG_BGCOLOR_3, 0x03)
+	vic.Write(uint16(vic6569.REG_MEM_LOC), 0x78)
+	vic.Write(uint16(vic6569.REG_CTRL1), 0x3B)
+	vic.Write(uint16(vic6569.REG_CTRL2), 0x18)
+	vic.Write(uint16(vic6569.REG_BORDER_COL), 0x0E)
+	vic.Write(uint16(vic6569.REG_BGCOLOR_0), 0x00)
+	vic.Write(uint16(vic6569.REG_BGCOLOR_1), 0x01)
+	vic.Write(uint16(vic6569.REG_BGCOLOR_2), 0x02)
+	vic.Write(uint16(vic6569.REG_BGCOLOR_3), 0x03)
 
 }
 
@@ -69,5 +69,5 @@ func main() {
 	start()
 
 	go vic.Run(false)
-	outputDriver.Run()
+	outputDriver.Run(true)
 }

@@ -7,11 +7,16 @@ type Globals struct {
 	RunPerfStats bool
 	Disassamble  bool
 	LogLevel     int
+	Debug        bool
 	Display      bool
 	LoadPRG      string
+	Model        string
+	ColorDisplay bool
+	CPUModel     string
+	Mhz          int
 }
 
-type Debug struct {
+type DebugMode struct {
 	Breakpoint uint16
 	Dump       uint16
 	Zone       int
@@ -20,5 +25,5 @@ type Debug struct {
 // ConfigData : Data structure du fichier de conf
 type ConfigData struct {
 	Globals
-	Debug
+	DebugMode
 }

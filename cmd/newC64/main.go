@@ -61,6 +61,7 @@ var (
 	outputDriver render.SDL2Driver
 	cpuTurn      bool
 	run          bool
+	trace        bool
 	execInst     sync.Mutex
 )
 
@@ -80,13 +81,11 @@ func setup() {
 	BASIC = mem.LoadROM(basicSize, "assets/roms/basic.bin")
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/char.bin")
 
-	mem.Clear(RAM)
-	mem.Clear(IO)
+	mem.Clear(RAM, 0x100, 0xFF)
+	mem.Clear(IO, 0x100, 0xFF)
 
 	LayoutSelector = 31
 	MEM = mem.InitBanks(nbMemLayout, &LayoutSelector)
-	// var test byte = 31
-	// MEM = mem.InitBanks(nbMemLayout, &test)
 	IOAccess = &io_accessor{}
 	RAMAccess = &ram_accessor{}
 	fillIOMapper()
@@ -98,7 +97,7 @@ func setup() {
 	vic.Init(RAM, IO, CHARGEN, &outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(&MEM)
+	cpu.Init(conf.CPUModel, conf.Mhz, &MEM, conf.Debug || conf.Disassamble)
 
 	cia1.Init("CIA1", IO[0x0C00:0x0C00+0x0200], &vic.SystemClock)
 	outputDriver.SetKeyboardLine(&cia1.InputLine)
@@ -122,8 +121,8 @@ func input() {
 			cia1.Stats()
 			vic.Stats()
 		case 's':
-			// Disassamble()
 			MEM.DumpStack(cpu.SP)
+			cpu.DumpStackDebug()
 		case 'z':
 			// Disassamble()
 			MEM.Dump(0)
@@ -139,13 +138,9 @@ func input() {
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
 		case ' ':
-			if run {
-				conf.Disassamble = true
-				run = false
-			} else {
-				execInst.Unlock()
-			}
-			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
+			fmt.Printf("%s\n", cpu.FullDebug)
+			trace = true
+			run = true
 		case 'w':
 			fmt.Printf("\nFill Color RAM")
 			for i := 0xD800; i < 0xDC00; i++ {
@@ -155,7 +150,7 @@ func input() {
 			// 	IO[uint16(i)] = 0
 			// }
 		case 'q':
-			cpu.DumpStats()
+			fmt.Printf("%s\n", cpu.FullDebug)
 			os.Exit(0)
 		default:
 			dumpAddr += string(r)
@@ -179,31 +174,27 @@ func timeTrack(start time.Time, name string) {
 }
 
 func RunEmulation() {
-	// defer timeTrack(time.Now(), "RunEmulation")
+	var speed float64
+
 	for {
 		cpuTurn = vic.Run(!run)
-		if cpu.CycleCount == 1 && !run {
-			execInst.Lock()
-		}
-		if cpuTurn {
-			// log.Printf("%04X\n", RAM[0x0001])
-			// MEM.Read(cpu.PC)
+
+		if cpuTurn && run {
 			cpu.NextCycle()
-			// if cpu.CycleCount == 0 {
-			// 	// outputDriver.DumpCode(cpu.FullInst)
-			// 	if conf.Breakpoint == cpu.InstStart {
-			// 		conf.Disassamble = true
-			// 		run = false
-			// 	}
-			// }
 		}
 		cia1.Run()
 		cia2.Run()
 
 		if cpu.CycleCount == 1 {
+			if trace {
+				run = false
+			}
+
 			outputDriver.DumpCode(cpu.FullInst)
-			if !run || conf.Disassamble {
+			outputDriver.SetSpeed(speed)
+			if conf.Breakpoint == cpu.InstStart {
 				fmt.Printf("%s\n", cpu.FullDebug)
+				trace = true
 			}
 		}
 	}
@@ -232,12 +223,13 @@ func main() {
 	go input()
 
 	run = true
+	trace = false
 	cpuTurn = true
 	outputDriver.ShowCode = true
 	outputDriver.ShowFps = true
 
 	go RunEmulation()
-	outputDriver.Run()
+	outputDriver.Run(false)
 
 	// cpu.DumpStats()
 	// <-exit

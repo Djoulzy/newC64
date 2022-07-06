@@ -1,7 +1,7 @@
 package vic6569
 
 func (V *VIC) Read(addr uint16) byte {
-	reg := addr - ((addr >> 6) << 6)
+	reg := byte(addr) // - ((addr >> 6) << 6)
 	// clog.Trace("VIC", "Read", "addr: %04X - Reg: %02X (%d)", addr, reg, reg)
 	switch reg {
 	case REG_MEM_LOC:

@@ -52,7 +52,7 @@ const (
 
 func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Driver, conf *config.ConfigData) {
 	V.graph = video
-	V.graph.Init(winWidth-DisplayOriginX-32, winHeight-DisplayOriginY-12, "Go Commodore 64", false)
+	V.graph.Init(winWidth-DisplayOriginX-32, winHeight-DisplayOriginY-12, "Go Commodore 64", false, false)
 	V.conf = conf
 
 	V.color = io[colorStart : colorStart+1024]
@@ -60,18 +60,18 @@ func (V *VIC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Driv
 	V.bankMem = mem.InitBanks(4, &V.BankSel)
 
 	V.bankMem.Layouts[3] = mem.InitConfig(0x4000)
-	V.bankMem.Layouts[3].Attach("RAM", 0, ram[BankStart3:BankStart3+0x4000], mem.READWRITE)
-	V.bankMem.Layouts[3].Attach("Char ROM", 0x1000, chargen, mem.READONLY)
+	V.bankMem.Layouts[3].Attach("RAM", 0, ram[BankStart3:BankStart3+0x4000], mem.READWRITE, false)
+	V.bankMem.Layouts[3].Attach("Char ROM", 0x1000, chargen, mem.READONLY, false)
 
 	V.bankMem.Layouts[2] = mem.InitConfig(0x4000)
-	V.bankMem.Layouts[2].Attach("RAM", 0, ram[BankStart2:BankStart2+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[2].Attach("RAM", 0, ram[BankStart2:BankStart2+0x4000], mem.READWRITE, false)
 
 	V.bankMem.Layouts[1] = mem.InitConfig(0x4000)
-	V.bankMem.Layouts[1].Attach("RAM", 0, ram[BankStart1:BankStart1+0x4000], mem.READWRITE)
-	V.bankMem.Layouts[1].Attach("Char ROM", 0x1000, chargen, mem.READONLY)
+	V.bankMem.Layouts[1].Attach("RAM", 0, ram[BankStart1:BankStart1+0x4000], mem.READWRITE, false)
+	V.bankMem.Layouts[1].Attach("Char ROM", 0x1000, chargen, mem.READONLY, false)
 
 	V.bankMem.Layouts[0] = mem.InitConfig(0x4000)
-	V.bankMem.Layouts[0].Attach("RAM", 0, ram[BankStart0:BankStart0+0x4000], mem.READWRITE)
+	V.bankMem.Layouts[0].Attach("RAM", 0, ram[BankStart0:BankStart0+0x4000], mem.READWRITE, false)
 
 	V.BA = true
 	V.VCBASE = 0

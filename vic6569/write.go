@@ -2,7 +2,7 @@ package vic6569
 
 func (V *VIC) Write(addr uint16, val byte) {
 
-	reg := addr - ((addr >> 6) << 6)
+	reg := byte(addr) // - ((addr >> 6) << 6)
 	// clog.Trace("VIC", "Write", "addr: %04X - Reg: %02X (%d)", addr, reg, reg)
 	switch reg {
 	case REG_X_SPRT_0:
@@ -122,7 +122,7 @@ func (V *VIC) Write(addr uint16, val byte) {
 	}
 }
 
-func (V *VIC) testBit(reg uint16, mask byte) bool {
+func (V *VIC) testBit(reg byte, mask byte) bool {
 	if V.Reg[reg]&mask == mask {
 		return true
 	}

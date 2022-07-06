@@ -8,7 +8,7 @@ import (
 var count = 0
 var loggerRead = false
 
-func (C *CIA) dispReadReg(label string, mode uint16, pr uint16, key byte, res byte) {
+func (C *CIA) dispReadReg(label string, mode byte, pr byte, key byte, res byte) {
 	if C.name == "CIA1" && loggerRead {
 		log.Printf("%-12s -*-    Mode: %08b -  RegVal: %08b -    Key: %08b - Res: %08b", label, C.Reg[mode], C.Reg[pr], key, res)
 	}
@@ -22,7 +22,7 @@ func (C *CIA) stopOncount() {
 }
 
 func (C *CIA) Read(addr uint16) byte {
-	reg := addr - ((addr >> 4) << 4)
+	reg := byte(addr) // - ((addr >> 4) << 4)
 	// clog.Trace("CIA", "Read", "%s - addr: %04X - Reg: %02X (%d)", C.name, addr, reg, reg)
 	switch reg {
 	case PRA:
